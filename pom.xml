@@ -18,6 +18,13 @@
     </developers>
 
     <dependencies>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.2</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Log4J: Logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -34,7 +41,7 @@
         <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>
             <artifactId>argparse4j</artifactId>
-            <version>0.2.0</version>
+            <version>0.8.1</version>
         </dependency>
         <!-- JSON: Parser and serializer -->
         <dependency>
