@@ -2,7 +2,7 @@
 <Configuration name="Decacher" status="INFO">
     <Loggers>
         <Root level="TRACE">
-            <AppenderRef ref="Console" level="${sys:decacher.verbose:-OFF}"/>
+            <AppenderRef ref="Console" level="${sys:decacher.verbose:-ERROR}"/>
         </Root>
     </Loggers>
 
