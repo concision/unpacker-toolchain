@@ -13,7 +13,6 @@ import lombok.extern.log4j.Log4j2;
 
 /**
  * Reads raw binary Packages.bin file.
- * Adapted from https://github.com/cheahjs/WFPackageParser
  *
  * @author Concision
  * @date 10/7/2019
