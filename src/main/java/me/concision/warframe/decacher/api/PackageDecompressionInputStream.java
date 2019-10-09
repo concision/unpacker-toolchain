@@ -101,7 +101,7 @@ public class PackageDecompressionInputStream extends InputStream {
                     if (blocklen < compPos + codeWord + 1) {
                         throw new IndexOutOfBoundsException();
                     }
-                    for (int i = codeWord; i >= 0; --i) {
+                    for (int i = codeWord; 0 <= i; --i) {
                         buffer[decompPos] = (byte) source.read();
                         decompPos++;
                         compPos++;
@@ -110,7 +110,7 @@ public class PackageDecompressionInputStream extends InputStream {
                     // encode dictionary
                     int copyLen = codeWord >>> 5; // high 3 bits are copy length
                     if (copyLen == 7) {
-                        if (compPos >= blocklen) {
+                        if (blocklen <= compPos) {
                             throw new IndexOutOfBoundsException();
                         }
                         copyLen += source.read(); // grab next byte and add 7 to it

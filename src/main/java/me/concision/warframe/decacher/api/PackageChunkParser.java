@@ -319,7 +319,7 @@ public class PackageChunkParser {
         if (nextParent instanceof Document) {
             ((Document) nextParent).put(lastKey, value);
         } else if (nextParent instanceof List) {
-            set(((List) nextParent), Integer.parseInt(lastKey), value);
+            set((List) nextParent, Integer.parseInt(lastKey), value);
         }
     }
 
