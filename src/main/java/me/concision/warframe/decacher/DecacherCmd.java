@@ -2,13 +2,12 @@ package me.concision.warframe.decacher;
 
 import java.io.PrintWriter;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Stream;
+import lombok.val;
+import me.concision.warframe.decacher.CommandArguments.OutputFormat;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.impl.type.FileArgumentType;
-import net.sourceforge.argparse4j.inf.ArgumentGroup;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +25,6 @@ public class DecacherCmd {
                 .prefixChars("--")
                 // width
                 .defaultFormatWidth(128)
-                .cjkWidthHack(true)
                 .terminalWidthDetection(true)
                 // sources
                 .fromFilePrefix("@")
@@ -35,11 +33,12 @@ public class DecacherCmd {
         parser.epilog("In lieu of a package list, a file containing the list may be specified with \"@file\"");
 
         // source flags
-        ArgumentGroup flagsGroup = parser.addArgumentGroup("flags");
+        val flagsGroup = parser.addArgumentGroup("flags");
         flagsGroup.addArgument("--algorithm") // memes
                 .help("Package extraction algorithm (required)")
                 .dest("algorithm")
                 .required(true)
+                .metavar("TYPE")
                 .choices("MECHAGENT", "NOT-MECHAGENT", "RANDOM");
         flagsGroup.addArgument("--cache")
                 .help("Caches intermediate results in $TEMP folder to increase performance of multiple executions")
@@ -51,7 +50,7 @@ public class DecacherCmd {
                 .action(Arguments.storeTrue());
 
         // data sources
-        MutuallyExclusiveGroup sourceGroup = parser.addMutuallyExclusiveGroup("source")
+        val sourceGroup = parser.addMutuallyExclusiveGroup("source")
                 .description("Packages.bin data source")
                 .required(true);
         sourceGroup.addArgument("--download-origin")
@@ -63,58 +62,49 @@ public class DecacherCmd {
                 .dest("source_warframe_install")
                 .metavar("DIR")
                 .nargs("?")
-                .type(new FileArgumentType().verifyCanRead().verifyIsDirectory().verifyExists());
+                .type(new FileArgumentType().verifyExists().verifyCanRead().verifyIsDirectory());
         sourceGroup.addArgument("--bin-file")
                 .help("Extracts from a raw Packages.bin file")
                 .dest("source_binary")
                 .metavar("FILE")
-                .type(new FileArgumentType().verifyCanRead().verifyIsFile().verifyExists());
+                .type(new FileArgumentType().verifyExists().verifyCanRead().verifyIsFile());
 
-        // output files
-        MutuallyExclusiveGroup outputGroup = parser.addMutuallyExclusiveGroup("output destination")
+        // output destinations
+        val outputGroup = parser.addMutuallyExclusiveGroup("output destination")
                 .description("Extracted package data destination")
                 .required(true);
         outputGroup.addArgument("--output-dir")
                 .help("Outputs each package record into a file (incompatible with --list)")
                 .dest("output_directory")
                 .metavar("DIR")
-                .type(new FileArgumentType().verifyCanWrite().verifyIsDirectory().verifyExists());
+                .type(new FileArgumentType().verifyExists().verifyCanWrite().verifyIsDirectory());
         outputGroup.addArgument("--output-file")
                 .help("Outputs results into an output file")
                 .dest("output_file")
                 .metavar("FILE")
-                .type(new FileArgumentType().verifyCanWrite().verifyNotExists());
+                .type(new FileArgumentType().verifyNotExists().verifyCanWrite());
         outputGroup.addArgument("--output-stdout")
                 .help("Outputs results directly into standard output stream")
                 .dest("output_stdout")
                 .action(Arguments.storeTrue());
 
         // output format
-        MutuallyExclusiveGroup outputTypeGroup = parser.addMutuallyExclusiveGroup("output format")
-                .description("Format of extracted data to write to destination")
-                .required(true);
-        outputTypeGroup.addArgument("--paths")
-                .help("Lists all matching package paths (incompatible with --output-dir)")
-                .dest("format_paths")
-                .action(Arguments.storeTrue());
-        outputTypeGroup.addArgument("--records")
-                .help("Each line is a package data record (e.g. {\"path\": \"/Lotus/Path/...\", \"data\": ...})  (incompatible with --output-dir)")
-                .dest("format_records")
-                .action(Arguments.storeTrue());
-        outputTypeGroup.addArgument("--recursive")
-                .help("Nests package data into a recursive structure (e.g. {\"Lotus\": {\"Path\": ...}})")
-                .dest("format_recursive")
-                .action(Arguments.storeTrue());
-        outputTypeGroup.addArgument("--flatten")
-                .help("Flattens package data into absolute paths (e.g. {\"/Lotus/Path/...\": ..., ...})")
-                .dest("format_flattened")
-                .action(Arguments.storeTrue());
-
+        val outputTypeGroup = parser.addArgumentGroup("output format")
+                .description("Format of extracted data to write to destination");
+        outputTypeGroup.addArgument("--format")
+                .help("PATHS: Lists all matching package paths (incompatible with --output-dir)\n" +
+                        "RECORDS: Each line is a package data record (e.g. {\"path\": \"/Lotus/Path/...\", \"package\": ...})  (incompatible with --output-dir)\n" +
+                        "RECURSIVE: Nests package data into a recursive structure (e.g. {\"Lotus\": {\"Path\": ...}})\n" +
+                        "FLATTENED: Flattens package data into absolute paths (e.g. {\"/Lotus/Path/...\": ..., ...})"
+                )
+                .dest("output_format")
+                .required(true)
+                .metavar("TYPE")
+                .type(Arguments.caseInsensitiveEnumType(OutputFormat.class));
         // output format flags
-        ArgumentGroup outputFlagsGroup = parser.addArgumentGroup("output flags");
-        outputFlagsGroup.addArgument("--raw")
+        outputTypeGroup.addArgument("--raw")
                 .help("Skips conversion of LUA Tables to JSON (default: false)")
-                .dest("format_raw_mode")
+                .dest("output_format_raw")
                 .action(Arguments.storeTrue());
 
         // specify positional glob
@@ -133,7 +123,8 @@ public class DecacherCmd {
 
         // validate a few parameters
         if (namespace.get("output_directory") != null) { // if --output-dir is set
-            if (Stream.of("format_paths", "format_records").anyMatch(namespace::getBoolean)) { // if incompatible flags for --output-dir are used
+            OutputFormat outputFormat = namespace.get("output_format");
+            if (outputFormat == OutputFormat.PATHS || outputFormat == OutputFormat.RECORDS) { // if incompatible flags for --output-dir are used
                 parser.printUsage(new PrintWriter(System.err, true));
                 System.err.println("decacher: error: --output-dir is incompatible with --paths and --records");
                 System.exit(-1);
