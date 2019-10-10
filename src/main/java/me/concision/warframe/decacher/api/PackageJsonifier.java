@@ -15,7 +15,7 @@ import org.bson.Document;
  * @author Concision
  * @date 10/7/2019
  */
-public class PackageChunkParser {
+public class PackageJsonifier {
     // regexes for ease of writng parser
     private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
     private static final Pattern SUBKEY_PATTERN = Pattern.compile("\\[(\\w+)]");
@@ -25,15 +25,10 @@ public class PackageChunkParser {
     /**
      * Parses a raw package chunk into a document structure
      *
-     * @param version     package chunk version
      * @param packageText raw chunk contents
      * @return document structure
      */
-    public static Document parse(int version, @NonNull String packageText) {
-        if (version != 0x14) {
-            throw new IllegalArgumentException("no support for package version " + version);
-        }
-
+    public static Document parse(@NonNull String packageText) {
         // version 14 parsing
         String[] split = packageText.split("[\\r\\n]+");
         Deque<String> lines = new LinkedList<>();
