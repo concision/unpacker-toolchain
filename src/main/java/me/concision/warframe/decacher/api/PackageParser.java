@@ -7,8 +7,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.experimental.Wither;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -26,7 +28,7 @@ public class PackageParser {
      * @return a deserialized list of all packages
      * @throws IOException if an underlying IO exception occurs
      */
-    public static List<PackageChunk> parsePackages(@NonNull InputStream inputStream) throws IOException {
+    public static <R extends List<PackageChunk> & Queue<PackageChunk>> R parsePackages(@NonNull InputStream inputStream) throws IOException {
         List<PackageChunk> chunkList = new LinkedList<>();
 
         // wrap with data input stream
@@ -123,7 +125,7 @@ public class PackageParser {
             }
         }
 
-        return chunkList;
+        return (R) chunkList;
     }
 
     /**
@@ -142,6 +144,7 @@ public class PackageParser {
         /**
          * Raw package contents
          */
+        @Wither
         private final String contents;
 
         /**
