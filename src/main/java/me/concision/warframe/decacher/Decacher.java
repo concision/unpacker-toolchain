@@ -1,8 +1,8 @@
 package me.concision.warframe.decacher;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.sourceforge.argparse4j.inf.Namespace;
 
 /**
  * Control flow for extraction process
@@ -16,7 +16,8 @@ public class Decacher {
      * Processed and validated command-line arguments
      */
     @NonNull
-    private final Namespace namespace;
+    @Getter
+    private final CommandArguments args;
 
     /**
      * Execute decaching with namespaced parameters

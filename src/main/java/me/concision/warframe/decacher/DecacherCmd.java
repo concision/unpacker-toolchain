@@ -1,13 +1,16 @@
 package me.concision.warframe.decacher;
 
 import java.io.PrintWriter;
+import java.nio.file.FileSystems;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.PatternSyntaxException;
 import lombok.val;
-import me.concision.warframe.decacher.CommandArguments.OutputFormat;
+import me.concision.warframe.decacher.output.OutputFormat;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.impl.type.FileArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -112,9 +115,16 @@ public class DecacherCmd {
                 .help("List of packages to extract using glob patterns (default: /**/*)")
                 .dest("packages")
                 .nargs("*")
+                // parse to globs
+                .type((argumentParser, arg, value) -> {
+                    try {
+                        return FileSystems.getDefault().getPathMatcher("glob:" + value);
+                    } catch (PatternSyntaxException exception) {
+                        throw new ArgumentParserException("invalid glob syntax" + (exception.getMessage() != null ? ": " + exception.getMessage() : ""), argumentParser, arg);
+                    }
+                })
                 .metavar("/glob/**/pattern/*file*")
-                .setDefault(new String[]{"/**/*"})
-                .type(String.class);
+                .setDefault(FileSystems.getDefault().getPathMatcher("glob:**/*"));
 
 
         // parse namespace, or exit runtime
@@ -153,7 +163,8 @@ public class DecacherCmd {
 
         // start extraction
         try {
-            new Decacher(namespace).execute();
+            new Decacher(CommandArguments.from(namespace))
+                    .execute();
         } catch (Throwable throwable) {
             // TODO: submit to Sentry
             throw new Error("an unexpected exception occurred during extraction", throwable);
