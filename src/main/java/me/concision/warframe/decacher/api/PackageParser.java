@@ -89,8 +89,14 @@ public class PackageParser {
                 String path;
                 {
                     int length = Integer.reverseBytes(stream.readInt());
-                    int read = stream.read(buffer, 0, length);
-                    if (read < 0) throw new EOFException();
+                    if (buffer.length < length) buffer = new byte[buffer.length];
+                    for (int totalRead = 0; totalRead < length; ) {
+                        int read = stream.read(buffer, totalRead, length - totalRead);
+                        if (read < 0) {
+                            throw new EOFException();
+                        }
+                        totalRead += read;
+                    }
                     path = new String(buffer, 0, length);
                 }
 
@@ -98,8 +104,14 @@ public class PackageParser {
                 String name;
                 {
                     int length = Integer.reverseBytes(stream.readInt());
-                    int read = stream.read(buffer, 0, length);
-                    if (read < 0) throw new EOFException();
+                    if (buffer.length < length) buffer = new byte[buffer.length];
+                    for (int totalRead = 0; totalRead < length; ) {
+                        int read = stream.read(buffer, totalRead, length - totalRead);
+                        if (read < 0) {
+                            throw new EOFException();
+                        }
+                        totalRead += read;
+                    }
                     name = new String(buffer, 0, length);
                 }
 
