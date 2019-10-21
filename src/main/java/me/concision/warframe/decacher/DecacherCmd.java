@@ -60,10 +60,10 @@ public class DecacherCmd {
                 .metavar("PATH")
                 .nargs("?")
                 .type(new FileArgumentType().verifyExists().verifyCanRead());
-        sourceGroup.addArgument("--cache")
-                .help("Caches intermediate results in $TEMP folder to increase performance of multiple executions")
-                .dest("cache")
-                .action(Arguments.storeTrue());
+//        sourceGroup.addArgument("--cache")
+//                .help("Caches intermediate results in $TEMP folder to increase performance of multiple executions")
+//                .dest("cache")
+//                .action(Arguments.storeTrue());
         sourceGroup.addArgument("--algorithm") // memes
                 .help("Package extraction algorithm to apply during the decaching process")
                 .dest("algorithm")
