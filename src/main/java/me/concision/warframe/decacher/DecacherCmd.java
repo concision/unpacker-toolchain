@@ -1,11 +1,12 @@
 package me.concision.warframe.decacher;
 
-import java.io.PrintWriter;
 import java.nio.file.FileSystems;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.PatternSyntaxException;
 import lombok.val;
-import me.concision.warframe.decacher.output.OutputFormat;
+import me.concision.warframe.decacher.destination.OutputMode;
+import me.concision.warframe.decacher.format.FormatType;
+import me.concision.warframe.decacher.source.SourceType;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.impl.type.FileArgumentType;
@@ -25,94 +26,94 @@ public class DecacherCmd {
     public static void main(String[] args) {
         // construct argument parser
         ArgumentParser parser = ArgumentParsers.newFor("decacher")
+                // flag prefix
                 .prefixChars("--")
                 // width
                 .defaultFormatWidth(128)
                 .terminalWidthDetection(true)
                 // sources
-                .fromFilePrefix("@")
-                .build();
-        parser.description("Extracts and processes data from Warframe's Packages.bin");
-        parser.epilog("In lieu of a package list, a file containing the list may be specified with \"@file\"");
+                .fromFilePrefix("@") // allow specifying paths from a file
+                .build()
+                .description("Extracts and processes data from Warframe's Packages.bin");
 
         // source flags
         val flagsGroup = parser.addArgumentGroup("flags");
-        flagsGroup.addArgument("--algorithm") // memes
-                .help("Package extraction algorithm (required)")
-                .dest("algorithm")
-                .required(true)
-                .metavar("TYPE")
-                .choices("MECHAGENT", "NOT-MECHAGENT", "RANDOM");
-        flagsGroup.addArgument("--cache")
+        flagsGroup.addArgument("--verbose")
+                .help("Verbosely logs information to standard error stream")
+                .dest("verbose_logging")
+                .action(Arguments.storeTrue());
+
+        // data source
+        val sourceGroup = parser.addArgumentGroup("source");
+        sourceGroup.addArgument("--source-type")
+                .help("Method of obtaining a Packages.bin data source\n" +
+                        "ORIGIN: Streams directly from Warframe update servers\n" +
+                        "INSTALL: Searches for last used Warframe install location\n" +
+                        "FOLDER: Specifies H.Misc.cache/H.Misc.toc folder (specify a --source-location DIRECTORY)\n" +
+                        "BINARY: Specifies a raw extracted Packages.bin file (specify a --source-location FILE)")
+                .dest("source_type")
+                .type(Arguments.caseInsensitiveEnumType(SourceType.class))
+                .required(true);
+        sourceGroup.addArgument("--source-location")
+                .help("A path to a source location on the filesystem, if required by the specified --source-type")
+                .dest("source_location")
+                .metavar("PATH")
+                .nargs("?")
+                .type(new FileArgumentType().verifyExists().verifyCanRead());
+        sourceGroup.addArgument("--cache")
                 .help("Caches intermediate results in $TEMP folder to increase performance of multiple executions")
                 .dest("cache")
                 .action(Arguments.storeTrue());
-        flagsGroup.addArgument("--verbose")
-                .dest("verbose")
-                .help("Verbosely outputs progress to standard error stream")
-                .action(Arguments.storeTrue());
-
-        // data sources
-        val sourceGroup = parser.addMutuallyExclusiveGroup("source")
-                .description("Packages.bin data source")
+        sourceGroup.addArgument("--algorithm") // memes
+                .help("Package extraction algorithm to apply during the decaching process")
+                .dest("algorithm")
+                .type(Arguments.caseInsensitiveEnumType(AlgorithmType.class))
                 .required(true);
-        sourceGroup.addArgument("--download-origin")
-                .help("Streams directly from Warframe origin server")
-                .dest("source_origin")
-                .action(Arguments.storeTrue());
-        sourceGroup.addArgument("--warframe-dir")
-                .help("Extracts from Warframe base/packages directory (default: search for install location)")
-                .dest("source_warframe_install")
-                .metavar("DIR")
+
+        // data output
+        val outputGroup = parser.addArgumentGroup("output");
+        outputGroup.addArgument("--output-mode")
+                .help("Specifies how output is controlled; options:\n" +
+                        "SINGLE: Outputs all relevant package records into single output (e.g. file, stdout)\n" +
+                        "        if '--output-location FILE' is specified, writes to file, otherwise to stdout\n" +
+                        "MULTIPLE: Outputs relevant package records into multiple independent files\n" +
+                        "       '--output-location DIRECTORY' argument must be specified")
+                .dest("output_mode")
+                .type(Arguments.caseInsensitiveEnumType(OutputMode.class))
+                .required(true);
+        outputGroup.addArgument("--output-location")
+                .help("Output path destination")
+                .metavar("PATH")
                 .nargs("?")
-                .type(new FileArgumentType().verifyExists().verifyCanRead().verifyIsDirectory());
-        sourceGroup.addArgument("--bin-file")
-                .help("Extracts from a raw Packages.bin file")
-                .dest("source_binary")
-                .metavar("FILE")
-                .type(new FileArgumentType().verifyExists().verifyCanRead().verifyIsFile());
-
-        // output destinations
-        val outputGroup = parser.addMutuallyExclusiveGroup("output destination")
-                .description("Extracted package data destination")
-                .required(true);
-        outputGroup.addArgument("--output-dir")
-                .help("Outputs each package record into a file (incompatible with --list)")
-                .dest("output_directory")
-                .metavar("DIR")
-                .type(new FileArgumentType().verifyExists().verifyCanWrite().verifyIsDirectory());
-        outputGroup.addArgument("--output-file")
-                .help("Outputs results into an output file")
-                .dest("output_file")
-                .metavar("FILE")
-                .type(new FileArgumentType().verifyNotExists().verifyCanWrite());
-        outputGroup.addArgument("--output-stdout")
-                .help("Outputs results directly into standard output stream")
-                .dest("output_stdout")
-                .action(Arguments.storeTrue());
-
-        // output format
-        val outputTypeGroup = parser.addArgumentGroup("output format")
-                .description("Format of extracted data to write to destination");
-        outputTypeGroup.addArgument("--format")
-                .help("PATHS: Lists all matching package paths (incompatible with --output-dir)\n" +
-                        "RECORDS: Each line is a package data record (e.g. {\"path\": \"/Lotus/Path/...\", \"package\": ...})  (incompatible with --output-dir)\n" +
-                        "RECURSIVE: Nests package data into a recursive structure (e.g. {\"Lotus\": {\"Path\": ...}})\n" +
-                        "FLATTENED: Flattens package data into absolute paths (e.g. {\"/Lotus/Path/...\": ..., ...})"
-                )
+                .type(new FileArgumentType().verifyCanCreate());
+        val outputFormatArgument = outputGroup.addArgument("--output-format")
+                .help("Specifies the output format for the given --output-mode\n" +
+                        "SINGLE:\n" +
+                        "  PATHS: Outputs matching package paths on each line\n" +
+                        "         (e.g. /Lotus/Path/.../PackageName\\r\\n)\n" +
+                        "  RECORDS: Outputs a matching package JSON record on each line\n" +
+                        "           (e.g. {\"path\": \"/Lotus/Path/...\", \"package\": ...}\\r\\n)\n" +
+                        "  MAP: Outputs all matching packages into a JSON map\n" +
+                        "       (e.g. {\"/Lotus/Path/...\": ..., ...})\n" +
+                        "  LIST: Outputs all matching packages into a JSON array\n" +
+                        "        (e.g. [{\"path\": \"/Lotus/Path/...\", \"package\": ...}, ...])\n" +
+                        "MULTIPLE:\n" +
+                        "  RECURSIVE: Outputs each matching package as a file with replicated directory structure\n" +
+                        "             (e.g. ${--output-location}/Lotus/Path/.../PackageName)\n" +
+                        "  FLATTENED: Outputs each matching package as a file without replicating directory structure\n" +
+                        "             (e.g. ${--output-location}/PackageName)")
+                .metavar("FORMAT")
                 .dest("output_format")
-                .required(true)
-                .metavar("TYPE")
-                .type(Arguments.caseInsensitiveEnumType(OutputFormat.class));
-        // output format flags
-        outputTypeGroup.addArgument("--raw")
+                .type(Arguments.caseInsensitiveEnumType(FormatType.class))
+                .required(true);
+        outputGroup.addArgument("--output-raw")
                 .help("Skips conversion of LUA Tables to JSON (default: false)")
                 .dest("output_format_raw")
                 .action(Arguments.storeTrue());
 
         // specify positional glob
         parser.addArgument("packages")
-                .help("List of packages to extract using glob patterns (default: /**/*)")
+                .help("List of packages to extract using glob patterns (default: \"**/*\")")
                 .dest("packages")
                 .nargs("*")
                 // parse to globs
@@ -126,39 +127,46 @@ public class DecacherCmd {
                 .metavar("/glob/**/pattern/*file*")
                 .setDefault(FileSystems.getDefault().getPathMatcher("glob:**/*"));
 
+        parser.epilog("In lieu of a package list, a file containing a list may be specified with \"@file\"");
 
         // parse namespace, or exit runtime
         Namespace namespace = parser.parseArgsOrFail(args);
 
 
-        // validate a few parameters
-        if (namespace.get("output_directory") != null) { // if --output-dir is set
-            OutputFormat outputFormat = namespace.get("output_format");
-            if (outputFormat == OutputFormat.PATHS || outputFormat == OutputFormat.RECORDS) { // if incompatible flags for --output-dir are used
-                parser.printUsage(new PrintWriter(System.err, true));
-                System.err.println("decacher: error: --output-dir is incompatible with --paths and --records");
-                System.exit(-1);
-                return;
-            }
-        }
-
+        // validate
         // memes
-        String algorithm = namespace.getString("algorithm");
-        if ("MECHAGENT".equalsIgnoreCase(algorithm)
-                || "RANDOM".equalsIgnoreCase(algorithm) && ThreadLocalRandom.current().nextInt(2) == 0
+        AlgorithmType algorithm = namespace.get("algorithm");
+        if (algorithm == AlgorithmType.MECHAGENT
+                || algorithm == AlgorithmType.RANDOM && ThreadLocalRandom.current().nextInt(2) == 0
         ) {
-            throw new OutOfMemoryError("download more dedicated wam");
+            throw new OutOfMemoryError("please reference https://downloadmorewam.com for detailed fix");
+        }
+        // verify output destination
+        OutputMode outputMode = namespace.get("output_mode");
+        if (outputMode == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
+            parser.handleError(new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputFormatArgument));
+            System.exit(-1);
+        }
+        // check output mode with format type
+        FormatType formatType = namespace.get("output_format");
+        if (formatType.mode() != outputMode) {
+            parser.handleError(new ArgumentParserException("output mode " + outputMode + " incompatible with format type " + formatType, parser, outputFormatArgument));
+            System.exit(-1);
         }
 
 
         // initialize environment
         // set logging verbosity
-        if (namespace.getBoolean("verbose")) {
+        if (namespace.getBoolean("verbose_logging")) {
             System.setProperty("decacher.verbose", "ALL");
         }
         // initialize logging mechanism
         Logger log = LogManager.getLogger(DecacherCmd.class);
         log.debug("Namespace: {}", namespace);
+        // stdout redirection warning
+        if (outputMode == OutputMode.SINGLE && namespace.get("output_location") == null) {
+            log.warn("No --output-location specified for --outout-mode SINGLE, defaulting to STDOUT");
+        }
 
 
         // start extraction
@@ -169,5 +177,24 @@ public class DecacherCmd {
             // TODO: submit to Sentry
             throw new Error("an unexpected exception occurred during extraction", throwable);
         }
+    }
+
+
+    /**
+     * Meme algorithm type, only {@link #NOT_MECHAGENT} provides deterministic decaching behaviour
+     */
+    private enum AlgorithmType {
+        /**
+         * Executes the actual decaching process
+         */
+        MECHAGENT,
+        /**
+         * Throws an {@link OutOfMemoryError} immediately
+         */
+        NOT_MECHAGENT,
+        /**
+         * Arbitrarily selects a {@link AlgorithmType}
+         */
+        RANDOM
     }
 }
