@@ -2,6 +2,7 @@ package me.concision.warframe.decacher.source;
 
 import java.io.InputStream;
 import java.util.function.Supplier;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.concision.warframe.decacher.CommandArguments;
@@ -17,27 +18,32 @@ public enum SourceType {
     /**
      * Streams directly from Warframe origin server
      */
-    ORIGIN(() -> {throw new UnsupportedOperationException();}),
+    ORIGIN(false, OriginSourceCollector::new),
     /**
      * Extracts from Warframe base/packages directory.
      * If no directory argument ({@link CommandArguments#sourcePath}) is specified, searches for default install location
      */
-    INSTALL(() -> {throw new UnsupportedOperationException();}),
+    INSTALL(false, InstallSourceCollector::new),
     /**
      * Extracts from a packages directory. {@link CommandArguments#sourcePath} indicates directory.
      */
-    FOLDER(() -> {throw new UnsupportedOperationException();}),
+    FOLDER(true, FolderSourceCollector::new),
     /**
      * Extracts from a raw Packages.bin file. {@link CommandArguments#sourcePath} indicates file.
      */
-    BINARY(() -> {throw new UnsupportedOperationException();});
+    BINARY(true, BinarySourceCollector::new);
+
+    /**
+     * Requires an additional {@link CommandArguments#sourcePath}
+     */
+    @Getter
+    private final boolean requiresSource;
 
     /**
      * Type-specific collector instance generator
      */
     @NonNull
     private final Supplier<SourceCollector> collector;
-
 
     /**
      * See {@link SourceCollector#generate(CommandArguments)}

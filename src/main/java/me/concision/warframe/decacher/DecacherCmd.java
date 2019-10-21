@@ -4,8 +4,8 @@ import java.nio.file.FileSystems;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.PatternSyntaxException;
 import lombok.val;
-import me.concision.warframe.decacher.output.OutputMode;
 import me.concision.warframe.decacher.output.FormatType;
+import me.concision.warframe.decacher.output.OutputMode;
 import me.concision.warframe.decacher.source.SourceType;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -54,7 +54,7 @@ public class DecacherCmd {
                 .dest("source_type")
                 .type(Arguments.caseInsensitiveEnumType(SourceType.class))
                 .required(true);
-        sourceGroup.addArgument("--source-location")
+        val sourceLocationArgument = sourceGroup.addArgument("--source-location")
                 .help("A path to a source location on the filesystem, if required by the specified --source-type")
                 .dest("source_location")
                 .metavar("PATH")
@@ -81,7 +81,7 @@ public class DecacherCmd {
                 .dest("output_mode")
                 .type(Arguments.caseInsensitiveEnumType(OutputMode.class))
                 .required(true);
-        outputGroup.addArgument("--output-location")
+        val outputLocationArgument = outputGroup.addArgument("--output-location")
                 .help("Output path destination")
                 .metavar("PATH")
                 .nargs("?")
@@ -141,16 +141,24 @@ public class DecacherCmd {
         ) {
             throw new OutOfMemoryError("please reference https://downloadmorewam.com for detailed fix");
         }
-        // verify output destination
-        OutputMode outputMode = namespace.get("output_mode");
-        if (outputMode == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
-            parser.handleError(new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputFormatArgument));
-            System.exit(-1);
-        }
-        // check output mode with format type
-        FormatType formatType = namespace.get("output_format");
-        if (formatType.mode() != outputMode) {
-            parser.handleError(new ArgumentParserException("output mode " + outputMode + " incompatible with format type " + formatType, parser, outputFormatArgument));
+        // verify source has source location
+        try {
+            SourceType sourceType = namespace.get("source_type");
+            if (sourceType.requiresSource() && namespace.get("source_location") == null) {
+                throw new ArgumentParserException("source type " + sourceType + " requires a specified --source-location PATH", parser, sourceLocationArgument);
+            }
+            // verify output destination
+            OutputMode outputMode = namespace.get("output_mode");
+            if (outputMode == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
+                throw new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputLocationArgument);
+            }
+            // check output mode with format type
+            FormatType formatType = namespace.get("output_format");
+            if (formatType.mode() != outputMode) {
+                throw new ArgumentParserException("output mode " + outputMode + " incompatible with format type " + formatType, parser, outputFormatArgument);
+            }
+        } catch (ArgumentParserException exception) {
+            parser.handleError(exception);
             System.exit(-1);
         }
 
@@ -164,7 +172,7 @@ public class DecacherCmd {
         Logger log = LogManager.getLogger(DecacherCmd.class);
         log.debug("Namespace: {}", namespace);
         // stdout redirection warning
-        if (outputMode == OutputMode.SINGLE && namespace.get("output_location") == null) {
+        if (namespace.get("output_mode") == OutputMode.SINGLE && namespace.get("output_location") == null) {
             log.warn("No --output-location specified for --outout-mode SINGLE, defaulting to STDOUT");
         }
 
