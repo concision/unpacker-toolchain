@@ -1,5 +1,6 @@
 package me.concision.warframe.decacher.source;
 
+import java.io.IOException;
 import java.io.InputStream;
 import lombok.NonNull;
 import me.concision.warframe.decacher.CommandArguments;
@@ -18,5 +19,5 @@ public interface SourceCollector {
      * @param args {@link CommandArguments} execution parameters
      * @return a Packages.bin {@link InputStream}
      */
-    InputStream generate(@NonNull CommandArguments args);
+    InputStream generate(@NonNull CommandArguments args) throws IOException;
 }
