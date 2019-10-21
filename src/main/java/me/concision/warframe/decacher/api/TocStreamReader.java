@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Value;
@@ -148,6 +149,23 @@ public class TocStreamReader {
             return null;
         }
     }
+
+    /**
+     * Iteratively search through TOC for a specific file
+     *
+     * @param absoluteFilename specific an absolute filename (e.g. /Lotus/Parent/Filename)
+     * @return an {@link Optional <PackageEntry>} of the package
+     * @throws IOException
+     */
+    public Optional<PackageEntry> findEntry(@NonNull String absoluteFilename) throws IOException {
+        for (PackageEntry entry; (entry = this.nextEntry()) != null; ) {
+            if (entry.filename.equals(absoluteFilename)) {
+                return Optional.of(entry);
+            }
+        }
+        return Optional.empty();
+    }
+
 
     /**
      * Package entry construct
