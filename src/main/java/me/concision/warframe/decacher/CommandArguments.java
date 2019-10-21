@@ -35,7 +35,7 @@ public class CommandArguments {
     public final FormatType outputFormat;
 
     public final boolean rawMode;
-    public final boolean cache;
+    // public final boolean cache;
 
     @NonNull
     public final List<PathMatcher> packages;
@@ -59,7 +59,7 @@ public class CommandArguments {
                 namespace.get("output_format"),
                 // output flags
                 namespace.getBoolean("output_format_raw"),
-                namespace.getBoolean("cache"),
+                // namespace.getBoolean("cache"),
                 // package glob patterns
                 Collections.unmodifiableList(namespace.getList("packages"))
         );
