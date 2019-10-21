@@ -40,7 +40,7 @@ public enum SourceType {
 
 
     /**
-     * {@link SourceCollector#generate(CommandArguments)}
+     * See {@link SourceCollector#generate(CommandArguments)}
      *
      * @param arguments {@link CommandArguments} execution parameters
      * @return generated Packages.bin data stream

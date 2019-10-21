@@ -7,8 +7,8 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.concision.warframe.decacher.destination.OutputMode;
-import me.concision.warframe.decacher.format.FormatType;
+import me.concision.warframe.decacher.output.OutputMode;
+import me.concision.warframe.decacher.output.FormatType;
 import me.concision.warframe.decacher.source.SourceType;
 import net.sourceforge.argparse4j.inf.Namespace;
 
