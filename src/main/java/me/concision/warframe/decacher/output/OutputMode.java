@@ -1,4 +1,4 @@
-package me.concision.warframe.decacher.destination;
+package me.concision.warframe.decacher.output;
 
 /**
  * Specifies how output is directed to destinations during the decaching process
