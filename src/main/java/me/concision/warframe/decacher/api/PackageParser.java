@@ -28,8 +28,8 @@ public class PackageParser {
      * @return a deserialized list of all packages
      * @throws IOException if an underlying IO exception occurs
      */
-    public static <R extends List<PackageChunk> & Queue<PackageChunk>> R parsePackages(@NonNull InputStream inputStream) throws IOException {
-        List<PackageChunk> chunkList = new LinkedList<>();
+    public static <R extends List<PackageRecord> & Queue<PackageRecord>> R parsePackages(@NonNull InputStream inputStream) throws IOException {
+        List<PackageRecord> chunkList = new LinkedList<>();
 
         // wrap with data input stream
         try (DataInputStream stream = new DataInputStream(inputStream)) {
@@ -129,7 +129,7 @@ public class PackageParser {
                 stream.skipBytes(4);
 
                 // add to package chunk pool
-                chunkList.add(new PackageChunk(
+                chunkList.add(new PackageRecord(
                         path,
                         name,
                         chunk
@@ -144,7 +144,7 @@ public class PackageParser {
      * Holds a parsed package and it's raw text
      */
     @Value
-    public static class PackageChunk {
+    public static class PackageRecord {
         /**
          * Package parent directory path
          */
