@@ -6,7 +6,7 @@
 
     <groupId>me.concision.warframe</groupId>
     <artifactId>decacher</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
 
     <description>Extracts package information from Warframe game files</description>
 
