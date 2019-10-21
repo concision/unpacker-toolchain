@@ -1,5 +1,6 @@
 package me.concision.warframe.decacher.source;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -51,7 +52,7 @@ public enum SourceType {
      * @param arguments {@link CommandArguments} execution parameters
      * @return generated Packages.bin data stream
      */
-    public InputStream generate(@NonNull CommandArguments arguments) {
+    public InputStream generate(@NonNull CommandArguments arguments) throws IOException {
         return collector.get().generate(arguments);
     }
 }
