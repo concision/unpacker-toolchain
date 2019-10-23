@@ -1,6 +1,7 @@
 package me.concision.warframe.decacher;
 
 import java.nio.file.FileSystems;
+import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.PatternSyntaxException;
 import lombok.val;
@@ -72,21 +73,17 @@ public class DecacherCmd {
 
         // data output
         val outputGroup = parser.addArgumentGroup("output");
-        outputGroup.addArgument("--output-mode")
-                .help("Specifies how output is controlled; options:\n" +
-                        "SINGLE: Outputs all relevant package records into single output (e.g. file, stdout)\n" +
-                        "        if '--output-location FILE' is specified, writes to file, otherwise to stdout\n" +
-                        "MULTIPLE: Outputs relevant package records into multiple independent files\n" +
-                        "       '--output-location DIRECTORY' argument must be specified")
-                .dest("output_mode")
-                .type(Arguments.caseInsensitiveEnumType(OutputMode.class))
-                .required(true);
+        outputGroup.description("Specifies how output is controlled; there are two types of outputs:\n" +
+                "SINGLE: Outputs all relevant package records into single output (e.g. file, stdout)\n" +
+                "        if '--output-location FILE' is specified, writes to file, otherwise to stdout\n" +
+                "MULTIPLE: Outputs relevant package records into multiple independent files\n" +
+                "          '--output-location DIRECTORY' argument must be specified");
         val outputLocationArgument = outputGroup.addArgument("--output-location")
                 .help("Output path destination")
                 .metavar("PATH")
                 .nargs("?")
                 .type(new FileArgumentType().verifyCanCreate());
-        val outputFormatArgument = outputGroup.addArgument("--output-format")
+        outputGroup.addArgument("--output-format")
                 .help("Specifies the output format for the given --output-mode\n" +
                         "SINGLE:\n" +
                         "  PATHS: Outputs matching package paths on each line\n" +
@@ -125,7 +122,7 @@ public class DecacherCmd {
                     }
                 })
                 .metavar("/glob/**/pattern/*file*")
-                .setDefault(FileSystems.getDefault().getPathMatcher("glob:**/*"));
+                .setDefault(Collections.singletonList(FileSystems.getDefault().getPathMatcher("glob:**/*")));
 
         parser.epilog("In lieu of a package list, a file containing a list may be specified with \"@file\"");
 
@@ -148,14 +145,9 @@ public class DecacherCmd {
                 throw new ArgumentParserException("source type " + sourceType + " requires a specified --source-location PATH", parser, sourceLocationArgument);
             }
             // verify output destination
-            OutputMode outputMode = namespace.get("output_mode");
-            if (outputMode == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
-                throw new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputLocationArgument);
-            }
-            // check output mode with format type
             FormatType formatType = namespace.get("output_format");
-            if (formatType.mode() != outputMode) {
-                throw new ArgumentParserException("output mode " + outputMode + " incompatible with format type " + formatType, parser, outputFormatArgument);
+            if (formatType.mode() == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
+                throw new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputLocationArgument);
             }
         } catch (ArgumentParserException exception) {
             parser.handleError(exception);

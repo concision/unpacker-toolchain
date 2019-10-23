@@ -23,17 +23,17 @@ public class CommandArguments {
     @NonNull
     public final Namespace namespace;
 
+    // source
     @NonNull
     public final SourceType source;
     public final File sourcePath;
 
-    @NonNull
-    public final OutputMode outputMode;
+    // output
     public final File outputPath;
     @NonNull
-
     public final FormatType outputFormat;
 
+    // flags
     public final boolean rawMode;
     // public final boolean cache;
 
@@ -53,9 +53,7 @@ public class CommandArguments {
                 namespace.get("source_type"),
                 namespace.get("source_location"),
                 // output
-                namespace.get("output_mode"),
                 namespace.get("output_location"),
-                // format
                 namespace.get("output_format"),
                 // output flags
                 namespace.getBoolean("output_format_raw"),
