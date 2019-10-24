@@ -1,11 +1,10 @@
 package me.concision.warframe.decacher.api;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 /**
  * Decompression stream for a .cache file input stream
@@ -13,22 +12,29 @@ import lombok.extern.log4j.Log4j2;
  * @author Concision
  * @date 10/7/2019
  */
-@RequiredArgsConstructor
 public class PackageDecompressionInputStream extends InputStream {
     /**
      * Raw compressed input stream
      */
-    @NonNull
-    private final InputStream source;
+    private final DataInputStream source;
     /**
      * Internal decompression buffer
      */
-    private final byte[] buffer = new byte[Character.MAX_VALUE];
+    private byte[] buffer = new byte[Character.MAX_VALUE];
 
     /**
      * Decompressed value buffer
      */
     private ByteArrayInputStream bufferStream;
+
+    /**
+     * Wraps an input stream with a Packages.bin decompression input stream
+     *
+     * @param stream {@link InputStream} to wrap
+     */
+    public PackageDecompressionInputStream(@NonNull InputStream stream) {
+        source = new DataInputStream(stream);
+    }
 
     /**
      * {@inheritDoc}
@@ -82,8 +88,8 @@ public class PackageDecompressionInputStream extends InputStream {
         int blocklen = ((source.read() & 0xff) << 8) | (source.read() & 0xFF);
         int decomplen = ((source.read() & 0xFF) << 8) | (source.read() & 0xFF);
         if (blocklen == decomplen) {
-            int read = source.read(buffer, 0, blocklen);
-            bufferStream = new ByteArrayInputStream(buffer, 0, read);
+            source.readFully(buffer, 0, blocklen);
+            bufferStream = new ByteArrayInputStream(buffer, 0, blocklen);
         } else if (blocklen < decomplen) {
             int compPos = 0;
             int decompPos = 0;
@@ -145,5 +151,15 @@ public class PackageDecompressionInputStream extends InputStream {
         } else {
             throw new IllegalStateException();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException {
+        buffer = null;
+        bufferStream = null;
+        source.close();
     }
 }

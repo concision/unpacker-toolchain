@@ -73,7 +73,7 @@ public class TocStreamReader {
     private void readHeader() throws IOException {
         // header magic value
         header = new byte[4];
-        stream.read(header);
+        stream.readFully(header);
         // verify magic value
         if (!Arrays.equals(header, new byte[]{0x4E, (byte) 0xC6, 0x67, 0x18})) {
             throw new IllegalArgumentException("header magic value mismatch (expected: 0x4EC66718, received: " + Hex.encodeHexString(header) + ")");
@@ -111,10 +111,7 @@ public class TocStreamReader {
                 int depthId = Integer.reverseBytes(stream.readInt());
                 // filename
                 byte[] filenameBuffer = new byte[64];
-                int read = stream.read(filenameBuffer);
-                if (read != filenameBuffer.length) {
-                    throw new IllegalStateException("failed to read 64 byte filename");
-                }
+                stream.readFully(filenameBuffer);
                 int nameEof = 0;
                 while (nameEof < filenameBuffer.length && filenameBuffer[nameEof] != '\0') {
                     nameEof++;
@@ -159,6 +156,9 @@ public class TocStreamReader {
      */
     public Optional<PackageEntry> findEntry(@NonNull String absoluteFilename) throws IOException {
         for (PackageEntry entry; (entry = this.nextEntry()) != null; ) {
+            if (entry.filename().contains("Packages.bin")) {
+                System.out.println(entry);
+            }
             if (entry.filename.equals(absoluteFilename)) {
                 return Optional.of(entry);
             }
