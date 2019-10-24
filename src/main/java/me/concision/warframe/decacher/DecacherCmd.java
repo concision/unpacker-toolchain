@@ -6,7 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.PatternSyntaxException;
 import lombok.val;
 import me.concision.warframe.decacher.output.FormatType;
-import me.concision.warframe.decacher.output.OutputMode;
+import me.concision.warframe.decacher.output.FormatType.OutputMode;
 import me.concision.warframe.decacher.source.SourceType;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -84,7 +84,7 @@ public class DecacherCmd {
                 .nargs("?")
                 .type(new FileArgumentType().verifyCanCreate());
         outputGroup.addArgument("--output-format")
-                .help("Specifies the output format for the given --output-mode\n" +
+                .help("Specifies the output format\n" +
                         "SINGLE:\n" +
                         "  PATHS: Outputs matching package paths on each line\n" +
                         "         (e.g. /Lotus/Path/.../PackageName\\r\\n)\n" +
@@ -164,8 +164,8 @@ public class DecacherCmd {
         Logger log = LogManager.getLogger(DecacherCmd.class);
         log.debug("Namespace: {}", namespace);
         // stdout redirection warning
-        if (namespace.get("output_mode") == OutputMode.SINGLE && namespace.get("output_location") == null) {
-            log.warn("No --output-location specified for --outout-mode SINGLE, defaulting to STDOUT");
+        if (namespace.<FormatType>get("output_format").mode() == OutputMode.SINGLE && namespace.get("output_location") == null) {
+            log.warn("No --output-location specified for a SINGLE format type, defaulting to STDOUT");
         }
 
 
@@ -175,7 +175,8 @@ public class DecacherCmd {
                     .execute();
         } catch (Throwable throwable) {
             // TODO: submit to Sentry
-            throw new Error("an unexpected exception occurred during extraction", throwable);
+            log.fatal("An unexpected exception occurred during extraction", throwable);
+            System.exit(-1);
         }
     }
 
