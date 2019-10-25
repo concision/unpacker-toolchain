@@ -147,7 +147,7 @@ public class OriginSourceCollector implements SourceCollector {
                     .findFirst()
                     .map(entry -> "http://content.warframe.com" + entry.path)
                     .orElseThrow(() -> new RuntimeException("failed to find H.Misc.cache in manifest"));
-            log.info(cacheUrl);
+            log.info("Cache URL: " + cacheUrl);
 
             // download APK file
             HttpGet request = new HttpGet(cacheUrl);
@@ -155,13 +155,13 @@ public class OriginSourceCollector implements SourceCollector {
             CloseableHttpResponse response = httpClient.execute(request);
             HttpEntity entity = response.getEntity();
 
-            log.info(response.getStatusLine());
+            log.info("H.Misc.cache response code: " + response.getStatusLine());
 
             InputStream input = new BufferedInputStream(new LZMACompressorInputStream(new BufferedInputStream(entity.getContent())));
             // skip bytes
-            log.info("Skipping useless files...");
+            log.info("Skipping until Packages.bin");
             IOUtils.skip(input, packageEntry.offset());
-            log.info("Reading Packages.bin");
+            log.info("Found Packages.bin; streaming to next format writer");
 
             // Warframe Packages.bin decompressor
             return new DependentInputStream(new PackageDecompressionInputStream(new BoundedInputStream(
