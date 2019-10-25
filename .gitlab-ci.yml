@@ -12,7 +12,7 @@ build:
   stage: build
   script:
     - mvn clean package
-    - mv target/decacher.* ..
+    - mv target/decacher.* .
   artifacts:
     paths:
       - decacher.exe
