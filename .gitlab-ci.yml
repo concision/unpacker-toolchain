@@ -12,5 +12,8 @@ build:
   stage: build
   script:
     - mvn clean package
+    - mv target/decacher.* ..
   artifacts:
-    paths: ['target/decacher.exe']
+    paths:
+      - decacher.exe
+      - decacher.jar
