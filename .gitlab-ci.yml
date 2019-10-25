@@ -13,5 +13,4 @@ build:
   script:
     - mvn clean package
   artifacts:
-    expose_as: 'Windows build'
     paths: ['target/decacher.exe']
