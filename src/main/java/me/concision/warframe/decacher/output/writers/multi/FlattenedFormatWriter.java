@@ -21,12 +21,10 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
     @Override
     public void publish(Decacher decacher, PackageRecord record) throws IOException {
         File outputPath = decacher.args().outputPath;
-        if (!outputPath.mkdirs()) {
-            throw new RuntimeException("could not create directory: " + outputPath.getAbsolutePath());
-        }
+        outputPath.mkdirs();
 
         String path;
-        switch (record.fullPath()) {
+        switch (record.name()) {
             case ".":
                 path = "_";
                 break;
@@ -34,11 +32,11 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
                 path = "__";
                 break;
             default:
-                path = record.fullPath().replaceAll("[^a-zA-Z0-9.-]", "_");
+                path = record.name().replaceAll("[^a-zA-Z0-9.-]", "_");
         }
 
         try (PrintStream output = new PrintStream(new FileOutputStream(
-                new File(decacher.args().outputPath, path + ".json")
+                new File(decacher.args().outputPath, path + ".json").getAbsoluteFile()
         ))) {
             if (decacher.args().rawMode) {
                 output.print(record.contents());

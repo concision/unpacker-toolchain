@@ -22,10 +22,8 @@ import org.bson.json.JsonWriterSettings;
 public class RecursiveFormatWriter implements RecordFormatWriter {
     @Override
     public void publish(Decacher decacher, PackageRecord record) throws IOException {
-        File outputPath = decacher.args().outputPath;
-        if (!outputPath.mkdirs()) {
-            throw new RuntimeException("could not create directory: " + outputPath.getAbsolutePath());
-        }
+        File file = new File(decacher.args().outputPath, record.fullPath() + ".json").getAbsoluteFile();
+        file.getParentFile().mkdirs();
 
         String filePath = Arrays.stream(record.fullPath().split("/"))
                 .map(path -> {
@@ -41,9 +39,7 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
                 .filter(path -> !path.isEmpty())
                 .collect(Collectors.joining("/"));
 
-        try (PrintStream output = new PrintStream(new FileOutputStream(
-                new File(outputPath, filePath + ".json")
-        ))) {
+        try (PrintStream output = new PrintStream(new FileOutputStream(file))) {
             if (decacher.args().rawMode) {
                 output.print(record.contents());
             } else {
