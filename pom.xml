@@ -17,6 +17,12 @@
         </developer>
     </developers>
 
+    <properties>
+        <windows.version>0.1.0.0</windows.version>
+        <!-- Compilation configuration -->
+        <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
+    </properties>
+
     <dependencies>
         <!-- Lombok -->
         <dependency>
@@ -105,6 +111,7 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+
             <!-- Shade dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -123,10 +130,61 @@
                                 <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class/>
+                                        <Main-Class>me.concision.warframe.decacher.DecacherCmd</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Compile to executable -->
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>1.7.25</version>
+                <executions>
+                    <execution>
+                        <id>l4j-gui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Build from ProGuard output -->
+                            <jar>${project.build.directory}/${project.name}.jar</jar>
+                            <outfile>${project.build.directory}/${project.name}.exe</outfile>
+                            <icon>launch4j/therox.ico</icon>
+                            <versionInfo>
+                                <originalFilename>${project.name}.exe</originalFilename>
+                                <fileVersion>${windows.version}</fileVersion>
+                                <txtFileVersion>${project.version}</txtFileVersion>
+                                <fileDescription>Allows you to become a certified dataminer that gets C&amp;D'd by Digital Extremes</fileDescription>
+                                <companyName>Digital Extremes</companyName>
+                                <copyright>None</copyright>
+                                <productVersion>${windows.version}</productVersion>
+                                <txtProductVersion>${project.version}</txtProductVersion>
+                                <productName>${project.name}</productName>
+                                <internalName>${project.name}</internalName>
+                                <language>ENGLISH_US</language>
+                            </versionInfo>
+                            <classPath>
+                                <mainClass>me.concision.warframe.decacher.DecacherCmd</mainClass>
+                                <!-- dependencies are already shaded, prevent leaking dependency info -->
+                                <addDependencies>false</addDependencies>
+                            </classPath>
+                            <!-- JRE 8 required -->
+                            <jre>
+                                <minVersion>1.8.0</minVersion>
+                            </jre>
+                            <headerType>console</headerType>
+                            <errTitle>${project.name}</errTitle>
+                            <messages>
+                                <startupErr>An error occurred while bootstrapping ${project.name}</startupErr>
+                                <jreVersionErr>JDK 1.8 or higher is required</jreVersionErr>
+                                <launcherErr>An exception occurred with Launch4j</launcherErr>
+                            </messages>
                         </configuration>
                     </execution>
                 </executions>
