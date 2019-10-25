@@ -1,7 +1,6 @@
 package me.concision.warframe.decacher.api;
 
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,6 +11,7 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.Wither;
 import lombok.extern.log4j.Log4j2;
+import org.semver.Version;
 
 /**
  * Reads raw binary Packages.bin file.
@@ -33,8 +33,19 @@ public class PackageParser {
 
         // wrap with data input stream
         try (DataInputStream stream = new DataInputStream(inputStream)) {
-            // 19 byte hash
-            stream.skipBytes(0x1D);
+            // unknown header bytes
+            stream.skipBytes(17);
+
+            int patch = stream.readInt();
+            int minor = stream.readInt();
+            int major = stream.readInt();
+
+            int unknownLength;
+            if (0 <= new Version(major, minor, patch).compareTo(new Version(0, 1, 29))) {
+                unknownLength = 1;
+            } else {
+                unknownLength = 4;
+            }
 
             // read header structures
             int structureCount = Integer.reverseBytes(stream.readInt());
@@ -46,7 +57,7 @@ public class PackageParser {
                 stream.skipBytes(stringLength);
 
                 // unknown integer
-                stream.skipBytes(4);
+                stream.skipBytes(unknownLength);
             }
 
 

@@ -97,6 +97,12 @@
             <artifactId>jna-platform</artifactId>
             <version>4.5.2</version>
         </dependency>
+        <!-- Semver: Version Comparison -->
+        <dependency>
+            <groupId>org.semver</groupId>
+            <artifactId>api</artifactId>
+            <version>0.9.33</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -160,7 +166,9 @@
                                 <originalFilename>${project.name}.exe</originalFilename>
                                 <fileVersion>${windows.version}</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>Allows you to become a certified dataminer that gets C&amp;D'd by Digital Extremes</fileDescription>
+                                <fileDescription>Allows you to become a certified dataminer that gets C&amp;D'd by
+                                    Digital Extremes
+                                </fileDescription>
                                 <companyName>Digital Extremes</companyName>
                                 <copyright>None</copyright>
                                 <productVersion>${windows.version}</productVersion>
