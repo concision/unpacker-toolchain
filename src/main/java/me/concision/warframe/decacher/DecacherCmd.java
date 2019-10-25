@@ -46,6 +46,7 @@ public class DecacherCmd {
 
         // data source
         val sourceGroup = parser.addArgumentGroup("source");
+        sourceGroup.description("Newer Warframe local installations fail package decompression, use ORIGIN for latest");
         sourceGroup.addArgument("--source-type")
                 .help("Method of obtaining a Packages.bin data source\n" +
                         "ORIGIN: Streams directly from Warframe update servers\n" +
@@ -163,10 +164,6 @@ public class DecacherCmd {
         // initialize logging mechanism
         Logger log = LogManager.getLogger(DecacherCmd.class);
         log.debug("Namespace: {}", namespace);
-        // stdout redirection warning
-        if (namespace.<FormatType>get("output_format").mode() == OutputMode.SINGLE && namespace.get("output_location") == null) {
-            log.warn("No --output-location specified for a SINGLE format type, defaulting to STDOUT");
-        }
 
 
         // start extraction

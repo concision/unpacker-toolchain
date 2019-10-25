@@ -49,6 +49,12 @@
             <artifactId>bson</artifactId>
             <version>3.11.0</version>
         </dependency>
+        <!-- JSON -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20190722</version>
+        </dependency>
         <!-- HTTPClient: Performing HTTP requests -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -78,6 +84,12 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.13</version>
+        </dependency>
+        <!-- JNA for Windows -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>4.5.2</version>
         </dependency>
     </dependencies>
 
