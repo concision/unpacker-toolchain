@@ -1,32 +1,23 @@
 package me.concision.warframe.decacher.output;
 
+import java.io.IOException;
+import java.io.InputStream;
 import lombok.NonNull;
-import me.concision.warframe.decacher.CommandArguments;
-import me.concision.warframe.decacher.api.PackageParser.PackageRecord;
+import me.concision.warframe.decacher.Decacher;
 
 /**
- * Formats package records and writes to output destination.
+ * Processed packages input stream and formats the result to the output destination
  *
  * @author Concision
  * @date 10/21/2019
  */
 public interface OutputFormatWriter {
     /**
-     * Sets format writer context, {@link #complete()} should be executed to conclude writing.
+     * Writes packages input stream to an output using an implemented format
      *
-     * @param arguments {@link CommandArguments} parameters
+     * @param decacher       associated {@link Decacher} parameter instance
+     * @param packagesStream Packages.bin input stream
+     * @throws IOException if an underlying IO exception is thrown
      */
-    void setContext(CommandArguments arguments);
-
-    /**
-     * Publishes a package record to the format writer
-     *
-     * @param record {@link PackageRecord} instance
-     */
-    void publish(@NonNull PackageRecord record);
-
-    /**
-     * Concludes output writing; releases resources
-     */
-    void complete();
+    void format(@NonNull Decacher decacher, @NonNull InputStream packagesStream) throws IOException;
 }

@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.concision.warframe.decacher.CommandArguments;
+import me.concision.warframe.decacher.source.collectors.BinarySourceCollector;
+import me.concision.warframe.decacher.source.collectors.FolderSourceCollector;
+import me.concision.warframe.decacher.source.collectors.InstallSourceCollector;
+import me.concision.warframe.decacher.source.collectors.OriginSourceCollector;
 
 /**
  * Specifies the data source for acquiring Packages.bin

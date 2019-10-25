@@ -156,9 +156,6 @@ public class TocStreamReader {
      */
     public Optional<PackageEntry> findEntry(@NonNull String absoluteFilename) throws IOException {
         for (PackageEntry entry; (entry = this.nextEntry()) != null; ) {
-            if (entry.filename().contains("Packages.bin")) {
-                System.out.println(entry);
-            }
             if (entry.filename.equals(absoluteFilename)) {
                 return Optional.of(entry);
             }
