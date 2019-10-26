@@ -2,7 +2,6 @@ package me.concision.warframe.decacher;
 
 import java.nio.file.FileSystems;
 import java.util.Collections;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.PatternSyntaxException;
 import lombok.val;
 import me.concision.warframe.decacher.output.FormatType;
@@ -66,11 +65,6 @@ public class DecacherCmd {
 //                .help("Caches intermediate results in $TEMP folder to increase performance of multiple executions")
 //                .dest("cache")
 //                .action(Arguments.storeTrue());
-        sourceGroup.addArgument("--algorithm") // memes
-                .help("Package extraction algorithm to apply during the decaching process")
-                .dest("algorithm")
-                .type(Arguments.caseInsensitiveEnumType(AlgorithmType.class))
-                .required(true);
 
         // data output
         val outputGroup = parser.addArgumentGroup("output");
@@ -132,13 +126,6 @@ public class DecacherCmd {
 
 
         // validate
-        // memes
-        AlgorithmType algorithm = namespace.get("algorithm");
-        if (algorithm == AlgorithmType.MECHAGENT
-                || algorithm == AlgorithmType.RANDOM && ThreadLocalRandom.current().nextInt(2) == 0
-        ) {
-            throw new OutOfMemoryError("please reference https://downloadmorewam.com for detailed fix");
-        }
         // verify source has source location
         try {
             SourceType sourceType = namespace.get("source_type");
@@ -175,24 +162,5 @@ public class DecacherCmd {
             log.fatal("An unexpected exception occurred during extraction", throwable);
             System.exit(-1);
         }
-    }
-
-
-    /**
-     * Meme algorithm type, only {@link #NOT_MECHAGENT} provides deterministic decaching behaviour
-     */
-    private enum AlgorithmType {
-        /**
-         * Executes the actual decaching process
-         */
-        MECHAGENT,
-        /**
-         * Throws an {@link OutOfMemoryError} immediately
-         */
-        NOT_MECHAGENT,
-        /**
-         * Arbitrarily selects a {@link AlgorithmType}
-         */
-        RANDOM
     }
 }
