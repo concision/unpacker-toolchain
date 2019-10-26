@@ -108,8 +108,9 @@ public class OriginSourceCollector implements SourceCollector {
             String tocUrl = files.stream()
                     .filter(file -> file.name.equals("H.Misc.toc"))
                     .findFirst()
-                    .map(entry -> "http://content.warframe.com" + entry.path)
+                    .map(entry -> "http://origin.warframe.com" + entry.path)
                     .orElseThrow(() -> new RuntimeException("failed to find H.Misc.toc in manifest"));
+            log.info("TOC Url: " + tocUrl);
 
             // form request
             HttpGet request = new HttpGet(tocUrl);
@@ -120,7 +121,6 @@ public class OriginSourceCollector implements SourceCollector {
 
             // parse response in real-time
             try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
-
                 Optional<PackageEntry> xd = new TocStreamReader(new BufferedInputStream(stream)).findEntry("/Packages.bin");
 
                 if (!xd.isPresent()) {
@@ -145,7 +145,7 @@ public class OriginSourceCollector implements SourceCollector {
             String cacheUrl = files.stream()
                     .filter(file -> file.name.equals("H.Misc.cache"))
                     .findFirst()
-                    .map(entry -> "http://content.warframe.com" + entry.path)
+                    .map(entry -> "http://origin.warframe.com" + entry.path)
                     .orElseThrow(() -> new RuntimeException("failed to find H.Misc.cache in manifest"));
             log.info("Cache URL: " + cacheUrl);
 
