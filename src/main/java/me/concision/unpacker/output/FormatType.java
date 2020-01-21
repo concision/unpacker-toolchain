@@ -16,8 +16,7 @@ import me.concision.unpacker.output.writers.single.RecordsFormatWriter;
  * Specifies the output format type for a specified {@link OutputMode}
  *
  * @author Concision
- * @date 10/9/2019
- */
+*/
 @RequiredArgsConstructor
 public enum FormatType {
     // single

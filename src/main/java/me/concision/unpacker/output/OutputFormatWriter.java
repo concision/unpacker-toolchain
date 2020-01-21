@@ -9,8 +9,7 @@ import me.concision.unpacker.Unpacker;
  * Processed packages input stream and formats the result to the output destination
  *
  * @author Concision
- * @date 10/21/2019
- */
+*/
 public interface OutputFormatWriter {
     /**
      * Writes packages input stream to an output using an implemented format

@@ -12,8 +12,7 @@ import me.concision.unpacker.output.OutputFormatWriter;
  * Control flow for extraction process
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 @Log4j2
 @RequiredArgsConstructor
 public class Unpacker {

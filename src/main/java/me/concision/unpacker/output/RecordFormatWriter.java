@@ -14,8 +14,7 @@ import org.apache.logging.log4j.Logger;
  * Parses Packages.bin input stream into package records and publishes
  *
  * @author Concision
- * @date 10/23/2019
- */
+*/
 public interface RecordFormatWriter extends OutputFormatWriter {
     Logger log = LogManager.getLogger(RecordFormatWriter.class);
 

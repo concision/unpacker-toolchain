@@ -13,8 +13,7 @@ import me.concision.unpacker.source.SourceType;
  * See {@link SourceType#BINARY}
  *
  * @author Concision
- * @date 10/21/2019
- */
+*/
 public class BinarySourceCollector implements SourceCollector {
     @Override
     public InputStream generate(CommandArguments args) throws IOException {

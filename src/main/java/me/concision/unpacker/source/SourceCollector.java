@@ -10,8 +10,7 @@ import me.concision.unpacker.CommandArguments;
  * Streams may be less performant if they are lazily generated.
  *
  * @author Concision
- * @date 10/21/2019
- */
+*/
 public interface SourceCollector {
     /**
      * Generates a Packages.bin data stream

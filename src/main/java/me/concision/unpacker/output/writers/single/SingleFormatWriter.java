@@ -16,8 +16,7 @@ import org.apache.commons.compress.utils.IOUtils;
  * An abstract format writer for writing to a single output destination
  *
  * @author Concision
- * @date 10/24/2019
- */
+*/
 public abstract class SingleFormatWriter implements OutputFormatWriter, Closeable {
     /**
      * Destination output stream

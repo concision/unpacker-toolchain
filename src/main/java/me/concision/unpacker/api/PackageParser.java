@@ -17,8 +17,7 @@ import org.semver.Version;
  * Reads raw binary Packages.bin file.
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 @Log4j2
 public class PackageParser {
     /**

@@ -10,8 +10,7 @@ import org.bson.Document;
  * See {@link FormatType#RECORDS}
  *
  * @author Concision
- * @date 10/23/2019
- */
+*/
 public class RecordsFormatWriter extends SingleRecordFormatWriter {
     @Override
     public void publish(Unpacker unpacker, PackageParser.PackageRecord record) {

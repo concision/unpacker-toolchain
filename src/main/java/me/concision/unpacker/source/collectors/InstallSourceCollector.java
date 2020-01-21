@@ -17,8 +17,7 @@ import org.apache.commons.codec.binary.Base64;
  * See {@link SourceType#INSTALL}
  *
  * @author Concision
- * @date 10/21/2019
- */
+*/
 @Log4j2
 public class InstallSourceCollector implements SourceCollector {
     /**
