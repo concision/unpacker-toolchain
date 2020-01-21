@@ -156,7 +156,6 @@ public class UnpackerCmd {
             new Unpacker(CommandArguments.from(namespace))
                     .execute();
         } catch (Throwable throwable) {
-            // TODO: submit to Sentry
             log.fatal("An unexpected exception occurred during extraction", throwable);
             System.exit(-1);
         }

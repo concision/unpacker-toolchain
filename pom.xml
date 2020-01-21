@@ -7,7 +7,7 @@
     <groupId>me.concision</groupId>
     <artifactId>unpacker</artifactId>
     <version>1.0.0</version>
-
+    
     <description>Extracts package information from an unnamed game's files</description>
 
     <developers>
@@ -16,8 +16,15 @@
         </developer>
     </developers>
 
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>api</module>
+        <module>cli</module>
+    </modules>
+
     <properties>
-        <windows.version>1.0.0.0</windows.version>
+        <windows.version>1.1.0.0</windows.version>
         <!-- Compilation configuration -->
         <project.build.sourceEncoding>ISO-8859-1</project.build.sourceEncoding>
     </properties>
@@ -30,170 +37,5 @@
             <version>1.18.2</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Log4J: Logging -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.11.2</version>
-        </dependency>
-        <!-- Sentry: Error capturing -->
-        <dependency>
-            <groupId>io.sentry</groupId>
-            <artifactId>sentry</artifactId>
-            <version>1.7.20</version>
-        </dependency>
-        <!-- Argparse4J: Command line argument parsing -->
-        <dependency>
-            <groupId>net.sourceforge.argparse4j</groupId>
-            <artifactId>argparse4j</artifactId>
-            <version>0.8.1</version>
-        </dependency>
-        <!-- BSON: JSON serialization; preserves insertion order -->
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>bson</artifactId>
-            <version>3.11.0</version>
-        </dependency>
-        <!-- JSON -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20190722</version>
-        </dependency>
-        <!-- HTTPClient: Performing HTTP requests -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.7</version>
-        </dependency>
-        <!-- compress: wrapped LZMA compression API -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-            <version>1.19</version>
-        </dependency>
-        <!-- xz: underlying LZMA decompression implementation -->
-        <dependency>
-            <groupId>org.tukaani</groupId>
-            <artifactId>xz</artifactId>
-            <version>1.8</version>
-        </dependency>
-        <!-- IO: buffer operations -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-        </dependency>
-        <!-- Codec: Hex encoding -->
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.13</version>
-        </dependency>
-        <!-- JNA for Windows -->
-        <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna-platform</artifactId>
-            <version>4.5.2</version>
-        </dependency>
-        <!-- Semver: Version Comparison -->
-        <dependency>
-            <groupId>org.semver</groupId>
-            <artifactId>api</artifactId>
-            <version>0.9.33</version>
-        </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <!-- Compile sources -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-
-            <!-- Shade dependencies -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <finalName>${project.name}</finalName>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <transformers>
-                                <!-- Specify entrypoint -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <manifestEntries>
-                                        <Main-Class>me.concision.unpacker.UnpackerCmd</Main-Class>
-                                    </manifestEntries>
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Compile to executable -->
-            <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <version>1.7.25</version>
-                <executions>
-                    <execution>
-                        <id>l4j-gui</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>launch4j</goal>
-                        </goals>
-                        <configuration>
-                            <!-- Build from ProGuard output -->
-                            <jar>${project.build.directory}/${project.name}.jar</jar>
-                            <outfile>${project.build.directory}/${project.name}.exe</outfile>
-                            <icon>launch4j/therox.ico</icon>
-                            <versionInfo>
-                                <originalFilename>${project.name}.exe</originalFilename>
-                                <fileVersion>${windows.version}</fileVersion>
-                                <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>Packages reader</fileDescription>
-                                <companyName>None</companyName>
-                                <copyright>None</copyright>
-                                <productVersion>${windows.version}</productVersion>
-                                <txtProductVersion>${project.version}</txtProductVersion>
-                                <productName>${project.name}</productName>
-                                <internalName>${project.name}</internalName>
-                                <language>ENGLISH_US</language>
-                            </versionInfo>
-                            <classPath>
-                                <mainClass>me.concision.unpacker.UnpackerCmd</mainClass>
-                                <!-- dependencies are already shaded, prevent leaking dependency info -->
-                                <addDependencies>false</addDependencies>
-                            </classPath>
-                            <!-- JRE 8 required -->
-                            <jre>
-                                <minVersion>1.8.0</minVersion>
-                            </jre>
-                            <headerType>console</headerType>
-                            <errTitle>${project.name}</errTitle>
-                            <messages>
-                                <startupErr>An error occurred while bootstrapping ${project.name}</startupErr>
-                                <jreVersionErr>JDK 1.8 or higher is required</jreVersionErr>
-                                <launcherErr>An exception occurred with Launch4j</launcherErr>
-                            </messages>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
