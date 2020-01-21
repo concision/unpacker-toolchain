@@ -4,16 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>me.concision.warframe</groupId>
-    <artifactId>decacher</artifactId>
+    <groupId>me.concision</groupId>
+    <artifactId>unpacker</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 
-    <description>Extracts package information from Warframe game files</description>
+    <description>Extracts package information from an unnamed game's files</description>
 
     <developers>
         <developer>
             <name>Concision</name>
-            <email>contact@concision.me</email>
         </developer>
     </developers>
 
@@ -136,7 +135,7 @@
                                 <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>me.concision.warframe.decacher.DecacherCmd</Main-Class>
+                                        <Main-Class>me.concision.unpacker.UnpackerCmd</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -166,10 +165,8 @@
                                 <originalFilename>${project.name}.exe</originalFilename>
                                 <fileVersion>${windows.version}</fileVersion>
                                 <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>Allows you to become a certified dataminer that gets C&amp;D'd by
-                                    Digital Extremes
-                                </fileDescription>
-                                <companyName>Digital Extremes</companyName>
+                                <fileDescription>Packages reader</fileDescription>
+                                <companyName>None</companyName>
                                 <copyright>None</copyright>
                                 <productVersion>${windows.version}</productVersion>
                                 <txtProductVersion>${project.version}</txtProductVersion>
@@ -178,7 +175,7 @@
                                 <language>ENGLISH_US</language>
                             </versionInfo>
                             <classPath>
-                                <mainClass>me.concision.warframe.decacher.DecacherCmd</mainClass>
+                                <mainClass>me.concision.unpacker.UnpackerCmd</mainClass>
                                 <!-- dependencies are already shaded, prevent leaking dependency info -->
                                 <addDependencies>false</addDependencies>
                             </classPath>
