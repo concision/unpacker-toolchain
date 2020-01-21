@@ -20,8 +20,7 @@ import org.apache.logging.log4j.Logger;
  * Command-line entrypoint; processes and validates command-line arguments
  *
  * @author Concision
- * @date 10/5/2019
- */
+*/
 public class UnpackerCmd {
     public static void main(String[] args) {
         // construct argument parser

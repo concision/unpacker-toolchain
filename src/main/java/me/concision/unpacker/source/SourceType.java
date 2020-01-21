@@ -16,8 +16,7 @@ import me.concision.unpacker.source.collectors.OriginSourceCollector;
  * Specifies the data source for acquiring Packages.bin
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 @RequiredArgsConstructor
 public enum SourceType {
     /**

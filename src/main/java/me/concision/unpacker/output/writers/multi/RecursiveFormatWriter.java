@@ -18,8 +18,7 @@ import org.bson.json.JsonWriterSettings;
  * See {@link FormatType#RECURSIVE}
  *
  * @author Concision
- * @date 10/23/2019
- */
+*/
 public class RecursiveFormatWriter implements RecordFormatWriter {
     @Override
     public void publish(Unpacker unpacker, PackageParser.PackageRecord record) throws IOException {

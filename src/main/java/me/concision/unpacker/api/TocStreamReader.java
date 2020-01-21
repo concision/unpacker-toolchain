@@ -18,8 +18,7 @@ import org.apache.commons.codec.binary.Hex;
  * Reads entries from a .toc file input stream
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 public class TocStreamReader {
     /**
      * Wrapped decompressed Packages.bin input stream

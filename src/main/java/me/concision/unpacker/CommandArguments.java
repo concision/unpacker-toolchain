@@ -15,8 +15,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
  * A runtime configuration to allow code to be more concise when referencing arguments
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommandArguments {
     @NonNull

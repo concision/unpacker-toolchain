@@ -44,8 +44,7 @@ import org.apache.http.protocol.HttpContext;
  * See {@link SourceType#ORIGIN}
  *
  * @author Concision
- * @date 10/21/2019
- */
+*/
 @Log4j2
 public class OriginSourceCollector implements SourceCollector {
     /**

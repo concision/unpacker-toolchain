@@ -13,8 +13,7 @@ import org.bson.Document;
  * Parses raw packages to a JSON document structure
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 public class PackageJsonifier {
     // regexes for ease of writng parser
     private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");

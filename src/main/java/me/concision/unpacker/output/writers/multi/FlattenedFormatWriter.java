@@ -16,8 +16,7 @@ import org.bson.json.JsonWriterSettings;
  * See {@link FormatType#FLATTENED}
  *
  * @author Concision
- * @date 10/23/2019
- */
+*/
 public class FlattenedFormatWriter implements RecordFormatWriter {
     @Override
     public void publish(Unpacker unpacker, PackageParser.PackageRecord record) throws IOException {

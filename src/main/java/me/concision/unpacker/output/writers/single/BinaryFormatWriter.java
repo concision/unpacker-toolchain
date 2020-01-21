@@ -11,8 +11,7 @@ import org.apache.commons.compress.utils.IOUtils;
  * See {@link FormatType#BINARY}
  *
  * @author Concision
- * @date 10/23/2019
- */
+*/
 @Log4j2
 public class BinaryFormatWriter extends SingleFormatWriter {
     @Override

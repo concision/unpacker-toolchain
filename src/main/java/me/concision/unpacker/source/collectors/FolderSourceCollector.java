@@ -18,8 +18,7 @@ import org.apache.commons.io.IOUtils;
  * See {@link SourceType#FOLDER}
  *
  * @author Concision
- * @date 10/21/2019
- */
+*/
 public class FolderSourceCollector implements SourceCollector {
     @Override
     public InputStream generate(CommandArguments args) throws IOException {
@@ -39,7 +38,7 @@ public class FolderSourceCollector implements SourceCollector {
      * @param tocStream   H.Misc.toc stream
      * @param cacheStream H.Misc.cache stream
      * @return Packages.bin stream
-     * @throws IOException
+     * @throws IOException if an exception occurs while reading from disk
      */
     InputStream generate(@NonNull InputStream tocStream, @NonNull InputStream cacheStream) throws IOException {
         // read Packages.bin entry

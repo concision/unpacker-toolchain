@@ -10,8 +10,7 @@ import lombok.NonNull;
  * Decompression stream for a .cache file input stream
  *
  * @author Concision
- * @date 10/7/2019
- */
+*/
 public class PackageDecompressionInputStream extends InputStream {
     /**
      * Raw compressed input stream
