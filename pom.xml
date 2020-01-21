@@ -6,7 +6,7 @@
 
     <groupId>me.concision</groupId>
     <artifactId>unpacker</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     
     <description>Extracts package information from an unnamed game's files</description>
 
