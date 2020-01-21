@@ -10,7 +10,6 @@ import java.util.Queue;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.Wither;
-import lombok.extern.log4j.Log4j2;
 import org.semver.Version;
 
 /**
@@ -18,7 +17,6 @@ import org.semver.Version;
  *
  * @author Concision
 */
-@Log4j2
 public class PackageParser {
     /**
      * Parses a raw full input stream of Packages.bin

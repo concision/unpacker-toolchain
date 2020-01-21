@@ -12,6 +12,7 @@ import me.concision.unpacker.CommandArguments;
 import me.concision.unpacker.source.SourceCollector;
 import me.concision.unpacker.source.SourceType;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
 
 /**
  * See {@link SourceType#INSTALL}
@@ -23,7 +24,7 @@ public class InstallSourceCollector implements SourceCollector {
     /**
      * Windows registry location; slightly obfuscated to prevent search indexing
      */
-    private static final String REGISTRY_PATH = new String(Base64.decodeBase64("U29mdHdhcmVcRGlnaXRhbCBFeHRyZW1lc1xXYXJmcmFtZVxMYXVuY2hlcg=="), StandardCharsets.ISO_8859_1);
+    private static final String REGISTRY_PATH = new String(Base64Converter.parseBase64Binary("U29mdHdhcmVcRGlnaXRhbCBFeHRyZW1lc1xXYXJmcmFtZVxMYXVuY2hlcg=="), StandardCharsets.ISO_8859_1);
 
     @Override
     public InputStream generate(CommandArguments args) throws IOException {

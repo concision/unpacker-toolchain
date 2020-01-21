@@ -39,18 +39,19 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
+import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
 
 /**
  * See {@link SourceType#ORIGIN}
  *
  * @author Concision
-*/
+ */
 @Log4j2
 public class OriginSourceCollector implements SourceCollector {
     /**
      * Origin server; slightly obfuscated to prevent search indexing
      */
-    private static final String ORIGIN_URL = new String(Base64.decodeBase64("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20="), StandardCharsets.ISO_8859_1);
+    private static final String ORIGIN_URL = new String(Base64Converter.parseBase64Binary("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20="), StandardCharsets.ISO_8859_1);
 
     @Override
     public InputStream generate(@NonNull CommandArguments args) {
