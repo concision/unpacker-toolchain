@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration name="Unpacker" status="INFO">
+<Configuration name="Extractor" status="INFO">
     <Loggers>
         <Root level="TRACE">
-            <AppenderRef ref="Console" level="${sys:unpacker.verbose:-ERROR}"/>
+            <AppenderRef ref="Console" level="${sys:extractor.verbose:-ERROR}"/>
         </Root>
     </Loggers>
 

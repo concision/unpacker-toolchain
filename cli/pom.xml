@@ -6,19 +6,19 @@
 
     <parent>
         <groupId>me.concision</groupId>
-        <artifactId>unpacker</artifactId>
+        <artifactId>extractor</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <groupId>me.concision.unpacker</groupId>
+    <groupId>me.concision.extractor</groupId>
     <artifactId>cli-tool</artifactId>
 
     <description>A CLI tool to extract manifest files from package caches</description>
 
     <dependencies>
-        <!-- Unpacker IO API: Manipulate package streams -->
+        <!-- Extractor IO API: Manipulate package streams -->
         <dependency>
-            <groupId>me.concision.unpacker</groupId>
+            <groupId>me.concision.extractor</groupId>
             <artifactId>io-api</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -103,7 +103,7 @@
                                 <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>me.concision.unpacker.UnpackerCmd</Main-Class>
+                                        <Main-Class>me.concision.extractor.ExtractorCmd</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -143,7 +143,7 @@
                                 <language>ENGLISH_US</language>
                             </versionInfo>
                             <classPath>
-                                <mainClass>me.concision.unpacker.UnpackerCmd</mainClass>
+                                <mainClass>me.concision.extractor.ExtractorCmd</mainClass>
                                 <!-- dependencies are already shaded, prevent leaking dependency info -->
                                 <addDependencies>false</addDependencies>
                             </classPath>
