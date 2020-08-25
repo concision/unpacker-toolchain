@@ -5,15 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.concision</groupId>
-        <artifactId>extractor</artifactId>
+        <groupId>me.concision.unnamed</groupId>
+        <artifactId>packages</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <groupId>me.concision.extractor</groupId>
+    <groupId>me.concision.unnamed.packages</groupId>
     <artifactId>io-api</artifactId>
 
-    <description>IO api to programmatically manipulate and extract package caches </description>
+    <description>IO api to programmatically manipulate and extract package caches</description>
 
     <dependencies>
         <!-- BSON: JSON serialization; preserves insertion order -->
