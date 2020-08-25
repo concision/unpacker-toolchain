@@ -19,19 +19,21 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>io-api</module>
         <module>server</module>
     </modules>
 
+    <!-- Skip cli-tool during Docker builds -->
     <profiles>
         <profile>
             <id>non-docker</id>
             <activation>
+                <!-- activate if NOT present -->
                 <property>
                     <name>!env.DOCKER</name>
                 </property>
             </activation>
             <modules>
-                <module>io-api</module>
                 <module>cli</module>
             </modules>
         </profile>
@@ -52,4 +54,15 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Resolves issues with dependency:go-offline not handling intra-project module dependencies -->
+            <plugin>
+                <groupId>de.qaware.maven</groupId>
+                <artifactId>go-offline-maven-plugin</artifactId>
+                <version>1.2.5</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>

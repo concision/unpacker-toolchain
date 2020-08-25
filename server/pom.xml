@@ -15,6 +15,16 @@
 
     <description>A dockerized HTTP server designed to archive package data and provide historical data through an REST API</description>
 
+    <dependencies>
+        <!-- Packages IO API: Manipulate package streams -->
+        <dependency>
+            <groupId>me.concision.unnamed.packages</groupId>
+            <artifactId>io-api</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
             <!-- Compile sources -->

@@ -16,21 +16,27 @@ RUN dos2unix /packages/server/scripts/*.sh && \
 ### Compile Maven Project
 FROM maven:3.6.3-openjdk-15 as compiler
 
-# copy project manifests
-COPY ./pom.xml /packages/
-COPY ./server/pom.xml /packages/server/
-
+# mark environment as docker; will disable other modules via profiles
+ENV DOCKER=true
 
 # set current work directory
-WORKDIR /packages/server/
+WORKDIR /packages/
+
+# copy project module manifests
+COPY ./pom.xml /packages/
+COPY ./server/pom.xml /packages/server/
+COPY ./io-api/pom.xml /packages/io-api/
 
 # fetch and cache dependencies
-RUN mvn dependency:go-offline
+RUN mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies -Dstyle.color=always -Djansi.force=true
 
-# copy project sources
-COPY ./server/src /packages/server/src/
+# copy io-api module
+COPY ./io-api/ /packages/io-api/
+# copy api-server module
+COPY ./server/ /packages/server/
+
 # compile project artifacts for api server
-RUN DOCKER=true mvn package -Dstyle.color=always
+RUN mvn clean package -Dstyle.color=always -Djansi.force=true
 
 
 ### Runtime Application
