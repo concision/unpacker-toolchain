@@ -7,7 +7,7 @@
     <groupId>me.concision.unnamed</groupId>
     <artifactId>packages</artifactId>
     <version>1.1.0</version>
-    
+
     <description>Extracts package information from an unnamed game's files</description>
 
     <developers>
@@ -19,10 +19,23 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>io-api</module>
-        <module>cli</module>
         <module>server</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>non-docker</id>
+            <activation>
+                <property>
+                    <name>!env.DOCKER</name>
+                </property>
+            </activation>
+            <modules>
+                <module>io-api</module>
+                <module>cli</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <properties>
         <windows.version>1.1.0.0</windows.version>

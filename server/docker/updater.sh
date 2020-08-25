@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # game client installation directory
-INSTALL_ROOT=/packages/installation
+INSTALL_ROOT=${1:-/packages/server/installation}
 
 # run game client update process with wine
 # shellcheck disable=SC2046 disable=SC2034

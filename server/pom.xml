@@ -40,6 +40,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <finalName>packages-server</finalName>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
