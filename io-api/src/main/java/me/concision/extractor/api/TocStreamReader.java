@@ -25,7 +25,10 @@ public class TocStreamReader {
      * Wrapped decompressed Packages.bin input stream
      */
     private final DataInputStream stream;
-
+    /**
+     * Directory hierarchy
+     */
+    private final List<String> hierarchy = new LinkedList<>(Collections.singletonList(""));
     /**
      * TOC file header
      */
@@ -34,11 +37,6 @@ public class TocStreamReader {
      * TOC file format version
      */
     private int version;
-
-    /**
-     * Directory hierarchy
-     */
-    private final List<String> hierarchy = new LinkedList<>(Collections.singletonList(""));
 
     /**
      * Constructs a TOC reader from an input stream

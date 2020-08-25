@@ -1,20 +1,18 @@
 package me.concision.extractor.api;
 
+import lombok.NonNull;
+
+import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.sun.istack.internal.NotNull;
-import lombok.NonNull;
-
-import javax.annotation.Nonnull;
-
 /**
  * Decompression stream for a .cache file input stream
  *
  * @author Concision
-*/
+ */
 public class PackageDecompressionInputStream extends InputStream {
     /**
      * Raw compressed input stream

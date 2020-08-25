@@ -332,7 +332,7 @@ public class PackageJsonifier {
      * Sets a position to a value in a list
      *
      * @param list  list to set
-     * @param index index to set, if it exceeeds list size, nulls are added
+     * @param index index to set, if it exceeds list size, nulls are added
      * @param value element value
      */
     private static void set(List<Object> list, int index, Object value) {
