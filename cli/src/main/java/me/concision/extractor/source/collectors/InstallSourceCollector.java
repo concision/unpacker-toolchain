@@ -23,6 +23,7 @@ public class InstallSourceCollector implements SourceCollector {
     /**
      * Windows registry location; slightly obfuscated to prevent search indexing
      */
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String REGISTRY_PATH = new String(Base64Converter.parseBase64Binary("U29mdHdhcmVcRGlnaXRhbCBFeHRyZW1lc1xXYXJmcmFtZVxMYXVuY2hlcg=="), StandardCharsets.ISO_8859_1);
 
     @Override

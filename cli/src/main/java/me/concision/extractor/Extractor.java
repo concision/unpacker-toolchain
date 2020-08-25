@@ -30,7 +30,7 @@ public class Extractor {
     public void execute() {
         // prepare environment
         this.prepare();
-        // decache with environment
+        // cache with environment
         this.decache();
     }
 
