@@ -103,7 +103,7 @@
                                 <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>me.concision.extractor.ExtractorCmd</Main-Class>
+                                        <Main-Class>me.concision.unnamed.packages.cli.ExtractorCmd</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -143,7 +143,7 @@
                                 <language>ENGLISH_US</language>
                             </versionInfo>
                             <classPath>
-                                <mainClass>me.concision.extractor.ExtractorCmd</mainClass>
+                                <mainClass>me.concision.unnamed.packages.cli.ExtractorCmd</mainClass>
                                 <!-- dependencies are already shaded, prevent leaking dependency info -->
                                 <addDependencies>false</addDependencies>
                             </classPath>
