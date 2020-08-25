@@ -1,9 +1,5 @@
 package me.concision.extractor;
 
-import java.io.File;
-import java.nio.file.PathMatcher;
-import java.util.Collections;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +7,16 @@ import me.concision.extractor.output.FormatType;
 import me.concision.extractor.source.SourceType;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import java.io.File;
+import java.nio.file.PathMatcher;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * A runtime configuration to allow code to be more concise when referencing arguments
  *
  * @author Concision
-*/
+ */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommandArguments {
     @NonNull

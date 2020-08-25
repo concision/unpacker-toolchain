@@ -1,6 +1,5 @@
 package me.concision.extractor;
 
-import java.io.InputStream;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -8,11 +7,13 @@ import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import me.concision.extractor.output.OutputFormatWriter;
 
+import java.io.InputStream;
+
 /**
  * Control flow for extraction process
  *
  * @author Concision
-*/
+ */
 @Log4j2
 @RequiredArgsConstructor
 public class Extractor {

@@ -1,22 +1,23 @@
 package me.concision.extractor.output.writers.single;
 
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import lombok.NonNull;
 import me.concision.extractor.CommandArguments;
 import me.concision.extractor.Extractor;
 import me.concision.extractor.output.OutputFormatWriter;
 import org.apache.commons.compress.utils.IOUtils;
 
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+
 /**
  * An abstract format writer for writing to a single output destination
  *
  * @author Concision
-*/
+ */
 public abstract class SingleFormatWriter implements OutputFormatWriter, Closeable {
     /**
      * Destination output stream

@@ -1,8 +1,5 @@
 package me.concision.extractor;
 
-import java.nio.file.FileSystems;
-import java.util.Collections;
-import java.util.regex.PatternSyntaxException;
 import lombok.val;
 import me.concision.extractor.output.FormatType;
 import me.concision.extractor.output.FormatType.OutputMode;
@@ -16,11 +13,15 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.file.FileSystems;
+import java.util.Collections;
+import java.util.regex.PatternSyntaxException;
+
 /**
  * Command-line entrypoint; processes and validates command-line arguments
  *
  * @author Concision
-*/
+ */
 public class ExtractorCmd {
     public static void main(String[] args) {
         // construct argument parser

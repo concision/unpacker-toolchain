@@ -11,7 +11,7 @@ import org.bson.json.JsonWriterSettings;
  * See {@link FormatType#MAP}
  *
  * @author Concision
-*/
+ */
 public class MapFormatWriter extends SingleRecordFormatWriter {
     private final Document document = new Document();
 

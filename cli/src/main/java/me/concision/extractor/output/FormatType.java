@@ -1,6 +1,5 @@
 package me.concision.extractor.output;
 
-import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +11,13 @@ import me.concision.extractor.output.writers.single.MapFormatWriter;
 import me.concision.extractor.output.writers.single.PathsFormatWriter;
 import me.concision.extractor.output.writers.single.RecordsFormatWriter;
 
+import java.util.function.Supplier;
+
 /**
  * Specifies the output format type for a specified {@link OutputMode}
  *
  * @author Concision
-*/
+ */
 @RequiredArgsConstructor
 public enum FormatType {
     // single

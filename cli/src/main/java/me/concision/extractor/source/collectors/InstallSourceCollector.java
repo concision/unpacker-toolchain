@@ -2,22 +2,22 @@ package me.concision.extractor.source.collectors;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
 import lombok.extern.log4j.Log4j2;
 import me.concision.extractor.CommandArguments;
 import me.concision.extractor.source.SourceCollector;
 import me.concision.extractor.source.SourceType;
 import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
  * See {@link SourceType#INSTALL}
  *
  * @author Concision
-*/
+ */
 @Log4j2
 public class InstallSourceCollector implements SourceCollector {
     /**
@@ -34,7 +34,8 @@ public class InstallSourceCollector implements SourceCollector {
         String downloadDir = null;
         try {
             downloadDir = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, REGISTRY_PATH, "DownloadDir");
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
         log.info("Download directory: " + downloadDir);
 
         File gameDirectory;

@@ -8,7 +8,7 @@ import me.concision.extractor.output.FormatType;
  * See {@link FormatType#PATHS}
  *
  * @author Concision
-*/
+ */
 public class PathsFormatWriter extends SingleRecordFormatWriter {
     @Override
     public void publish(Extractor extractor, PackageParser.PackageRecord record) {

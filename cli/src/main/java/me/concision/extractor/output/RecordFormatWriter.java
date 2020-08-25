@@ -1,20 +1,21 @@
 package me.concision.extractor.output;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Paths;
-import java.util.Queue;
 import lombok.NonNull;
 import me.concision.extractor.Extractor;
 import me.concision.extractor.api.PackageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.Queue;
+
 /**
  * Parses Packages.bin input stream into package records and publishes
  *
  * @author Concision
-*/
+ */
 public interface RecordFormatWriter extends OutputFormatWriter {
     Logger log = LogManager.getLogger(RecordFormatWriter.class);
 
@@ -52,7 +53,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
      * Publishes a package record to the format writer
      *
      * @param extractor associated {@link Extractor} instance
-     * @param record   {@link PackageParser.PackageRecord} instance
+     * @param record    {@link PackageParser.PackageRecord} instance
      */
     void publish(@NonNull Extractor extractor, @NonNull PackageParser.PackageRecord record) throws IOException;
 }

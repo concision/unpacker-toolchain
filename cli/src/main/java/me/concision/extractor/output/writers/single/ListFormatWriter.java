@@ -11,7 +11,7 @@ import org.json.JSONArray;
  * See {@link FormatType#LIST}
  *
  * @author Concision
-*/
+ */
 public class ListFormatWriter extends SingleRecordFormatWriter {
     private final JSONArray list = new JSONArray();
 

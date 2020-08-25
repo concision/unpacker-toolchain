@@ -1,8 +1,5 @@
 package me.concision.extractor.source;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +9,15 @@ import me.concision.extractor.source.collectors.FolderSourceCollector;
 import me.concision.extractor.source.collectors.InstallSourceCollector;
 import me.concision.extractor.source.collectors.OriginSourceCollector;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.function.Supplier;
+
 /**
  * Specifies the data source for acquiring Packages.bin
  *
  * @author Concision
-*/
+ */
 @RequiredArgsConstructor
 public enum SourceType {
     /**

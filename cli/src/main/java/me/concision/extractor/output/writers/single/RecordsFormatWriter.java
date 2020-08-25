@@ -10,7 +10,7 @@ import org.bson.Document;
  * See {@link FormatType#RECORDS}
  *
  * @author Concision
-*/
+ */
 public class RecordsFormatWriter extends SingleRecordFormatWriter {
     @Override
     public void publish(Extractor extractor, PackageParser.PackageRecord record) {

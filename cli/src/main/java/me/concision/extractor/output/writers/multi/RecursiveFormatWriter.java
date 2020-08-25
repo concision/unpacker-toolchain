@@ -1,5 +1,12 @@
 package me.concision.extractor.output.writers.multi;
 
+import me.concision.extractor.Extractor;
+import me.concision.extractor.api.PackageJsonifier;
+import me.concision.extractor.api.PackageParser;
+import me.concision.extractor.output.FormatType;
+import me.concision.extractor.output.RecordFormatWriter;
+import org.bson.json.JsonWriterSettings;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,18 +15,11 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import me.concision.extractor.Extractor;
-import me.concision.extractor.api.PackageJsonifier;
-import me.concision.extractor.api.PackageParser;
-import me.concision.extractor.output.FormatType;
-import me.concision.extractor.output.RecordFormatWriter;
-import org.bson.json.JsonWriterSettings;
-
 /**
  * See {@link FormatType#RECURSIVE}
  *
  * @author Concision
-*/
+ */
 public class RecursiveFormatWriter implements RecordFormatWriter {
     @Override
     public void publish(Extractor extractor, PackageParser.PackageRecord record) throws IOException {
