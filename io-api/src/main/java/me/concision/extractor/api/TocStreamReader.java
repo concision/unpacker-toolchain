@@ -1,5 +1,10 @@
 package me.concision.extractor.api;
 
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.Value;
+import org.apache.commons.codec.binary.Hex;
+
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -9,16 +14,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.Value;
-import org.apache.commons.codec.binary.Hex;
 
 /**
  * Reads entries from a .toc file input stream
  *
  * @author Concision
-*/
+ */
 public class TocStreamReader {
     /**
      * Wrapped decompressed Packages.bin input stream
@@ -151,7 +152,7 @@ public class TocStreamReader {
      *
      * @param absoluteFilename specific an absolute filename (e.g. /Lotus/Parent/Filename)
      * @return an {@link Optional <PackageEntry>} of the package
-     * @throws IOException
+     * @throws IOException if an underlying IO exception occurs
      */
     public Optional<PackageEntry> findEntry(@NonNull String absoluteFilename) throws IOException {
         for (PackageEntry entry; (entry = this.nextEntry()) != null; ) {
@@ -171,22 +172,22 @@ public class TocStreamReader {
         /**
          * Package filename
          */
-        private final String filename;
+        String filename;
         /**
          * Byte offset of file bytes inside of cache file
          */
-        private final long offset;
+        long offset;
         /**
          * Time created
          */
-        private final long timestamp;
+        long timestamp;
         /**
          * Compressed byte size
          */
-        private final int compressedSize;
+        int compressedSize;
         /**
          * Uncompressed byte size
          */
-        private final int uncompressedSize;
+        int uncompressedSize;
     }
 }

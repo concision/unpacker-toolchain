@@ -1,21 +1,22 @@
 package me.concision.extractor.api;
 
+import lombok.NonNull;
+import org.bson.Document;
+
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.NonNull;
-import org.bson.Document;
 
 /**
  * Parses raw packages to a JSON document structure
  *
  * @author Concision
-*/
+ */
 public class PackageJsonifier {
-    // regexes for ease of writng parser
+    // regexes for ease of writing parser
     private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
     private static final Pattern SUBKEY_PATTERN = Pattern.compile("\\[(\\w+)]");
     private static final Pattern INLINE_ARRAY_PATTERN = Pattern.compile("^\\{(?:[^\"]+|\"(?:[^\"]+)?\")(?:,(?:[^\"]+|\"(?:[^\"]+)?\"))+}$");
@@ -115,8 +116,8 @@ public class PackageJsonifier {
      * @param lines remaining lines in chunk
      * @return a parsed {@link List}
      */
-    private static List parseMultilineArray(Deque<String> lines) {
-        List list = new ArrayList();
+    private static List<Object> parseMultilineArray(Deque<String> lines) {
+        List<Object> list = new ArrayList<>();
         while (true) {
             String line = lines.pollFirst();
             if (line == null) {
@@ -151,8 +152,8 @@ public class PackageJsonifier {
      * @param inlineArray raw inline array
      * @return parsed {@link List}
      */
-    private static List parseInlineArray(String inlineArray) {
-        List list = new ArrayList();
+    private static List<Object> parseInlineArray(String inlineArray) {
+        List<Object> list = new ArrayList<>();
 
         // strip brackets
         for (Matcher subkeyMatcher = INLINE_ARRAY_FINDER_PATTERN.matcher(inlineArray); subkeyMatcher.find(); ) {
@@ -176,6 +177,7 @@ public class PackageJsonifier {
             return new Document();
         } else if (value.equals("{")) {
             // do lookahead, check if map
+            assert lines.peekFirst() != null;
             if (KEY_VALUE_PATTERN.matcher(lines.peekFirst()).matches()) {
                 return parseMultilineMap(lines, false);
             } else {
@@ -207,10 +209,12 @@ public class PackageJsonifier {
     private static Object parseInlinedValue(String value) {
         try {
             return Integer.parseInt(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
         try {
             return Double.parseDouble(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
         return value;
     }
 
@@ -227,17 +231,18 @@ public class PackageJsonifier {
     private static void set(Document absoluteParent, Deque<String> keys, Object value) {
         Object nextParent = absoluteParent;
 
-        //
-        while (1 < keys.size()) {
+        while (2 <= keys.size()) {
             String currentKey = keys.pollFirst();
             String nextKey = keys.peekFirst();
 
             // next
             boolean isNextNumber = false;
             try {
+                //noinspection ConstantConditions
                 Integer.parseInt(nextKey);
                 isNextNumber = true;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException | NullPointerException ignored) {
+            }
 
             if (nextParent instanceof Document) {
                 Document parent = (Document) nextParent;
@@ -255,7 +260,8 @@ public class PackageJsonifier {
                     // if next tree is an array, but our key isn't an index
                     if (child instanceof List && !isNextNumber) {
                         // upgrade to map
-                        List replacedChild = (List) child;
+                        //noinspection unchecked
+                        List<Object> replacedChild = (List<Object>) child;
                         Document replacement = new Document();
 
                         for (int i = 0; i < replacedChild.size(); i++) {
@@ -272,7 +278,8 @@ public class PackageJsonifier {
 
                 nextParent = child;
             } else if (nextParent instanceof List) {
-                List parent = (List) nextParent;
+                //noinspection unchecked
+                List<Object> parent = (List<Object>) nextParent;
                 int currentIndex = Integer.parseInt(currentKey);
                 Object child = currentIndex < parent.size() ? parent.get(currentIndex) : null;
 
@@ -289,7 +296,8 @@ public class PackageJsonifier {
                     // if next tree is an array, but our key isn't an index
                     if (child instanceof List && !isNextNumber) {
                         // upgrade to map
-                        List replacedChild = (List) child;
+                        //noinspection unchecked
+                        List<Object> replacedChild = (List<Object>) child;
                         Document replacement = new Document();
 
                         for (int i = 0; i < replacedChild.size(); i++) {
@@ -310,10 +318,13 @@ public class PackageJsonifier {
 
         // insert last
         String lastKey = keys.pollFirst();
-        if (nextParent instanceof Document) {
-            ((Document) nextParent).put(lastKey, value);
-        } else if (nextParent instanceof List) {
-            set((List) nextParent, Integer.parseInt(lastKey), value);
+        if (lastKey != null) {
+            if (nextParent instanceof Document) {
+                ((Document) nextParent).put(lastKey, value);
+            } else if (nextParent instanceof List) {
+                //noinspection unchecked
+                set((List<Object>) nextParent, Integer.parseInt(lastKey), value);
+            }
         }
     }
 
@@ -324,8 +335,10 @@ public class PackageJsonifier {
      * @param index index to set, if it exceeeds list size, nulls are added
      * @param value element value
      */
-    private static void set(List list, int index, Object value) {
-        while (list.size() < index) list.add(null);
+    private static void set(List<Object> list, int index, Object value) {
+        while (list.size() < index) {
+            list.add(null);
+        }
         if (list.size() == index) {
             list.add(value);
         } else {

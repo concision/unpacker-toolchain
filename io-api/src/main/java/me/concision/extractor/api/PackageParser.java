@@ -1,5 +1,10 @@
 package me.concision.extractor.api;
 
+import lombok.NonNull;
+import lombok.Value;
+import lombok.With;
+import org.semver.Version;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,16 +12,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.experimental.Wither;
-import org.semver.Version;
 
 /**
  * Reads raw binary Packages.bin file.
  *
  * @author Concision
-*/
+ */
 public class PackageParser {
     /**
      * Parses a raw full input stream of Packages.bin
@@ -134,6 +135,7 @@ public class PackageParser {
             }
         }
 
+        //noinspection unchecked
         return (R) chunkList;
     }
 
@@ -145,16 +147,16 @@ public class PackageParser {
         /**
          * Package parent directory path
          */
-        private final String path;
+        String path;
         /**
          * Package name
          */
-        private final String name;
+        String name;
         /**
          * Raw package contents
          */
-        @Wither
-        private final String contents;
+        @With
+        String contents;
 
         /**
          * Retrieves the package's fully qualified path

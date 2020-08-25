@@ -8,6 +8,8 @@ import java.io.InputStream;
 import com.sun.istack.internal.NotNull;
 import lombok.NonNull;
 
+import javax.annotation.Nonnull;
+
 /**
  * Decompression stream for a .cache file input stream
  *
@@ -53,7 +55,7 @@ public class PackageDecompressionInputStream extends InputStream {
      * {@inheritDoc}
      */
     @Override
-    public int read(byte[] buffer, int off, int len) throws IOException {
+    public int read(@Nonnull @NonNull byte[] buffer, int off, int len) throws IOException {
         if (len == 0) {
             return 0;
         }
