@@ -21,6 +21,7 @@
     <modules>
         <module>io-api</module>
         <module>cli</module>
+        <module>server</module>
     </modules>
 
     <properties>
