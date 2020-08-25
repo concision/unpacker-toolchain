@@ -19,7 +19,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>api</module>
+        <module>io-api</module>
         <module>cli</module>
     </modules>
 
