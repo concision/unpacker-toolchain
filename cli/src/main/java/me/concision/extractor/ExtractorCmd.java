@@ -72,7 +72,7 @@ public class ExtractorCmd {
                 "MULTIPLE: Outputs relevant package records into multiple independent files\n" +
                 "          '--output-location DIRECTORY' argument must be specified");
         val outputLocationArgument = outputGroup.addArgument("--output-location")
-                .help("Output path destination")
+                .help("Output path destination; omitting this flag will print the output to standard output")
                 .metavar("PATH")
                 .nargs("?")
                 .type(new FileArgumentType().verifyCanCreate());
