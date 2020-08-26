@@ -2,7 +2,6 @@ package me.concision.unnamed.packages.ioapi;
 
 import lombok.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -53,7 +52,7 @@ public class PackageDecompressionInputStream extends InputStream {
      * {@inheritDoc}
      */
     @Override
-    public int read(@Nonnull @NonNull byte[] buffer, int off, int len) throws IOException {
+    public int read(@SuppressWarnings("NullableProblems") @NonNull byte[] buffer, int off, int len) throws IOException {
         if (len == 0) {
             return 0;
         }
