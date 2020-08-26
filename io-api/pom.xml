@@ -42,11 +42,45 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
+                <version>3.8.1</version>
+                <executions>
+                    <!-- Disable default phase due to fixed id and position in lifecycle -->
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <!-- Compile project with Java 9 to ensure module-info.java is valid -->
+                    <execution>
+                        <id>module-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <source>9</source>
+                            <release>9</release>
+                            <jdkToolchain>
+                                <version>9</version>
+                            </jdkToolchain>
+                        </configuration>
+                    </execution>
+                    <!-- Recompile as Java 8 to overwrite Java 9 class files, except module-info.java -->
+                    <execution>
+                        <id>jdk8-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <source>8</source>
+                            <target>8</target>
+                            <jdkToolchain>
+                                <version>[1.8,9)</version>
+                            </jdkToolchain>
+                            <excludes>
+                                <exclude>module-info.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
