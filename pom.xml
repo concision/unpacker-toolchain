@@ -23,14 +23,15 @@
         <module>server</module>
     </modules>
 
-    <!-- Skip cli-tool during Docker builds -->
     <profiles>
+        <!-- Skip cli-tool during Docker builds -->
         <profile>
             <id>non-docker</id>
             <activation>
-                <!-- activate if NOT present -->
+                <!-- activate if DOCKER environment variable is NOT present -->
                 <property>
-                    <name>!env.DOCKER</name>
+                    <name>env.DOCKER</name>
+                    <value>!true</value>
                 </property>
             </activation>
             <modules>
@@ -58,12 +59,6 @@
 
     <build>
         <plugins>
-            <!-- Resolves issues with dependency:go-offline not handling intra-project module dependencies -->
-            <plugin>
-                <groupId>de.qaware.maven</groupId>
-                <artifactId>go-offline-maven-plugin</artifactId>
-                <version>1.2.5</version>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
