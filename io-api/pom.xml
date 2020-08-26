@@ -48,6 +48,11 @@
                     <execution>
                         <id>default-compile</id>
                         <phase>none</phase>
+                        <!-- specify source/target for IDE integration -->
+                        <configuration>
+                            <source>9</source>
+                            <target>9</target>
+                        </configuration>
                     </execution>
                     <!-- Compile project with Java 9 to ensure module-info.java is valid -->
                     <execution>
