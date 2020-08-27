@@ -48,7 +48,7 @@ FROM precompiled as compiled
 
 ## Copy Sources
 # copy entire api-server module
-COPY ./server/ /packages/server/
+COPY ./server/src/ /packages/server/src/
 
 ## Compile Project
 # build project artifacts for api-server
