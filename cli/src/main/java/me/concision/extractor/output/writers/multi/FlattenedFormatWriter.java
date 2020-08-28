@@ -41,7 +41,7 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
             if (extractor.args().rawMode) {
                 output.print(record.contents());
             } else {
-                output.print(PackageJsonifier.parse(record.contents())
+                output.print(PackageJsonifier.parse(record.contents(), extractor.args().convertStringLiterals)
                         .toJson(JsonWriterSettings.builder().indent(true).build()));
             }
             output.flush();

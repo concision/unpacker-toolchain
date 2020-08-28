@@ -20,7 +20,7 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
         if (extractor.args().rawMode) {
             document.put(record.fullPath(), record.contents());
         } else {
-            document.put(record.fullPath(), PackageJsonifier.parse(record.contents()));
+            document.put(record.fullPath(), PackageJsonifier.parse(record.contents(), extractor.args().convertStringLiterals));
         }
     }
 
