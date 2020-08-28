@@ -1,9 +1,9 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
-import me.concision.unnamed.unpacker.cli.Unpacker;
-import me.concision.unnamed.unpacker.cli.output.FormatType;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.output.FormatType;
 import org.bson.Document;
 import org.json.JSONArray;
 
@@ -29,7 +29,7 @@ public class ListFormatWriter extends SingleRecordFormatWriter {
         if (unpacker.args().rawMode) {
             document.put("package", record.contents());
         } else {
-            document.put("package", Lua2JsonConverter.parse(record.contents()));
+            document.put("package", Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals));
         }
 
         list.put(document);

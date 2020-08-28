@@ -44,7 +44,7 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
             if (unpacker.args().rawMode) {
                 output.print(record.contents());
             } else {
-                output.print(Lua2JsonConverter.parse(record.contents())
+                output.print(Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals)
                         .toJson(JsonWriterSettings.builder().indent(true).build()));
             }
             output.flush();

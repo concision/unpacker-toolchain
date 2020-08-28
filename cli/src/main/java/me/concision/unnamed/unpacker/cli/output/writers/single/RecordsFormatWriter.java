@@ -20,7 +20,7 @@ public class RecordsFormatWriter extends SingleRecordFormatWriter {
         if (unpacker.args().rawMode) {
             document.put("package", record.contents());
         } else {
-            document.put("package", Lua2JsonConverter.parse(record.contents()));
+            document.put("package", Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals));
         }
 
         outputStream.println(document.toJson());

@@ -1,7 +1,8 @@
 package me.concision.unnamed.unpacker.api;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
-import lombok.experimental.UtilityClass;
+import lombok.RequiredArgsConstructor;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import org.bson.Document;
 
@@ -20,27 +21,48 @@ import java.util.stream.Collectors;
  *
  * @author Concision
  */
-@UtilityClass
 @SuppressWarnings("DuplicatedCode")
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Lua2JsonConverter {
     // helpful regular expressions for simplifying parsing
     /**
      * Matches assignment with sub-keys (e.g. "value[0][1].x=...").
      */
-    private final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
+    private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
     /**
      * Matches each occurrence of a valid sub-key from the sub-key capture group in {@link #KEY_VALUE_PATTERN}.
      */
-    private final Pattern SUBKEY_PATTERN = Pattern.compile("\\[(\\w+)]");
+    private static final Pattern SUBKEY_PATTERN = Pattern.compile("\\[(\\w+)]");
     /**
      * Matches if a parsed value during assignment is a single-line ("inline") array (e.g. "{1, \"2\", 3}").
      */
-    private final Pattern INLINE_ARRAY_PATTERN = Pattern.compile("^\\{(?:[^\"]+|\"(?:[^\"]+)?\")(?:,(?:[^\"]+|\"(?:[^\"]+)?\"))+}$");
+    private static final Pattern INLINE_ARRAY_PATTERN = Pattern.compile("^\\{(?:[^\"]+|\"(?:[^\"]+)?\")(?:,(?:[^\"]+|\"(?:[^\"]+)?\"))+}$");
     /**
      * Matches individual elements in an single-line ("inline") array value. Applied when a value matches
      * {@link #INLINE_ARRAY_PATTERN}.
      */
-    private final Pattern INLINE_ARRAY_FINDER_PATTERN = Pattern.compile("(?:^\\{)?([^\",]+|\"(?:[^\"]+)?\")[,}]");
+    private static final Pattern INLINE_ARRAY_FINDER_PATTERN = Pattern.compile("(?:^\\{)?([^\",]+|\"(?:[^\"]+)?\")[,}]");
+
+    // cached JSONifier structures to reduce memory footprint; if more flags are added, these will be removed
+    private static final Lua2JsonConverter JSONIFIER_PARSE_STRINGS_TRUE = new Lua2JsonConverter(true);
+    private static final Lua2JsonConverter JSONIFIER_PARSE_STRINGS_FALSE = new Lua2JsonConverter(false);
+
+    /**
+     * Indicates to parser that LUA table string literals should be treated the same as ENUMs or package paths
+     * (e.g. if set to {@code true}, a LUA literal string of "\"content\"" will be converted to "content").
+     */
+    private final boolean convertStringLiterals;
+
+    /**
+     * Parses a raw package chunk into a document structure
+     *
+     * @param packageText  raw chunk contents
+     * @param parseStrings sets {@link #convertStringLiterals} flag
+     * @return document structure
+     */
+    public static Document parse(@NonNull String packageText, boolean parseStrings) {
+        return (parseStrings ? JSONIFIER_PARSE_STRINGS_TRUE : JSONIFIER_PARSE_STRINGS_FALSE).parse(packageText);
+    }
 
     /**
      * Converts raw LUA text tables to an equivalent BSON/JSON document structure.
@@ -198,7 +220,7 @@ public class Lua2JsonConverter {
         } else if (value.equals("{")) {
             // skip blank lines to ensure accuracy of lookahead parse
             String line;
-            while ((line = lines.peekFirst()) != null && line.trim().isEmpty() ) {
+            while ((line = lines.peekFirst()) != null && line.trim().isEmpty()) {
                 lines.pollFirst();
             }
             if (line == null) {
@@ -245,6 +267,13 @@ public class Lua2JsonConverter {
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ignored) {
+        }
+
+        // convert string literals, if enabled
+        if (convertStringLiterals) {
+            if (value.startsWith("\"") && value.endsWith("\"") && 2 <= value.length()) {
+                value = value.substring(1, value.length() - 1);
+            }
         }
 
         // assume string

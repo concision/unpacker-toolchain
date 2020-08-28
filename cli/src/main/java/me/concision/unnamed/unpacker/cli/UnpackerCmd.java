@@ -98,8 +98,15 @@ public class UnpackerCmd {
                 .type(Arguments.caseInsensitiveEnumType(FormatType.class))
                 .required(true);
         outputGroup.addArgument("--output-raw")
-                .help("Skips conversion of LUA Tables to JSON (default: false)")
+                .help("Skips conversion of LUA Tables to JSON (default: false)\n" +
+                        "Mutually exclusive with --output-convert-string-literals")
                 .dest("output_format_raw")
+                .action(Arguments.storeTrue());
+        val outputConvertStringLiteralsArgument = outputGroup.addArgument("--output-convert-string-literals")
+                .help("Strips quotes for string literals when converting LUA tables to JSON " +
+                        "(e.g. \"\\\"string\\\"\" is converted to \"string\") (default: false).\n" +
+                        "Mutually exclusive with --output-raw")
+                .dest("output_convert_string_literals")
                 .action(Arguments.storeTrue());
 
         // specify positional glob
@@ -135,6 +142,12 @@ public class UnpackerCmd {
             FormatType formatType = namespace.get("output_format");
             if (formatType.mode() == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
                 throw new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputLocationArgument);
+            }
+
+            if (namespace.getBoolean("output_format_raw")) {
+                if (namespace.getBoolean("output_convert_string_literals")) {
+                    throw new ArgumentParserException("--output-raw is mutually exclusive", parser, outputConvertStringLiteralsArgument);
+                }
             }
         } catch (ArgumentParserException exception) {
             parser.handleError(exception);

@@ -34,6 +34,7 @@ public class CommandArguments {
 
     // flags
     public final boolean rawMode;
+    public final boolean convertStringLiterals;
     // public final boolean cache;
 
     @NonNull
@@ -56,6 +57,7 @@ public class CommandArguments {
                 namespace.get("output_format"),
                 // output flags
                 namespace.getBoolean("output_format_raw"),
+                namespace.getBoolean("output_convert_string_literals"),
                 // namespace.getBoolean("cache"),
                 // package glob patterns
                 Collections.unmodifiableList(namespace.getList("packages"))

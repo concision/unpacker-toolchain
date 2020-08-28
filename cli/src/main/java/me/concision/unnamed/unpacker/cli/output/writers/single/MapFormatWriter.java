@@ -20,7 +20,10 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
         if (unpacker.args().rawMode) {
             document.put(record.absolutePath(), record.contents());
         } else {
-            document.put(record.absolutePath(), Lua2JsonConverter.parse(record.contents()));
+            document.put(
+                    record.absolutePath(),
+                    Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals)
+            );
         }
     }
 
