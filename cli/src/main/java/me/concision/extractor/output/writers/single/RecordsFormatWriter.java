@@ -20,7 +20,7 @@ public class RecordsFormatWriter extends SingleRecordFormatWriter {
         if (extractor.args().rawMode) {
             document.put("package", record.contents());
         } else {
-            document.put("package", PackageJsonifier.parse(record.contents()));
+            document.put("package", PackageJsonifier.parse(record.contents(), extractor.args().convertStringLiterals));
         }
 
         outputStream.println(document.toJson());

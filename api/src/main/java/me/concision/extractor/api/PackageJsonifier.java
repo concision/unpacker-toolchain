@@ -1,19 +1,23 @@
 package me.concision.extractor.api;
 
+import lombok.AccessLevel;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.bson.Document;
+
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.NonNull;
-import org.bson.Document;
 
 /**
  * Parses raw packages to a JSON document structure
  *
  * @author Concision
-*/
+ */
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PackageJsonifier {
     // regexes for ease of writng parser
     private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
@@ -21,13 +25,34 @@ public class PackageJsonifier {
     private static final Pattern INLINE_ARRAY_PATTERN = Pattern.compile("^\\{(?:[^\"]+|\"(?:[^\"]+)?\")(?:,(?:[^\"]+|\"(?:[^\"]+)?\"))+}$");
     private static final Pattern INLINE_ARRAY_FINDER_PATTERN = Pattern.compile("(?:^\\{)?([^\",]+|\"(?:[^\"]+)?\")[,}]");
 
+    // cached JSONifier structures to reduce memory footprint; if more flags are added, these will be removed
+    private static final PackageJsonifier JSONIFIER_PARSE_STRINGS_TRUE = new PackageJsonifier(true);
+    private static final PackageJsonifier JSONIFIER_PARSE_STRINGS_FALSE = new PackageJsonifier(false);
+
+    /**
+     * Indicates to parser that LUA table string literals should be treated the same as ENUMs or package paths
+     * (e.g. if set to {@code true}, a LUA literal string of "\"content\"" will be converted to "content").
+     */
+    private final boolean convertStringLiterals;
+
+    /**
+     * Parses a raw package chunk into a document structure
+     *
+     * @param packageText raw chunk contents
+     * @param parseStrings sets {@link #convertStringLiterals} flag
+     * @return document structure
+     */
+    public static Document parse(@NonNull String packageText, boolean parseStrings) {
+        return (parseStrings ? JSONIFIER_PARSE_STRINGS_TRUE : JSONIFIER_PARSE_STRINGS_FALSE).parse(packageText);
+    }
+
     /**
      * Parses a raw package chunk into a document structure
      *
      * @param packageText raw chunk contents
      * @return document structure
      */
-    public static Document parse(@NonNull String packageText) {
+    public Document parse(@NonNull String packageText) {
         // version 14 parsing
         String[] split = packageText.split("[\\r\\n]+");
         Deque<String> lines = new LinkedList<>();
@@ -50,7 +75,7 @@ public class PackageJsonifier {
      * @param root  whether this is the root document
      * @return a parsed {@link Document}
      */
-    private static Document parseMultilineMap(Deque<String> lines, boolean root) {
+    private Document parseMultilineMap(Deque<String> lines, boolean root) {
         Document parent = new Document();
         // read
         while (true) {
@@ -115,7 +140,7 @@ public class PackageJsonifier {
      * @param lines remaining lines in chunk
      * @return a parsed {@link List}
      */
-    private static List parseMultilineArray(Deque<String> lines) {
+    private List parseMultilineArray(Deque<String> lines) {
         List list = new ArrayList();
         while (true) {
             String line = lines.pollFirst();
@@ -151,7 +176,7 @@ public class PackageJsonifier {
      * @param inlineArray raw inline array
      * @return parsed {@link List}
      */
-    private static List parseInlineArray(String inlineArray) {
+    private List parseInlineArray(String inlineArray) {
         List list = new ArrayList();
 
         // strip brackets
@@ -170,7 +195,7 @@ public class PackageJsonifier {
      * @param inArray whether the value is in an array or not
      * @return parsed object
      */
-    private static Object parseValue(Deque<String> lines, String value, boolean inArray) {
+    private Object parseValue(Deque<String> lines, String value, boolean inArray) {
         // check for map/array
         if (value.equals("{}")) {
             return new Document();
@@ -204,13 +229,24 @@ public class PackageJsonifier {
      * @param value raw value
      * @return parsed value
      */
-    private static Object parseInlinedValue(String value) {
+    private Object parseInlinedValue(String value) {
+        // try integer
         try {
             return Integer.parseInt(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) { }
+        // try floating point
         try {
             return Double.parseDouble(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) { }
+
+        // convert string literals, if enabled
+        if (convertStringLiterals) {
+            if (value.startsWith("\"") && value.endsWith("\"") && 2 <= value.length()) {
+                value = value.substring(1, value.length() - 1);
+            }
+        }
+
+        // assume string
         return value;
     }
 
@@ -224,7 +260,7 @@ public class PackageJsonifier {
      * @param keys           recursive keys (e.g. map['x']['y'][0] = ... is ['x', 'y', '0']
      * @param value          parsed value to set
      */
-    private static void set(Document absoluteParent, Deque<String> keys, Object value) {
+    private void set(Document absoluteParent, Deque<String> keys, Object value) {
         Object nextParent = absoluteParent;
 
         //
@@ -237,7 +273,8 @@ public class PackageJsonifier {
             try {
                 Integer.parseInt(nextKey);
                 isNextNumber = true;
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException ignored) {
+            }
 
             if (nextParent instanceof Document) {
                 Document parent = (Document) nextParent;
@@ -324,7 +361,7 @@ public class PackageJsonifier {
      * @param index index to set, if it exceeeds list size, nulls are added
      * @param value element value
      */
-    private static void set(List list, int index, Object value) {
+    private void set(List list, int index, Object value) {
         while (list.size() < index) list.add(null);
         if (list.size() == index) {
             list.add(value);
