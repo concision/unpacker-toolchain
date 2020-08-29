@@ -6,11 +6,11 @@
 
     <parent>
         <groupId>me.concision.unnamed</groupId>
-        <artifactId>packages</artifactId>
+        <artifactId>unpacker</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <groupId>me.concision.unnamed.packages</groupId>
+    <groupId>me.concision.unnamed.unpacker</groupId>
     <artifactId>cli-tool</artifactId>
 
     <description>A CLI tool to extract manifest files from package caches</description>
@@ -18,57 +18,66 @@
     <dependencies>
         <!-- Extractor IO API: Manipulate package streams -->
         <dependency>
-            <groupId>me.concision.unnamed.packages</groupId>
+            <groupId>me.concision.unnamed.unpacker</groupId>
             <artifactId>api</artifactId>
             <version>${project.version}</version>
+            <scope>compile</scope>
         </dependency>
         <!-- Log4J: Logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.11.2</version>
+            <scope>compile</scope>
         </dependency>
         <!-- Argparse4J: Command line argument parsing -->
         <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>
             <artifactId>argparse4j</artifactId>
             <version>0.8.1</version>
+            <scope>compile</scope>
         </dependency>
         <!-- JSON: JSON format -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20190722</version>
+            <scope>compile</scope>
         </dependency>
         <!-- HTTPClient: Performing HTTP requests -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.7</version>
+            <scope>compile</scope>
         </dependency>
         <!-- compress: wrapped LZMA compression API -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.19</version>
+            <scope>compile</scope>
         </dependency>
         <!-- xz: underlying LZMA decompression implementation -->
         <dependency>
             <groupId>org.tukaani</groupId>
             <artifactId>xz</artifactId>
             <version>1.8</version>
+            <scope>compile</scope>
         </dependency>
         <!-- IO: buffer operations -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.6</version>
+            <scope>compile</scope>
         </dependency>
         <!-- JNA for Windows -->
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
             <version>4.5.2</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

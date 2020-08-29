@@ -6,11 +6,11 @@
 
     <parent>
         <groupId>me.concision.unnamed</groupId>
-        <artifactId>packages</artifactId>
+        <artifactId>unpacker</artifactId>
         <version>1.1.0</version>
     </parent>
 
-    <groupId>me.concision.unnamed.packages</groupId>
+    <groupId>me.concision.unnamed.unpacker</groupId>
     <artifactId>api-server</artifactId>
 
     <description>A dockerized HTTP server designed to archive package data and provide historical data through an REST API</description>
@@ -18,7 +18,7 @@
     <dependencies>
         <!-- Packages IO API: Manipulate package streams -->
         <dependency>
-            <groupId>me.concision.unnamed.packages</groupId>
+            <groupId>me.concision.unnamed.unpacker</groupId>
             <artifactId>api</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
