@@ -1,42 +1,59 @@
-package me.concision.unnamed.packages.ioapi;
+package me.concision.unnamed.unpacker.api;
 
 import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import org.bson.Document;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- * Parses raw packages to a JSON document structure
+ * Converts LUA text tables from {@link PackageEntry#contents()} to BSON/JSON documents. The LUA text table is not very
+ * developer-friendly for building applications, as it does not have a plethora of parsing libraries (unlike JSON).
  *
  * @author Concision
  */
-public class PackageJsonifier {
-    // regexes for ease of writing parser
-    private static final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
-    private static final Pattern SUBKEY_PATTERN = Pattern.compile("\\[(\\w+)]");
-    private static final Pattern INLINE_ARRAY_PATTERN = Pattern.compile("^\\{(?:[^\"]+|\"(?:[^\"]+)?\")(?:,(?:[^\"]+|\"(?:[^\"]+)?\"))+}$");
-    private static final Pattern INLINE_ARRAY_FINDER_PATTERN = Pattern.compile("(?:^\\{)?([^\",]+|\"(?:[^\"]+)?\")[,}]");
+@UtilityClass
+@SuppressWarnings("DuplicatedCode")
+public class Lua2JsonConverter {
+    // helpful regular expressions for simplifying parsing
+    /**
+     * Matches assignment with sub-keys (e.g. "value[0][1].x=...").
+     */
+    private final Pattern KEY_VALUE_PATTERN = Pattern.compile("^([^\\[.]+)((?:\\.[^\\[.]+)*)((?:\\[(?:\\w+)])*)=(.+)$");
+    /**
+     * Matches each occurrence of a valid sub-key from the sub-key capture group in {@link #KEY_VALUE_PATTERN}.
+     */
+    private final Pattern SUBKEY_PATTERN = Pattern.compile("\\[(\\w+)]");
+    /**
+     * Matches if a parsed value during assignment is a single-line ("inline") array (e.g. "{1, \"2\", 3}").
+     */
+    private final Pattern INLINE_ARRAY_PATTERN = Pattern.compile("^\\{(?:[^\"]+|\"(?:[^\"]+)?\")(?:,(?:[^\"]+|\"(?:[^\"]+)?\"))+}$");
+    /**
+     * Matches individual elements in an single-line ("inline") array value. Applied when a value matches
+     * {@link #INLINE_ARRAY_PATTERN}.
+     */
+    private final Pattern INLINE_ARRAY_FINDER_PATTERN = Pattern.compile("(?:^\\{)?([^\",]+|\"(?:[^\"]+)?\")[,}]");
 
     /**
-     * Parses a raw package chunk into a document structure
+     * Converts raw LUA text tables to an equivalent BSON/JSON document structure.
      *
-     * @param packageText raw chunk contents
-     * @return document structure
+     * @param packageText a raw {@link PackageEntry#contents()} value
+     * @return a 1-to-1 mapping of {@param packageText} to a BSON/JSON document structure
      */
-    public static Document parse(@NonNull String packageText) {
+    public Document parse(@NonNull String packageText) {
         // version 14 parsing
-        String[] split = packageText.split("[\\r\\n]+");
-        Deque<String> lines = new LinkedList<>();
-        for (String line : split) {
-            String trim = line.trim();
-            if (trim.startsWith(">>>>") || trim.startsWith("<<<<")) continue;
-            lines.add(trim);
-        }
+        Deque<String> lines = Arrays.stream(packageText.split("[\\r\\n]+"))
+                .map(String::trim)
+                .filter(line -> !line.startsWith(">>>>") && !line.startsWith("<<<<"))
+                .collect(Collectors.toCollection(LinkedList::new));
 
         return parseMultilineMap(lines, true);
     }
@@ -45,15 +62,16 @@ public class PackageJsonifier {
     // map
 
     /**
-     * Reads the equivalent of a {@link Document}
+     * Parses a (possibly multiline) LUA table structure as the equivalent of a {@link Document}.
      *
      * @param lines remaining lines in chunk
-     * @param root  whether this is the root document
-     * @return a parsed {@link Document}
+     * @param root  indicates this is the root LUA table, invoked from {@link #parse(String)}
+     * @return an equivalent {@link Document}
      */
-    private static Document parseMultilineMap(Deque<String> lines, boolean root) {
+    private Document parseMultilineMap(Deque<String> lines, boolean root) {
         Document parent = new Document();
-        // read
+
+        // read until out of lines
         while (true) {
             String line = lines.pollFirst();
 
@@ -69,11 +87,12 @@ public class PackageJsonifier {
                 continue;
             }
 
-            // structure end
+            // detect structure end
             if (line.startsWith("}")) {
                 break;
             }
 
+            // extract an assignment operation
             Matcher matcher = KEY_VALUE_PATTERN.matcher(line);
             // exception if not key => value
             if (!matcher.find()) {
@@ -101,9 +120,10 @@ public class PackageJsonifier {
 
             // set value
             if (!key.startsWith("$")) {
-                set(parent, subKeys, realValue);
+                assign(parent, subKeys, realValue);
             }
         }
+
         return parent;
     }
 
@@ -111,12 +131,12 @@ public class PackageJsonifier {
     // list
 
     /**
-     * Parses a multi-line array structure
+     * Parses a multi-line LUA table array structure as a {@link List}.
      *
      * @param lines remaining lines in chunk
-     * @return a parsed {@link List}
+     * @return an equivalent {@link List}
      */
-    private static List<Object> parseMultilineArray(Deque<String> lines) {
+    private List<Object> parseMultilineArray(Deque<String> lines) {
         List<Object> list = new ArrayList<>();
         while (true) {
             String line = lines.pollFirst();
@@ -147,12 +167,12 @@ public class PackageJsonifier {
     }
 
     /**
-     * Parses an inline array
+     * Parses a single-line ("inline") LUA table array structure as a {@link List}.
      *
      * @param inlineArray raw inline array
-     * @return parsed {@link List}
+     * @return an equivalent {@link List}
      */
-    private static List<Object> parseInlineArray(String inlineArray) {
+    private List<Object> parseInlineArray(String inlineArray) {
         List<Object> list = new ArrayList<>();
 
         // strip brackets
@@ -164,21 +184,29 @@ public class PackageJsonifier {
     }
 
     /**
-     * Parses a value in a map or list
+     * Context-aware parse of a LUA value that may be several lines into its BSON/JSON equivalent or string literal.
      *
-     * @param lines   remaining lines
+     * @param lines   remaining lines in chunk
      * @param value   raw string value
-     * @param inArray whether the value is in an array or not
-     * @return parsed object
+     * @param inArray indicates the value being parsed in an array
+     * @return an equivalent BSON/JSON structure or literal value
      */
-    private static Object parseValue(Deque<String> lines, String value, boolean inArray) {
+    private Object parseValue(Deque<String> lines, String value, boolean inArray) {
         // check for map/array
         if (value.equals("{}")) {
             return new Document();
         } else if (value.equals("{")) {
-            // do lookahead, check if map
-            assert lines.peekFirst() != null;
-            if (KEY_VALUE_PATTERN.matcher(lines.peekFirst()).matches()) {
+            // skip blank lines to ensure accuracy of lookahead parse
+            String line;
+            while ((line = lines.peekFirst()) != null && line.trim().isEmpty() ) {
+                lines.pollFirst();
+            }
+            if (line == null) {
+                throw new IllegalStateException("EOF while parsing object");
+            }
+
+            // lookahead check if next entry is map (check if there is an assignment)
+            if (KEY_VALUE_PATTERN.matcher(line).matches()) {
                 return parseMultilineMap(lines, false);
             } else {
                 return parseMultilineArray(lines);
@@ -191,6 +219,7 @@ public class PackageJsonifier {
                 }
             }
 
+            // check if value is an inline array
             Matcher arrayMatcher = INLINE_ARRAY_PATTERN.matcher(value);
             if (arrayMatcher.find()) { // if array
                 return parseInlineArray(value);
@@ -206,29 +235,33 @@ public class PackageJsonifier {
      * @param value raw value
      * @return parsed value
      */
-    private static Object parseInlinedValue(String value) {
+    private Object parseInlinedValue(String value) {
+        // try parsing as an integer
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException ignored) {
         }
+        // try parsing as a double
         try {
             return Double.parseDouble(value);
         } catch (NumberFormatException ignored) {
         }
+
+        // assume string
         return value;
     }
 
 
-    // sets
+    // assignment
 
     /**
-     * Sets a deep key-value mapping in a map
+     * Deep assigns a key-value mapping in to a map.
      *
      * @param absoluteParent parent map
-     * @param keys           recursive keys (e.g. map['x']['y'][0] = ... is ['x', 'y', '0']
-     * @param value          parsed value to set
+     * @param keys           recursive keys (e.g. map['x']['y'][0] = ... is ['map', 'x', 'y', '0']
+     * @param value          a value to assign
      */
-    private static void set(Document absoluteParent, Deque<String> keys, Object value) {
+    private void assign(Document absoluteParent, Deque<String> keys, Object value) {
         Object nextParent = absoluteParent;
 
         while (2 <= keys.size()) {
@@ -291,7 +324,7 @@ public class PackageJsonifier {
                         child = new Document();
                     }
 
-                    set(parent, currentIndex, child);
+                    assign(parent, currentIndex, child);
                 } else {
                     // if next tree is an array, but our key isn't an index
                     if (child instanceof List && !isNextNumber) {
@@ -307,7 +340,7 @@ public class PackageJsonifier {
                             }
                         }
 
-                        set(parent, currentIndex, child);
+                        assign(parent, currentIndex, child);
                         child = replacement;
                     }
                 }
@@ -323,19 +356,20 @@ public class PackageJsonifier {
                 ((Document) nextParent).put(lastKey, value);
             } else if (nextParent instanceof List) {
                 //noinspection unchecked
-                set((List<Object>) nextParent, Integer.parseInt(lastKey), value);
+                assign((List<Object>) nextParent, Integer.parseInt(lastKey), value);
             }
         }
     }
 
     /**
-     * Sets a position to a value in a list
+     * Assigns a position to a value in a {@link List}. If {@code list.size() <= index}, nulls are inserted to pad the
+     * list.
      *
      * @param list  list to set
-     * @param index index to set, if it exceeds list size, nulls are added
+     * @param index index to set; if it exceeds list size, nulls are added
      * @param value element value
      */
-    private static void set(List<Object> list, int index, Object value) {
+    private void assign(List<Object> list, int index, Object value) {
         while (list.size() < index) {
             list.add(null);
         }

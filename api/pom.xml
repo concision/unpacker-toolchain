@@ -11,28 +11,16 @@
     </parent>
 
     <groupId>me.concision.unnamed.packages</groupId>
-    <artifactId>io-api</artifactId>
+    <artifactId>api</artifactId>
 
-    <description>IO api to programmatically manipulate and extract package caches</description>
+    <description>An I/O api to programmatically read and parse caches and packages</description>
 
     <dependencies>
-        <!-- BSON: JSON serialization; preserves insertion order -->
+        <!-- BSON: JSON serialization; preserves insertion order unlike org.json -->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>bson</artifactId>
             <version>3.11.0</version>
-        </dependency>
-        <!-- Codec: Hex encoding -->
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.13</version>
-        </dependency>
-        <!-- Semver: Version Comparison -->
-        <dependency>
-            <groupId>org.semver</groupId>
-            <artifactId>api</artifactId>
-            <version>0.9.33</version>
         </dependency>
     </dependencies>
 

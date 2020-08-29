@@ -8,9 +8,9 @@ import lombok.extern.log4j.Log4j2;
 import me.concision.unnamed.packages.cli.CommandArguments;
 import me.concision.unnamed.packages.cli.source.SourceCollector;
 import me.concision.unnamed.packages.cli.source.SourceType;
-import me.concision.unnamed.packages.ioapi.PackageDecompressionInputStream;
-import me.concision.unnamed.packages.ioapi.TocStreamReader;
-import me.concision.unnamed.packages.ioapi.TocStreamReader.PackageEntry;
+import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
+import me.concision.unnamed.decacher.api.TocStreamReader;
+import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
 import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
 import org.apache.commons.compress.utils.BoundedInputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -108,7 +108,7 @@ public class OriginSourceCollector implements SourceCollector {
 
         // find Packages.bin TOC entry
         log.info("Fetching H.Misc.toc");
-        PackageEntry packageEntry;
+        CacheEntry cacheEntry;
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new HeaderFormatter())
                 .build()) {
@@ -129,13 +129,13 @@ public class OriginSourceCollector implements SourceCollector {
 
             // parse response in real-time
             try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
-                Optional<PackageEntry> xd = new TocStreamReader(new BufferedInputStream(stream)).findEntry("/Packages.bin");
+                Optional<CacheEntry> xd = new TocStreamReader(new BufferedInputStream(stream)).findEntry("/Packages.bin");
 
                 if (!xd.isPresent()) {
                     throw new RuntimeException("failed to find Packages.bin");
                 }
 
-                packageEntry = xd.get();
+                cacheEntry = xd.get();
             }
             response.close();
         } catch (EOFException ignored) {
@@ -168,13 +168,13 @@ public class OriginSourceCollector implements SourceCollector {
             InputStream input = new BufferedInputStream(new LZMACompressorInputStream(new BufferedInputStream(entity.getContent())));
             // skip bytes
             log.info("Skipping until Packages.bin");
-            IOUtils.skip(input, packageEntry.offset());
+            IOUtils.skip(input, cacheEntry.offset());
             log.info("Found Packages.bin; streaming to next format writer");
 
             // Packages.bin decompressor
-            return new DependentInputStream(new PackageDecompressionInputStream(new BoundedInputStream(
+            return new DependentInputStream(new CacheDecompressionInputStream(new BoundedInputStream(
                     input,
-                    ((int) Math.round(Math.ceil(packageEntry.compressedSize() / (double) Character.MAX_VALUE)) + 1) * Character.MAX_VALUE
+                    ((int) Math.round(Math.ceil(cacheEntry.compressedSize() / (double) Character.MAX_VALUE)) + 1) * Character.MAX_VALUE
             )), httpClient);
         } catch (Throwable throwable) {
             IOUtils.closeQuietly(httpClient);

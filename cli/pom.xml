@@ -19,7 +19,7 @@
         <!-- Extractor IO API: Manipulate package streams -->
         <dependency>
             <groupId>me.concision.unnamed.packages</groupId>
-            <artifactId>io-api</artifactId>
+            <artifactId>api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- Log4J: Logging -->

@@ -2,6 +2,20 @@
 # Note: The build context for this Dockerfile is at the project root, as maven requires the api-server's parent
 
 
+#
+# scripts: dos2unix + chmod
+#
+# jre: using module-info.class,
+#
+#
+#
+#
+#
+#
+#
+
+
+
 ### Build Scripts
 # Windows build compatbility - sanitize Windows line endings and mark scripts as executable
 FROM alpine:3.12.0 as scripts
@@ -79,7 +93,7 @@ FROM alpine:3.12.0
 # add JRE to path
 ENV PATH="/opt/jre/bin:${PATH}"
 # set current working directory
-WORKDIR /packages/
+WORKDIR /packages/server/
 # dynamic server data (e.g. configuration, logs, etc)
 VOLUME /packages/server/data/
 # set container "entrypoint"

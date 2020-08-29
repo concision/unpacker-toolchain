@@ -4,9 +4,9 @@ import lombok.NonNull;
 import me.concision.unnamed.packages.cli.CommandArguments;
 import me.concision.unnamed.packages.cli.source.SourceCollector;
 import me.concision.unnamed.packages.cli.source.SourceType;
-import me.concision.unnamed.packages.ioapi.PackageDecompressionInputStream;
-import me.concision.unnamed.packages.ioapi.TocStreamReader;
-import me.concision.unnamed.packages.ioapi.TocStreamReader.PackageEntry;
+import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
+import me.concision.unnamed.decacher.api.TocStreamReader;
+import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
@@ -44,17 +44,17 @@ public class FolderSourceCollector implements SourceCollector {
      */
     InputStream generate(@NonNull InputStream tocStream, @NonNull InputStream cacheStream) throws IOException {
         // read Packages.bin entry
-        Optional<PackageEntry> entry = new TocStreamReader(tocStream).findEntry("/Packages.bin");
+        Optional<CacheEntry> entry = new TocStreamReader(tocStream).findEntry("/Packages.bin");
         // verify discovered
         if (!entry.isPresent()) {
             throw new RuntimeException("Packages.bin entry not found in H.Misc.toc");
         }
         // read entry
-        PackageEntry packageEntry = entry.get();
+        CacheEntry cacheEntry = entry.get();
 
         // skip offset in cache stream
-        IOUtils.skip(cacheStream, packageEntry.offset());
+        IOUtils.skip(cacheStream, cacheEntry.offset());
 
-        return new PackageDecompressionInputStream(cacheStream);
+        return new CacheDecompressionInputStream(cacheStream);
     }
 }

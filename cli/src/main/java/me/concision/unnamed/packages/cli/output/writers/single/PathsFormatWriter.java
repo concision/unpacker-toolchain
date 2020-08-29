@@ -2,7 +2,7 @@ package me.concision.unnamed.packages.cli.output.writers.single;
 
 import me.concision.unnamed.packages.cli.Extractor;
 import me.concision.unnamed.packages.cli.output.FormatType;
-import me.concision.unnamed.packages.ioapi.PackageParser.PackageRecord;
+import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 
 /**
  * See {@link FormatType#PATHS}
@@ -11,7 +11,7 @@ import me.concision.unnamed.packages.ioapi.PackageParser.PackageRecord;
  */
 public class PathsFormatWriter extends SingleRecordFormatWriter {
     @Override
-    public void publish(Extractor extractor, PackageRecord record) {
-        outputStream.println(record.fullPath());
+    public void publish(Extractor extractor, PackageEntry record) {
+        outputStream.println(record.absolutePath());
     }
 }

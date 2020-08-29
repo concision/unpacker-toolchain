@@ -2,7 +2,7 @@ package me.concision.unnamed.packages.cli.output;
 
 import lombok.NonNull;
 import me.concision.unnamed.packages.cli.Extractor;
-import me.concision.unnamed.packages.ioapi.PackageParser;
+import me.concision.unnamed.unpacker.api.PackageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,9 +22,9 @@ public interface RecordFormatWriter extends OutputFormatWriter {
     @Override
     default void format(@NonNull Extractor extractor, @NonNull InputStream packagesStream) {
         // parse packages into record
-        Queue<PackageParser.PackageRecord> records;
+        Queue<PackageParser.PackageEntry> records;
         try {
-            records = PackageParser.parsePackages(packagesStream);
+            records = PackageParser.parseStream(packagesStream);
         } catch (Throwable throwable) {
             throw new RuntimeException("failed to parse Packages.bin data stream", throwable);
         }
@@ -32,18 +32,18 @@ public interface RecordFormatWriter extends OutputFormatWriter {
         // publish records
         while (!records.isEmpty()) {
             // read package record
-            PackageParser.PackageRecord record = records.poll();
+            PackageParser.PackageEntry record = records.poll();
 
             // check if matches any patterns
-            if (extractor.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.fullPath())))) {
+            if (extractor.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.absolutePath())))) {
                 // process record
-                log.info("Publishing package: {}", record.fullPath());
+                log.info("Publishing package: {}", record.absolutePath());
 
                 // attempt publish
                 try {
                     this.publish(extractor, record);
                 } catch (Throwable throwable) {
-                    log.error("Failed to publish record: " + record.fullPath(), throwable);
+                    log.error("Failed to publish record: " + record.absolutePath(), throwable);
                 }
             }
         }
@@ -53,7 +53,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
      * Publishes a package record to the format writer
      *
      * @param extractor associated {@link Extractor} instance
-     * @param record    {@link PackageParser.PackageRecord} instance
+     * @param record    {@link PackageParser.PackageEntry} instance
      */
-    void publish(@NonNull Extractor extractor, @NonNull PackageParser.PackageRecord record) throws IOException;
+    void publish(@NonNull Extractor extractor, @NonNull PackageParser.PackageEntry record) throws IOException;
 }
