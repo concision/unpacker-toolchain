@@ -152,18 +152,19 @@
                             </transformers>
                             <filters>
                                 <filter>
-                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
-                                    <includes>
-                                        <include>**/*</include>
-                                        <include>**/module-info.class</include>
-                                        <include>**/module-info.java</include>
-                                    </includes>
-                                </filter>
-                                <filter>
                                     <artifact>org.apache.logging.log4j:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- Strip module-info from dependencies (e.g. META-INF/versions/*/module-info.class) -->
+                                        <exclude>**/module-info.class</exclude>
+                                        <!-- Strip classes in META-INF due to strange jlink error -->
+                                        <exclude>**/META-INF/versions/**/*</exclude>
+                                    </excludes>
                                 </filter>
                             </filters>
                         </configuration>
