@@ -65,13 +65,6 @@
             <version>1.8</version>
             <scope>compile</scope>
         </dependency>
-        <!-- IO: buffer operations -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
-            <scope>compile</scope>
-        </dependency>
         <!-- JNA for Windows -->
         <dependency>
             <groupId>net.java.dev.jna</groupId>
@@ -87,11 +80,50 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
+                <version>3.8.1</version>
+                <executions>
+                    <!-- Disable default phase due to fixed id and position in lifecycle -->
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                        <!-- specify source/target for IDE integration -->
+                        <configuration>
+                            <source>9</source>
+                            <target>9</target>
+                        </configuration>
+                    </execution>
+                    <!-- Compile project with Java 9 to ensure module-info.java is valid -->
+                    <execution>
+                        <id>module-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <source>9</source>
+                            <release>9</release>
+                            <jdkToolchain>
+                                <version>9</version>
+                            </jdkToolchain>
+                        </configuration>
+                    </execution>
+                    <!-- Recompile as Java 8 to overwrite Java 9 class files, except module-info.java -->
+                    <execution>
+                        <id>jdk8-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <source>8</source>
+                            <target>8</target>
+                            <jdkToolchain>
+                                <version>[1.8,9)</version>
+                            </jdkToolchain>
+                            <excludes>
+                                <exclude>module-info.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Shade dependencies -->
@@ -107,7 +139,9 @@
                         </goals>
                         <configuration>
                             <finalName>${project.parent.name}</finalName>
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <minimizeJar>true</minimizeJar>
                             <transformers>
                                 <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -116,61 +150,119 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
+                                    <includes>
+                                        <include>**/*</include>
+                                        <include>**/module-info.class</include>
+                                        <include>**/module-info.java</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.logging.log4j:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Compile to executable -->
+            <!-- Add module-info.class into built product -->
             <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <version>1.7.25</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
-                        <id>l4j-gui</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>launch4j</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <!-- Build from ProGuard output -->
-                            <jar>${project.build.directory}/${project.parent.name}.jar</jar>
-                            <outfile>${project.build.directory}/${project.parent.name}.exe</outfile>
-                            <icon>launch4j/therox.ico</icon>
-                            <versionInfo>
-                                <originalFilename>${parent.name}.exe</originalFilename>
-                                <fileVersion>${windows.version}</fileVersion>
-                                <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>${project.description}</fileDescription>
-                                <companyName>None</companyName>
-                                <copyright>None</copyright>
-                                <productVersion>${windows.version}</productVersion>
-                                <txtProductVersion>${project.version}</txtProductVersion>
-                                <productName>${project.name}</productName>
-                                <internalName>${project.name}</internalName>
-                                <language>ENGLISH_US</language>
-                            </versionInfo>
-                            <classPath>
-                                <mainClass>me.concision.unnamed.packages.cli.ExtractorCmd</mainClass>
-                                <!-- dependencies are already shaded, prevent leaking dependency info -->
-                                <addDependencies>false</addDependencies>
-                            </classPath>
-                            <!-- JRE 8 required -->
-                            <jre>
-                                <minVersion>1.8.0</minVersion>
-                            </jre>
-                            <headerType>console</headerType>
-                            <errTitle>${project.name}</errTitle>
-                            <messages>
-                                <startupErr>An error occurred while bootstrapping ${project.name}</startupErr>
-                                <jreVersionErr>JDK 1.8 or higher is required</jreVersionErr>
-                                <launcherErr>An exception occurred with Launch4j</launcherErr>
-                            </messages>
+                            <target>
+                                <zip
+                                        basedir="${project.build.directory}/classes"
+                                        includes="module-info.class"
+                                        destfile="${project.build.directory}/unpacker.jar"
+                                        update="true"
+                                />
+                            </target>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Skip Windows executable generator during Docker builds -->
+        <profile>
+            <id>non-docker</id>
+            <activation>
+                <!-- activate if DOCKER environment variable is NOT present -->
+                <property>
+                    <name>env.DOCKER</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Compile to executable -->
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <version>1.7.25</version>
+                        <executions>
+                            <execution>
+                                <id>l4j-gui</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <!-- Build from ProGuard output -->
+                                    <jar>${project.build.directory}/${project.parent.name}.jar</jar>
+                                    <outfile>${project.build.directory}/${project.parent.name}.exe</outfile>
+                                    <icon>launch4j/therox.ico</icon>
+                                    <versionInfo>
+                                        <originalFilename>${parent.name}.exe</originalFilename>
+                                        <fileVersion>${windows.version}</fileVersion>
+                                        <txtFileVersion>${project.version}</txtFileVersion>
+                                        <fileDescription>${project.description}</fileDescription>
+                                        <companyName>None</companyName>
+                                        <copyright>None</copyright>
+                                        <productVersion>${windows.version}</productVersion>
+                                        <txtProductVersion>${project.version}</txtProductVersion>
+                                        <productName>${project.name}</productName>
+                                        <internalName>${project.name}</internalName>
+                                        <language>ENGLISH_US</language>
+                                    </versionInfo>
+                                    <classPath>
+                                        <mainClass>me.concision.unnamed.packages.cli.ExtractorCmd</mainClass>
+                                        <!-- dependencies are already shaded, prevent leaking dependency info -->
+                                        <addDependencies>false</addDependencies>
+                                    </classPath>
+                                    <!-- JRE 8 required -->
+                                    <jre>
+                                        <minVersion>1.8.0</minVersion>
+                                    </jre>
+                                    <headerType>console</headerType>
+                                    <errTitle>${project.name}</errTitle>
+                                    <messages>
+                                        <startupErr>An error occurred while bootstrapping ${project.parent.name}</startupErr>
+                                        <jreVersionErr>JDK 1.8 or higher is required</jreVersionErr>
+                                        <launcherErr>An exception occurred with Launch4j</launcherErr>
+                                    </messages>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
