@@ -1,4 +1,4 @@
-module me.concision.unnamed.packages.api {
+module me.concision.unnamed.unpacker.api {
     requires static lombok;
     requires org.mongodb.bson;
 
