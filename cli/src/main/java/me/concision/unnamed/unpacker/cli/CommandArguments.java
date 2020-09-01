@@ -1,10 +1,10 @@
-package me.concision.unnamed.packages.cli;
+package me.concision.unnamed.unpacker.cli;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.concision.unnamed.packages.cli.output.FormatType;
-import me.concision.unnamed.packages.cli.source.SourceType;
+import me.concision.unnamed.unpacker.cli.output.FormatType;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.io.File;

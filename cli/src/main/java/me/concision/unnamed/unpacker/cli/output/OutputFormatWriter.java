@@ -1,7 +1,7 @@
-package me.concision.unnamed.packages.cli.output;
+package me.concision.unnamed.unpacker.cli.output;
 
 import lombok.NonNull;
-import me.concision.unnamed.packages.cli.Extractor;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,9 +15,9 @@ public interface OutputFormatWriter {
     /**
      * Writes packages input stream to an output using an implemented format
      *
-     * @param extractor      associated {@link Extractor} parameter instance
+     * @param unpacker      associated {@link Unpacker} parameter instance
      * @param packagesStream Packages.bin input stream
      * @throws IOException if an underlying IO exception is thrown
      */
-    void format(@NonNull Extractor extractor, @NonNull InputStream packagesStream) throws IOException;
+    void format(@NonNull Unpacker unpacker, @NonNull InputStream packagesStream) throws IOException;
 }

@@ -1,8 +1,8 @@
-package me.concision.unnamed.packages.cli.source.collectors;
+package me.concision.unnamed.unpacker.cli.source.collectors;
 
-import me.concision.unnamed.packages.cli.CommandArguments;
-import me.concision.unnamed.packages.cli.source.SourceCollector;
-import me.concision.unnamed.packages.cli.source.SourceType;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.source.SourceCollector;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;

@@ -1,6 +1,6 @@
 # Packages Extractor
-[![license](https://img.shields.io/github/license/concision/packages-extractor?style=flat-square)](https://github.com/concision/packages-extractor/blob/master/LICENSE)
-![version](https://img.shields.io/github/v/tag/concision/packages-extractor?style=flat-square)
+[![license](https://img.shields.io/github/license/concision/packages-unpacker?style=flat-square)](https://github.com/concision/packages-unpacker/blob/master/LICENSE)
+![version](https://img.shields.io/github/v/tag/concision/packages-unpacker?style=flat-square)
 
 A CLI tool designed to easily extract data manifests from an unnamed game's package cache.
 
@@ -45,9 +45,9 @@ Instructions are intentionally not included for compiling this project. Regardle
 Effectively, project compilation is left as an exercise to the reader.
 
 ## CLI Usage
-Command usage is available with ```extractor -h```; however, it is provided below for convenience:
+Command usage is available with ```unpacker -h```; however, it is provided below for convenience:
 ```
-usage: extractor [-h] [--verbose] --source-type {ORIGIN,INSTALL,FOLDER,BINARY} [--source-location [PATH]]
+usage: unpacker [-h] [--verbose] --source-type {ORIGIN,INSTALL,FOLDER,BINARY} [--source-location [PATH]]
                 [--output-location [PATH]] --output-format FORMAT [--output-raw]
                 [/glob/**/pattern/*file* [/glob/**/pattern/*file* ...]]
 

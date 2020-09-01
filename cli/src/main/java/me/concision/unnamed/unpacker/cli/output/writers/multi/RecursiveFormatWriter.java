@@ -1,8 +1,8 @@
-package me.concision.unnamed.packages.cli.output.writers.multi;
+package me.concision.unnamed.unpacker.cli.output.writers.multi;
 
-import me.concision.unnamed.packages.cli.Extractor;
-import me.concision.unnamed.packages.cli.output.FormatType;
-import me.concision.unnamed.packages.cli.output.RecordFormatWriter;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.output.FormatType;
+import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import org.bson.json.JsonWriterSettings;
@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
  */
 public class RecursiveFormatWriter implements RecordFormatWriter {
     @Override
-    public void publish(Extractor extractor, PackageEntry record) throws IOException {
-        File file = new File(extractor.args().outputPath, record.absolutePath() + ".json").getAbsoluteFile();
+    public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
+        File file = new File(unpacker.args().outputPath, record.absolutePath() + ".json").getAbsoluteFile();
         if (!file.getParentFile().mkdirs()) {
             throw new FileNotFoundException("failed to create directory: " + file.getParentFile().getAbsolutePath());
         }
@@ -43,7 +43,7 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
                 .collect(Collectors.joining("/"));
 
         try (PrintStream output = new PrintStream(new FileOutputStream(filePath))) {
-            if (extractor.args().rawMode) {
+            if (unpacker.args().rawMode) {
                 output.print(record.contents());
             } else {
                 output.print(Lua2JsonConverter.parse(record.contents())

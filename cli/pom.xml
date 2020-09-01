@@ -16,7 +16,7 @@
     <description>A CLI tool to extract manifest files from package caches</description>
 
     <dependencies>
-        <!-- Extractor IO API: Manipulate package streams -->
+        <!-- Unpacker I/O API: Manipulate package streams -->
         <dependency>
             <groupId>me.concision.unnamed.unpacker</groupId>
             <artifactId>api</artifactId>
@@ -146,7 +146,7 @@
                                 <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>me.concision.unnamed.packages.cli.ExtractorCmd</Main-Class>
+                                        <Main-Class>me.concision.unnamed.unpacker.cli.UnpackerCmd</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -242,7 +242,7 @@
                                         <language>ENGLISH_US</language>
                                     </versionInfo>
                                     <classPath>
-                                        <mainClass>me.concision.unnamed.packages.cli.ExtractorCmd</mainClass>
+                                        <mainClass>me.concision.unnamed.unpacker.cli.UnpackerCmd</mainClass>
                                         <!-- dependencies are already shaded, prevent leaking dependency info -->
                                         <addDependencies>false</addDependencies>
                                     </classPath>

@@ -1,7 +1,7 @@
-package me.concision.unnamed.packages.cli.output.writers.single;
+package me.concision.unnamed.unpacker.cli.output.writers.single;
 
-import me.concision.unnamed.packages.cli.Extractor;
-import me.concision.unnamed.packages.cli.output.RecordFormatWriter;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
 
 import java.io.InputStream;
 
@@ -12,11 +12,11 @@ import java.io.InputStream;
  */
 public abstract class SingleRecordFormatWriter extends SingleFormatWriter implements RecordFormatWriter {
     @Override
-    public void format(Extractor extractor, InputStream packagesStream) {
-        this.open(extractor);
+    public void format(Unpacker unpacker, InputStream packagesStream) {
+        this.open(unpacker);
 
         try {
-            RecordFormatWriter.super.format(extractor, packagesStream);
+            RecordFormatWriter.super.format(unpacker, packagesStream);
         } finally {
             this.close();
         }

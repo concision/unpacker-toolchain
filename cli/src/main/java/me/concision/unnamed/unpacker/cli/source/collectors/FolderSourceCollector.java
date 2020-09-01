@@ -1,9 +1,9 @@
-package me.concision.unnamed.packages.cli.source.collectors;
+package me.concision.unnamed.unpacker.cli.source.collectors;
 
 import lombok.NonNull;
-import me.concision.unnamed.packages.cli.CommandArguments;
-import me.concision.unnamed.packages.cli.source.SourceCollector;
-import me.concision.unnamed.packages.cli.source.SourceType;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.source.SourceCollector;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
 import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
 import me.concision.unnamed.decacher.api.TocStreamReader;
 import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;

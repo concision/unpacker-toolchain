@@ -1,11 +1,11 @@
-package me.concision.unnamed.packages.cli;
+package me.concision.unnamed.unpacker.cli;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import me.concision.unnamed.packages.cli.output.OutputFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
 
 import java.io.InputStream;
 
@@ -16,7 +16,7 @@ import java.io.InputStream;
  */
 @Log4j2
 @RequiredArgsConstructor
-public class Extractor {
+public class Unpacker {
     /**
      * Processed and validated command-line arguments
      */

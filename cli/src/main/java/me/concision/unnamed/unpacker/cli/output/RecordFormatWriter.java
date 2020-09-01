@@ -1,7 +1,7 @@
-package me.concision.unnamed.packages.cli.output;
+package me.concision.unnamed.unpacker.cli.output;
 
 import lombok.NonNull;
-import me.concision.unnamed.packages.cli.Extractor;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.api.PackageParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +20,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
     Logger log = LogManager.getLogger(RecordFormatWriter.class);
 
     @Override
-    default void format(@NonNull Extractor extractor, @NonNull InputStream packagesStream) {
+    default void format(@NonNull Unpacker unpacker, @NonNull InputStream packagesStream) {
         // parse packages into record
         Queue<PackageParser.PackageEntry> records;
         try {
@@ -35,13 +35,13 @@ public interface RecordFormatWriter extends OutputFormatWriter {
             PackageParser.PackageEntry record = records.poll();
 
             // check if matches any patterns
-            if (extractor.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.absolutePath())))) {
+            if (unpacker.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.absolutePath())))) {
                 // process record
                 log.info("Publishing package: {}", record.absolutePath());
 
                 // attempt publish
                 try {
-                    this.publish(extractor, record);
+                    this.publish(unpacker, record);
                 } catch (Throwable throwable) {
                     log.error("Failed to publish record: " + record.absolutePath(), throwable);
                 }
@@ -52,8 +52,8 @@ public interface RecordFormatWriter extends OutputFormatWriter {
     /**
      * Publishes a package record to the format writer
      *
-     * @param extractor associated {@link Extractor} instance
+     * @param unpacker associated {@link Unpacker} instance
      * @param record    {@link PackageParser.PackageEntry} instance
      */
-    void publish(@NonNull Extractor extractor, @NonNull PackageParser.PackageEntry record) throws IOException;
+    void publish(@NonNull Unpacker unpacker, @NonNull PackageParser.PackageEntry record) throws IOException;
 }

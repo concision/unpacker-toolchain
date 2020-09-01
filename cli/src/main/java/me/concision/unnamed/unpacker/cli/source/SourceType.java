@@ -1,13 +1,13 @@
-package me.concision.unnamed.packages.cli.source;
+package me.concision.unnamed.unpacker.cli.source;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.concision.unnamed.packages.cli.CommandArguments;
-import me.concision.unnamed.packages.cli.source.collectors.BinarySourceCollector;
-import me.concision.unnamed.packages.cli.source.collectors.FolderSourceCollector;
-import me.concision.unnamed.packages.cli.source.collectors.InstallSourceCollector;
-import me.concision.unnamed.packages.cli.source.collectors.OriginSourceCollector;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.source.collectors.BinarySourceCollector;
+import me.concision.unnamed.unpacker.cli.source.collectors.FolderSourceCollector;
+import me.concision.unnamed.unpacker.cli.source.collectors.InstallSourceCollector;
+import me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector;
 
 import java.io.IOException;
 import java.io.InputStream;

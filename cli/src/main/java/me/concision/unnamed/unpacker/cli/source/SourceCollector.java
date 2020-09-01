@@ -1,7 +1,7 @@
-package me.concision.unnamed.packages.cli.source;
+package me.concision.unnamed.unpacker.cli.source;
 
 import lombok.NonNull;
-import me.concision.unnamed.packages.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
 
 import java.io.IOException;
 import java.io.InputStream;

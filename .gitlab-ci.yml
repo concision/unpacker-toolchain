@@ -12,7 +12,7 @@ build:
   stage: build
   script:
     - mvn clean package
-    - mv cli/target/extractor.exe .
+    - mv cli/target/unpacker.exe .
   artifacts:
     paths:
-      - extractor.exe
+      - unpacker.exe

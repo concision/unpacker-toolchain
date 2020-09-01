@@ -1,15 +1,15 @@
-package me.concision.unnamed.packages.cli.output;
+package me.concision.unnamed.unpacker.cli.output;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.concision.unnamed.packages.cli.output.writers.multi.FlattenedFormatWriter;
-import me.concision.unnamed.packages.cli.output.writers.multi.RecursiveFormatWriter;
-import me.concision.unnamed.packages.cli.output.writers.single.BinaryFormatWriter;
-import me.concision.unnamed.packages.cli.output.writers.single.ListFormatWriter;
-import me.concision.unnamed.packages.cli.output.writers.single.MapFormatWriter;
-import me.concision.unnamed.packages.cli.output.writers.single.PathsFormatWriter;
-import me.concision.unnamed.packages.cli.output.writers.single.RecordsFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.multi.FlattenedFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.multi.RecursiveFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.single.BinaryFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.single.ListFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.single.MapFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.single.PathsFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.writers.single.RecordsFormatWriter;
 
 import java.util.function.Supplier;
 

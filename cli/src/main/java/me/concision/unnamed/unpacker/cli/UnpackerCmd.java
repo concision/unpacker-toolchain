@@ -1,9 +1,9 @@
-package me.concision.unnamed.packages.cli;
+package me.concision.unnamed.unpacker.cli;
 
 import lombok.val;
-import me.concision.unnamed.packages.cli.output.FormatType;
-import me.concision.unnamed.packages.cli.output.FormatType.OutputMode;
-import me.concision.unnamed.packages.cli.source.SourceType;
+import me.concision.unnamed.unpacker.cli.output.FormatType;
+import me.concision.unnamed.unpacker.cli.output.FormatType.OutputMode;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.impl.type.FileArgumentType;
@@ -22,10 +22,10 @@ import java.util.regex.PatternSyntaxException;
  *
  * @author Concision
  */
-public class ExtractorCmd {
+public class UnpackerCmd {
     public static void main(String[] args) {
         // construct argument parser
-        ArgumentParser parser = ArgumentParsers.newFor("extractor")
+        ArgumentParser parser = ArgumentParsers.newFor("unpacker")
                 // flag prefix
                 .prefixChars("--")
                 // width
@@ -145,16 +145,16 @@ public class ExtractorCmd {
         // initialize environment
         // set logging verbosity
         if (namespace.getBoolean("verbose_logging")) {
-            System.setProperty("extractor.verbose", "ALL");
+            System.setProperty("unpacker.verbose", "ALL");
         }
         // initialize logging mechanism
-        Logger log = LogManager.getLogger(ExtractorCmd.class);
+        Logger log = LogManager.getLogger(UnpackerCmd.class);
         log.debug("Namespace: {}", namespace);
 
 
         // start extraction
         try {
-            new Extractor(CommandArguments.from(namespace))
+            new Unpacker(CommandArguments.from(namespace))
                     .execute();
         } catch (Throwable throwable) {
             log.fatal("An unexpected exception occurred during extraction", throwable);

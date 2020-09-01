@@ -1,11 +1,11 @@
-package me.concision.unnamed.packages.cli.source.collectors;
+package me.concision.unnamed.unpacker.cli.source.collectors;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import lombok.extern.log4j.Log4j2;
-import me.concision.unnamed.packages.cli.CommandArguments;
-import me.concision.unnamed.packages.cli.source.SourceCollector;
-import me.concision.unnamed.packages.cli.source.SourceType;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.source.SourceCollector;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
 import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
 
 import java.io.File;

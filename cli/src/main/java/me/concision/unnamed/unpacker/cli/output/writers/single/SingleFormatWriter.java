@@ -1,9 +1,9 @@
-package me.concision.unnamed.packages.cli.output.writers.single;
+package me.concision.unnamed.unpacker.cli.output.writers.single;
 
 import lombok.NonNull;
-import me.concision.unnamed.packages.cli.CommandArguments;
-import me.concision.unnamed.packages.cli.Extractor;
-import me.concision.unnamed.packages.cli.output.OutputFormatWriter;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.BufferedOutputStream;
@@ -25,12 +25,12 @@ public abstract class SingleFormatWriter implements OutputFormatWriter, Closeabl
     protected PrintStream outputStream;
 
     /**
-     * Opens an output stream to the extractor destination. If no {@link CommandArguments#outputPath} is specified, defaults to {@link System#out}
+     * Opens an output stream to the unpacker destination. If no {@link CommandArguments#outputPath} is specified, defaults to {@link System#out}
      *
-     * @param extractor associated {@link Extractor} instance
+     * @param unpacker associated {@link Unpacker} instance
      */
-    public void open(@NonNull Extractor extractor) {
-        File outputPath = extractor.args().outputPath;
+    public void open(@NonNull Unpacker unpacker) {
+        File outputPath = unpacker.args().outputPath;
         if (outputPath != null) {
             try {
                 outputStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputPath)));

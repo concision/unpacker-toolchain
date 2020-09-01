@@ -1,8 +1,8 @@
-package me.concision.unnamed.packages.cli.output.writers.multi;
+package me.concision.unnamed.unpacker.cli.output.writers.multi;
 
-import me.concision.unnamed.packages.cli.Extractor;
-import me.concision.unnamed.packages.cli.output.FormatType;
-import me.concision.unnamed.packages.cli.output.RecordFormatWriter;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.output.FormatType;
+import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import org.bson.json.JsonWriterSettings;
@@ -20,8 +20,8 @@ import java.io.PrintStream;
  */
 public class FlattenedFormatWriter implements RecordFormatWriter {
     @Override
-    public void publish(Extractor extractor, PackageEntry record) throws IOException {
-        File outputPath = extractor.args().outputPath;
+    public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
+        File outputPath = unpacker.args().outputPath;
         if (!outputPath.mkdirs()) {
             throw new FileNotFoundException("failed to create directory: " + outputPath.getAbsolutePath());
         }
@@ -39,9 +39,9 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
         }
 
         try (PrintStream output = new PrintStream(new FileOutputStream(
-                new File(extractor.args().outputPath, path + ".json").getAbsoluteFile()
+                new File(unpacker.args().outputPath, path + ".json").getAbsoluteFile()
         ))) {
-            if (extractor.args().rawMode) {
+            if (unpacker.args().rawMode) {
                 output.print(record.contents());
             } else {
                 output.print(Lua2JsonConverter.parse(record.contents())
