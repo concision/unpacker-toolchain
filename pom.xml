@@ -20,25 +20,8 @@
 
     <modules>
         <module>api</module>
-        <module>server</module>
+        <module>cli</module>
     </modules>
-
-    <profiles>
-        <!-- Skip cli-tool during Docker builds -->
-        <profile>
-            <id>non-docker</id>
-            <activation>
-                <!-- activate if DOCKER environment variable is NOT present -->
-                <property>
-                    <name>env.DOCKER</name>
-                    <value>!true</value>
-                </property>
-            </activation>
-            <modules>
-                <module>cli</module>
-            </modules>
-        </profile>
-    </profiles>
 
     <properties>
         <windows.version>1.1.0.0</windows.version>
