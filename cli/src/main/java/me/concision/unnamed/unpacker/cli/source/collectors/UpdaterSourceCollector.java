@@ -160,11 +160,10 @@ public class UpdaterSourceCollector implements SourceCollector {
             throw new RuntimeException("failed to fetch game client", throwable);
         }
 
+        // build game client command to execute
+        boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        log.info("Is Windows: {}", isWindows);
         try {
-            // build game client command to execute
-            boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-            log.info("Is Windows: {}", isWindows);
-
             // build command
             String[] command;
             if (isWindows) {
@@ -227,6 +226,16 @@ public class UpdaterSourceCollector implements SourceCollector {
         File cacheFolder = new File(tempDirectory, "Cache.Windows");
         Path cachePath = cacheFolder.toPath();
         // delete all unnecessary files
+        if (!isWindows) {
+            // native acceleration must be used for performance
+            Process deleteProcess = Runtime.getRuntime().exec(new String[]{
+                    "rm", "-rf", executableFile.getAbsolutePath(), new File(tempDirectory, ".wine64").getAbsolutePath()
+            });
+            try {
+                deleteProcess.waitFor();
+            } catch (InterruptedException ignored) {
+            }
+        }
         walk(tempDirectory, (File file) -> {
             // check if Packages.bin related file
             if (file.toPath().startsWith(cachePath)) {
@@ -299,7 +308,8 @@ public class UpdaterSourceCollector implements SourceCollector {
                 INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
                 Thread.sleep(1);
             }
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
     }
 
     /**
