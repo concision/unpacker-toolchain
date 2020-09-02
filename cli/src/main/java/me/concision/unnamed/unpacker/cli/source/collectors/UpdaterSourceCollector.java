@@ -250,6 +250,7 @@ public class UpdaterSourceCollector implements SourceCollector {
      *
      * @param executableFile Game client executable {@link File} to match
      */
+    @SuppressWarnings("BusyWait")
     private static void awaitHideWindow(File executableFile) {
         // found client hwnd
         HWND[] clientHwnd = new HWND[1];
@@ -285,7 +286,6 @@ public class UpdaterSourceCollector implements SourceCollector {
             // try again in 1 microsecond
             if (clientHwnd[0] == null) {
                 try {
-                    //noinspection BusyWait
                     Thread.sleep(0, (int) TimeUnit.MICROSECONDS.toNanos(1));
                 } catch (InterruptedException ignored) {
                     return;
@@ -294,7 +294,12 @@ public class UpdaterSourceCollector implements SourceCollector {
         }
 
         log.info("Detected running process; removing visibility");
-        INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
+        try {
+            while (true) {
+                INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
+                Thread.sleep(1);
+            }
+        } catch (InterruptedException ignored) {}
     }
 
     /**
