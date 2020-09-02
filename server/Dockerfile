@@ -121,6 +121,12 @@ COPY --from=scripts /unpacker/server/scripts/*.sh /unpacker/server/
 # disable Python .pyc
 ENV PYTHONDONTWRITEBYTECODE 1
 
+## Linux Dependencies
+RUN apk add --no-cache --virtual .build-deps \
+    gcc \
+    musl-dev \
+    postgresql-dev
+
 ## Python Dependencies
 # copy logical and transitive dependency manifests
 COPY ./server/requirements.txt ./server/Pipfile ./server/Pipfile.lock /unpacker/server/
