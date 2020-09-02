@@ -52,7 +52,7 @@ RUN jlink \
 
 
 ### Collect Python Dependencies ###
-FROM python:3.8.5-alpine3.12 as python-deps
+FROM python:3.9.0rc1-alpine3.12 as python-deps
 ## Runtime Configuration
 # set current working directory
 WORKDIR /unpacker/server/
@@ -84,7 +84,7 @@ RUN pipenv install --deploy
 
 ### Build Runtime Application
 # Build Docker image with all project artifacts
-FROM python:3.8.5-alpine3.12
+FROM python:3.9.0rc1-alpine3.12
 
 ## Image Configuration
 # add JRE to path
