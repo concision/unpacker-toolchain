@@ -60,10 +60,7 @@ public class UnpackerCmd {
                 .metavar("PATH")
                 .nargs("?")
                 .type(new FileArgumentType().verifyExists().verifyCanRead());
-//        sourceGroup.addArgument("--cache")
-//                .help("Caches intermediate results in $TEMP folder to increase performance of multiple executions")
-//                .dest("cache")
-//                .action(Arguments.storeTrue());
+
 
         // data output
         val outputGroup = parser.addArgumentGroup("output");
