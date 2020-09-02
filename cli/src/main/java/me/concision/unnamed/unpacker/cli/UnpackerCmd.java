@@ -12,6 +12,9 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.util.Collections;
 import java.util.Date;
@@ -267,14 +270,32 @@ public class UnpackerCmd {
         log.setUseParentHandlers(false);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new SimpleFormatter() {
+            private final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+            private final PrintStream printStream = new PrintStream(byteStream);
+
             @Override
             public synchronized String format(LogRecord record) {
-                return String.format(
+                StringBuilder builder = new StringBuilder();
+                builder.append(String.format(
                         "[%1$tF %1$tT] %2$-7s %3$s %n",
                         new Date(record.getMillis()),
                         record.getLevel().getLocalizedName(),
                         record.getMessage()
-                );
+                ));
+                Throwable thrown = record.getThrown();
+                if (thrown != null) {
+                    thrown.printStackTrace(printStream);
+                    for (String line : new String(byteStream.toByteArray(), StandardCharsets.ISO_8859_1).split("[\r\n]+")) {
+                        builder.append(String.format(
+                                "[%1$tF %1$tT] %2$-7s %3$s %n",
+                                new Date(record.getMillis()),
+                                record.getLevel().getLocalizedName(),
+                                line
+                        ));
+                    }
+                    byteStream.reset();
+                }
+                return builder.toString();
             }
         });
         log.addHandler(handler);
