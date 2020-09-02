@@ -47,7 +47,8 @@ public class UnpackerCmd {
         val sourceGroup = parser.addArgumentGroup("source");
         sourceGroup.addArgument("--source-type")
                 .help("Method of obtaining a Packages.bin data source\n" +
-                        "ORIGIN: Streams directly from update servers\n" +
+                        "ORIGIN: Streams cached CDN files directly from update servers\n" +
+                        "        (note: these files may be out of date)\n" +
                         "INSTALL: Searches for last used install location\n" +
                         "FOLDER: Specifies H.Misc.cache/H.Misc.toc folder (specify a --source-location DIRECTORY)\n" +
                         "BINARY: Specifies a raw extracted Packages.bin file (specify a --source-location FILE)")
@@ -65,9 +66,9 @@ public class UnpackerCmd {
         // data output
         val outputGroup = parser.addArgumentGroup("output");
         outputGroup.description("Specifies how output is controlled; there are two types of outputs:\n" +
-                "SINGLE: Outputs all relevant package records into single output (e.g. file, stdout)\n" +
+                "Single: Outputs all relevant package records into single output (e.g. file, stdout)\n" +
                 "        if '--output-location FILE' is specified, writes to file, otherwise to stdout\n" +
-                "MULTIPLE: Outputs relevant package records into multiple independent files\n" +
+                "Multiple: Outputs relevant package records into multiple independent files\n" +
                 "          '--output-location DIRECTORY' argument must be specified");
         val outputLocationArgument = outputGroup.addArgument("--output-location")
                 .help("Output path destination; omitting this flag will print the output to standard output")
@@ -77,6 +78,7 @@ public class UnpackerCmd {
         outputGroup.addArgument("--output-format")
                 .help("Specifies the output format\n" +
                         "SINGLE:\n" +
+                        "  BINARY: Outputs a raw decompressed Packages.bin\n" +
                         "  PATHS: Outputs matching package paths on each line\n" +
                         "         (e.g. /Lotus/Path/.../PackageName\\r\\n)\n" +
                         "  RECORDS: Outputs a matching package JSON record on each line\n" +
@@ -102,7 +104,7 @@ public class UnpackerCmd {
         val outputConvertStringLiteralsArgument = outputGroup.addArgument("--output-convert-string-literals")
                 .help("Strips quotes for string literals when converting LUA tables to JSON " +
                         "(e.g. \"\\\"string\\\"\" is converted to \"string\") (default: false).\n" +
-                        "Mutually exclusive with --output-raw")
+                        "Mutually exclusive with \"--output-format BINARY\" and \"--output-raw\"")
                 .dest("output_convert_string_literals")
                 .action(Arguments.storeTrue());
 
@@ -132,11 +134,13 @@ public class UnpackerCmd {
         // verify source has source location
         try {
             SourceType sourceType = namespace.get("source_type");
+            FormatType formatType = namespace.get("output_format");
+
             if (sourceType.requiresSource() && namespace.get("source_location") == null) {
                 throw new ArgumentParserException("source type " + sourceType + " requires a specified --source-location PATH", parser, sourceLocationArgument);
             }
+
             // verify output destination
-            FormatType formatType = namespace.get("output_format");
             if (formatType.mode() == OutputMode.MULTIPLE && namespace.get("output_location") == null) {
                 throw new ArgumentParserException("output mode " + OutputMode.MULTIPLE + " requires a specified --output-location DIRECTORY", parser, outputLocationArgument);
             }
@@ -144,6 +148,12 @@ public class UnpackerCmd {
             if (namespace.getBoolean("output_format_raw")) {
                 if (namespace.getBoolean("output_convert_string_literals")) {
                     throw new ArgumentParserException("--output-raw is mutually exclusive", parser, outputConvertStringLiteralsArgument);
+                }
+            }
+
+            if (formatType == FormatType.BINARY) {
+                if (namespace.getBoolean("output_convert_string_literals")) {
+                    throw new ArgumentParserException("--output-format " + FormatType.BINARY + " is mutually exclusive", parser, outputConvertStringLiteralsArgument);
                 }
             }
         } catch (ArgumentParserException exception) {

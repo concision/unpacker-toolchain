@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public enum SourceType {
     /**
-     * Streams directly from origin server
+     * Streams cached files directly from origin server
      */
     ORIGIN(false, OriginSourceCollector::new),
     /**
