@@ -10,7 +10,7 @@ import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
 import java.io.InputStream;
 
 /**
- * Control flow for extraction process
+ * Control flow for unpacking process
  *
  * @author Concision
  */
@@ -47,13 +47,13 @@ public class Unpacker {
      */
     private void decache() {
         log.info("Generating Packages.bin stream");
-        // generate packages.bin input stream; thrown away after block has finished execution
+        // generate packages.bin input stream
         InputStream packagesStream;
         try {
-            packagesStream = args.source.generate(args);
+            packagesStream = args.sourceType.generate(args);
 
             if (packagesStream == null) {
-                throw new NullPointerException("source type " + args.source + " generated a null stream");
+                throw new NullPointerException("source type " + args.sourceType + " generated a null stream");
             }
         } catch (Throwable throwable) {
             throw new RuntimeException("failed to generate Packages.bin input stream", throwable);
@@ -69,6 +69,6 @@ public class Unpacker {
         } catch (Throwable throwable) {
             throw new RuntimeException("formatter " + args.outputFormat + " failed to write", throwable);
         }
-        log.info("Completed");
+        log.info("Finished unpacking. Goodbye.");
     }
 }

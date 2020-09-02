@@ -37,7 +37,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
             // check if matches any patterns
             if (unpacker.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.absolutePath())))) {
                 // process record
-                log.info("Publishing package: "+ record.absolutePath());
+                log.info("Publishing package: " + record.absolutePath());
 
                 // attempt publish
                 try {

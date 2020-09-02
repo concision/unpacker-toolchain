@@ -59,6 +59,100 @@ public class UpdaterSourceCollector implements SourceCollector {
      */
     private static final String CLIENT_EXECUTABLE_FILENAME = new String(Base64.getDecoder().decode("V2FyZnJhbWUueDY0LmV4ZQ=="), StandardCharsets.ISO_8859_1);
 
+    /**
+     * Waits for a process to be spawned and then hides all GUI windows using JNA
+     *
+     * @param executableFile Game client executable {@link File} to match
+     */
+    @SuppressWarnings("BusyWait")
+    private static void awaitHideWindow(File executableFile) {
+        // found client hwnd
+        HWND[] clientHwnd = new HWND[1];
+
+        // JNA buffer
+        byte[] buffer = new byte[executableFile.getAbsolutePath().length() + 2];
+        IntByReference pointer = new IntByReference();
+
+        while (clientHwnd[0] == null) {
+            INSTANCE.EnumWindows((hwnd, __) -> {
+                // get process id
+                INSTANCE.GetWindowThreadProcessId(hwnd, pointer);
+                // read process information
+                WinNT.HANDLE process = Kernel32.INSTANCE.OpenProcess(PROCESS_QUERY_INFORMATION, false, pointer.getValue());
+                // read absolute filename
+                Psapi.INSTANCE.GetModuleFileNameExA(process, null, buffer, buffer.length - 1 /* null terminator */);
+
+                // convert to File
+                File processFile = new File(Native.toString(buffer));
+
+                // check if process is our executable
+                if (processFile.getName().equals(executableFile.getName()) || executableFile.equals(processFile)) {
+                    // save file
+                    clientHwnd[0] = hwnd;
+                    // exit iteration early
+                    return false;
+                }
+
+                // keep iterating
+                return true;
+            }, null);
+
+            // try again in 1 microsecond
+            if (clientHwnd[0] == null) {
+                try {
+                    Thread.sleep(0, (int) TimeUnit.MICROSECONDS.toNanos(1));
+                } catch (InterruptedException ignored) {
+                    return;
+                }
+            }
+        }
+
+        log.info("Detected running process; removing visibility");
+        try {
+            while (true) {
+                INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
+                Thread.sleep(1);
+            }
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    // threads
+
+    /**
+     * Redirects process {@link InputStream} to logger
+     *
+     * @param prefix logging prefix
+     * @param stream {@link InputStream} to read
+     */
+    private static void log(String prefix, InputStream stream) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            for (String line; (line = reader.readLine()) != null; ) {
+                log.info("[" + prefix + "] " + line);
+            }
+        } catch (IOException exception) {
+            log.severe("[" + prefix + "] Stream closed");
+        }
+    }
+
+    /**
+     * Traverse a directory recursively
+     *
+     * @param parent   root directory to traverse
+     * @param consumer {@link Consumer} callback
+     */
+    private static void walk(File parent, Consumer<File> consumer) {
+        File[] files = parent.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                walk(file, consumer);
+            }
+        }
+        consumer.accept(parent);
+    }
+
+    // utility
+
     @Override
     @SuppressWarnings("DuplicatedCode")
     public InputStream generate(@NonNull CommandArguments args) throws IOException {
@@ -250,99 +344,5 @@ public class UpdaterSourceCollector implements SourceCollector {
 
         // delegate to folder source collector
         return new FolderSourceCollector().generate(cacheFolder);
-    }
-
-    // threads
-
-    /**
-     * Waits for a process to be spawned and then hides all GUI windows using JNA
-     *
-     * @param executableFile Game client executable {@link File} to match
-     */
-    @SuppressWarnings("BusyWait")
-    private static void awaitHideWindow(File executableFile) {
-        // found client hwnd
-        HWND[] clientHwnd = new HWND[1];
-
-        // JNA buffer
-        byte[] buffer = new byte[executableFile.getAbsolutePath().length() + 2];
-        IntByReference pointer = new IntByReference();
-
-        while (clientHwnd[0] == null) {
-            INSTANCE.EnumWindows((hwnd, __) -> {
-                // get process id
-                INSTANCE.GetWindowThreadProcessId(hwnd, pointer);
-                // read process information
-                WinNT.HANDLE process = Kernel32.INSTANCE.OpenProcess(PROCESS_QUERY_INFORMATION, false, pointer.getValue());
-                // read absolute filename
-                Psapi.INSTANCE.GetModuleFileNameExA(process, null, buffer, buffer.length - 1 /* null terminator */);
-
-                // convert to File
-                File processFile = new File(Native.toString(buffer));
-
-                // check if process is our executable
-                if (processFile.getName().equals(executableFile.getName()) || executableFile.equals(processFile)) {
-                    // save file
-                    clientHwnd[0] = hwnd;
-                    // exit iteration early
-                    return false;
-                }
-
-                // keep iterating
-                return true;
-            }, null);
-
-            // try again in 1 microsecond
-            if (clientHwnd[0] == null) {
-                try {
-                    Thread.sleep(0, (int) TimeUnit.MICROSECONDS.toNanos(1));
-                } catch (InterruptedException ignored) {
-                    return;
-                }
-            }
-        }
-
-        log.info("Detected running process; removing visibility");
-        try {
-            while (true) {
-                INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
-                Thread.sleep(1);
-            }
-        } catch (InterruptedException ignored) {
-        }
-    }
-
-    /**
-     * Redirects process {@link InputStream} to logger
-     *
-     * @param prefix logging prefix
-     * @param stream {@link InputStream} to read
-     */
-    private static void log(String prefix, InputStream stream) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            for (String line; (line = reader.readLine()) != null; ) {
-                log.info("[" + prefix + "] " + line);
-            }
-        } catch (IOException exception) {
-            log.severe("[" + prefix + "] Stream closed");
-        }
-    }
-
-    // utility
-
-    /**
-     * Traverse a directory recursively
-     *
-     * @param parent   root directory to traverse
-     * @param consumer {@link Consumer} callback
-     */
-    private static void walk(File parent, Consumer<File> consumer) {
-        File[] files = parent.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                walk(file, consumer);
-            }
-        }
-        consumer.accept(parent);
     }
 }

@@ -27,7 +27,7 @@ public class CommandArguments {
 
     // source
     @NonNull
-    public final SourceType source;
+    public final SourceType sourceType;
     public final File sourcePath;
 
     // output
@@ -36,7 +36,7 @@ public class CommandArguments {
     public final FormatType outputFormat;
 
     // flags
-    public final boolean rawMode;
+    public final boolean skipJsonificiation;
     public final boolean convertStringLiterals;
 
     @NonNull
@@ -52,19 +52,19 @@ public class CommandArguments {
         return new CommandArguments(
                 namespace,
                 // miscellaneous
-                namespace.getString("wine_cmd"),
+                namespace.getString(UnpackerCmd.DEST_WINE_CMD),
                 // source
-                namespace.get("source_type"),
-                namespace.get("source_location"),
+                namespace.get(UnpackerCmd.DEST_SOURCE_TYPE),
+                namespace.get(UnpackerCmd.DEST_SOURCE_LOCATION),
                 // output
-                namespace.get("output_location"),
-                namespace.get("output_format"),
+                namespace.get(UnpackerCmd.DEST_OUTPUT_LOCATION),
+                namespace.get(UnpackerCmd.DEST_OUTPUT_FORMAT),
                 // output flags
-                namespace.getBoolean("output_format_raw"),
-                namespace.getBoolean("output_convert_string_literals"),
+                namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
+                namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_CONVERT_STRING_LITERALS),
                 // namespace.getBoolean("cache"),
                 // package glob patterns
-                Collections.unmodifiableList(namespace.getList("packages"))
+                Collections.unmodifiableList(namespace.getList(UnpackerCmd.ARGUMENT_PACKAGES))
         );
     }
 }

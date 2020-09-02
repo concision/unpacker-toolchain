@@ -15,7 +15,7 @@ public interface OutputFormatWriter {
     /**
      * Writes packages input stream to an output using an implemented format
      *
-     * @param unpacker      associated {@link Unpacker} parameter instance
+     * @param unpacker       associated {@link Unpacker} parameter instance
      * @param packagesStream Packages.bin input stream
      * @throws IOException if an underlying IO exception is thrown
      */

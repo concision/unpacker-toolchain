@@ -26,7 +26,7 @@ public class ListFormatWriter extends SingleRecordFormatWriter {
         Document document = new Document();
 
         document.put("path", record.absolutePath());
-        if (unpacker.args().rawMode) {
+        if (unpacker.args().skipJsonificiation) {
             document.put("package", record.contents());
         } else {
             document.put("package", Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals));

@@ -1,10 +1,10 @@
 package me.concision.unnamed.unpacker.cli.output.writers.multi;
 
+import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
+import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.FormatType;
 import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
-import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
-import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import org.bson.json.JsonWriterSettings;
 
 import java.io.File;
@@ -43,7 +43,7 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
                 .collect(Collectors.joining("/"));
 
         try (PrintStream output = new PrintStream(new FileOutputStream(filePath))) {
-            if (unpacker.args().rawMode) {
+            if (unpacker.args().skipJsonificiation) {
                 output.print(record.contents());
             } else {
                 output.print(Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals)

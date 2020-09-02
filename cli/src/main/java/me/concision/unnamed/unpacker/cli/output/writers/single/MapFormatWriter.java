@@ -1,9 +1,9 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
-import me.concision.unnamed.unpacker.cli.Unpacker;
-import me.concision.unnamed.unpacker.cli.output.FormatType;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.output.FormatType;
 import org.bson.Document;
 import org.bson.json.JsonWriterSettings;
 
@@ -17,7 +17,7 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
 
     @Override
     public void publish(Unpacker unpacker, PackageEntry record) {
-        if (unpacker.args().rawMode) {
+        if (unpacker.args().skipJsonificiation) {
             document.put(record.absolutePath(), record.contents());
         } else {
             document.put(

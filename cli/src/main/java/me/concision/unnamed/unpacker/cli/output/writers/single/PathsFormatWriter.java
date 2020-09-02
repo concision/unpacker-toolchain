@@ -1,8 +1,8 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.FormatType;
-import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 
 /**
  * See {@link FormatType#PATHS}
