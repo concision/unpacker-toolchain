@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
 
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import java.io.InputStream;
  *
  * @author Concision
  */
-@Log4j2
+@Log
 @RequiredArgsConstructor
 public class Unpacker {
     /**

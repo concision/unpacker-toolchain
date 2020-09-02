@@ -1,6 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.FormatType;
 import org.apache.commons.compress.utils.IOUtils;
@@ -13,7 +13,7 @@ import java.io.InputStream;
  *
  * @author Concision
  */
-@Log4j2
+@Log
 public class BinaryFormatWriter extends SingleFormatWriter {
     @Override
     public void format(Unpacker unpacker, InputStream packagesStream) throws IOException {

@@ -2,29 +2,29 @@ package me.concision.unnamed.unpacker.cli.source.collectors;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
-import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 /**
  * See {@link SourceType#INSTALL}
  *
  * @author Concision
  */
-@Log4j2
+@Log
 public class InstallSourceCollector implements SourceCollector {
     /**
      * Windows registry location; slightly obfuscated to prevent search indexing
      */
     @SuppressWarnings("SpellCheckingInspection")
-    private static final String REGISTRY_PATH = new String(Base64Converter.parseBase64Binary("U29mdHdhcmVcRGlnaXRhbCBFeHRyZW1lc1xXYXJmcmFtZVxMYXVuY2hlcg=="), StandardCharsets.ISO_8859_1);
+    private static final String REGISTRY_PATH = new String(Base64.getDecoder().decode("U29mdHdhcmVcRGlnaXRhbCBFeHRyZW1lc1xXYXJmcmFtZVxMYXVuY2hlcg=="), StandardCharsets.ISO_8859_1);
 
     @Override
     public InputStream generate(CommandArguments args) throws IOException {

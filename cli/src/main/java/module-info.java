@@ -2,8 +2,6 @@ module me.concision.unnamed.unpacker.cli {
     requires static lombok;
     requires static me.concision.unnamed.unpacker.api;
 
-    requires static org.apache.logging.log4j;
-    requires static org.apache.logging.log4j.core;
     requires static argparse4j;
     requires static org.json;
     requires static org.mongodb.bson;
@@ -14,9 +12,7 @@ module me.concision.unnamed.unpacker.cli {
     requires static org.apache.commons.compress;
 
     requires java.base;
-    requires java.xml;
-    requires java.desktop;
-    requires java.naming;
-    requires java.management;
-    requires java.scripting;
+    requires java.logging;
+
+    requires java.naming; // required by httpclient
 }

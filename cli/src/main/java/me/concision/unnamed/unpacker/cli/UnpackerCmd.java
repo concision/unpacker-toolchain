@@ -10,11 +10,15 @@ import net.sourceforge.argparse4j.impl.type.FileArgumentType;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.nio.file.FileSystems;
 import java.util.Collections;
+import java.util.Date;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -184,22 +188,35 @@ public class UnpackerCmd {
 
 
         // initialize environment
-        // set logging verbosity
-        if (namespace.getBoolean("verbose_logging")) {
-            System.setProperty("unpacker.verbose", "ALL");
-        }
         // initialize logging mechanism
-        Logger log = LogManager.getLogger(UnpackerCmd.class);
-        log.debug("Namespace: {}", namespace);
-
+        Logger rootLogger = Logger.getLogger(UnpackerCmd.class.getPackageName());
+        rootLogger.setUseParentHandlers(false);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setFormatter(new SimpleFormatter() {
+            @Override
+            public synchronized String format(LogRecord record) {
+                return String.format(
+                        "[%1$tF %1$tT] %2$-7s %3$s %n",
+                        new Date(record.getMillis()),
+                        record.getLevel().getLocalizedName(),
+                        record.getMessage()
+                );
+            }
+        });
+        rootLogger.addHandler(handler);
+        // set logging verbosity
+        if (!namespace.getBoolean("verbose_logging")) {
+            rootLogger.setLevel(Level.OFF);
+        }
+        // initialize logger for current file
+        rootLogger.config("Namespace: " + namespace);
 
         // start extraction
         try {
             new Unpacker(CommandArguments.from(namespace))
                     .execute();
         } catch (Throwable throwable) {
-            log.fatal("An unexpected exception occurred during extraction", throwable);
-
+            rootLogger.log(Level.SEVERE, "An unexpected exception occurred during extraction", throwable);
             System.exit(-1);
         }
     }

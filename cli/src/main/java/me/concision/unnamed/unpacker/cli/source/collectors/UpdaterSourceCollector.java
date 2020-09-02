@@ -9,7 +9,7 @@ import com.sun.jna.ptr.IntByReference;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
@@ -21,7 +21,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -35,6 +34,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -52,12 +52,12 @@ import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCo
  *
  * @author Concision
  */
-@Log4j2
+@Log
 public class UpdaterSourceCollector implements SourceCollector {
     /**
      * Game client executable filename
      */
-    private static final String CLIENT_EXECUTABLE_FILENAME = new String(Base64Converter.parseBase64Binary("V2FyZnJhbWUueDY0LmV4ZQ=="), StandardCharsets.ISO_8859_1);
+    private static final String CLIENT_EXECUTABLE_FILENAME = new String(Base64.getDecoder().decode("V2FyZnJhbWUueDY0LmV4ZQ=="), StandardCharsets.ISO_8859_1);
 
     @Override
     @SuppressWarnings("DuplicatedCode")
@@ -124,7 +124,7 @@ public class UpdaterSourceCollector implements SourceCollector {
         tempDirectory.deleteOnExit();
         //noinspection ResultOfMethodCallIgnored
         Runtime.getRuntime().addShutdownHook(new Thread(() -> walk(tempDirectory, File::delete), "Unpacker::ShutdownHook"));
-        log.info("Using temporary directory: {}", tempDirectory.getAbsolutePath());
+        log.info("Using temporary directory: " + tempDirectory.getAbsolutePath());
 
         // find game client
         log.info("Fetching game client");
@@ -162,7 +162,7 @@ public class UpdaterSourceCollector implements SourceCollector {
 
         // build game client command to execute
         boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-        log.info("Is Windows: {}", isWindows);
+        log.info("Is Windows: " + isWindows);
         try {
             // build command
             String[] command;
@@ -175,7 +175,7 @@ public class UpdaterSourceCollector implements SourceCollector {
                         args.wineCmd.replace("UNPACKER_COMMAND", "\"" + executableFile.getAbsolutePath() + "\" -silent -cluster:public -applet:/EE/Types/Framework/ContentUpdate")
                 };
             }
-            log.info("Client command: {}", String.join(" ", command));
+            log.info("Client command: " + String.join(" ", command));
 
             // execute game client
             Process updaterProcess = Runtime.getRuntime().exec(
@@ -209,7 +209,7 @@ public class UpdaterSourceCollector implements SourceCollector {
 
             // wait for game client to finish
             int exitCode = updaterProcess.waitFor();
-            log.info("Exit code: {}", exitCode);
+            log.info("Client exit code: " + exitCode);
 
             log.info("Waiting for process management threads to finish");
             for (Thread thread : threads) {
@@ -321,10 +321,10 @@ public class UpdaterSourceCollector implements SourceCollector {
     private static void log(String prefix, InputStream stream) {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
             for (String line; (line = reader.readLine()) != null; ) {
-                log.info("[{}] {}", prefix, line);
+                log.info("[" + prefix + "] " + line);
             }
         } catch (IOException exception) {
-            log.error("[{}] Stream closed", prefix);
+            log.severe("[" + prefix + "] Stream closed");
         }
     }
 

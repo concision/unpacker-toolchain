@@ -1,15 +1,14 @@
 package me.concision.unnamed.unpacker.cli.source.collectors;
 
 import lombok.NonNull;
-import lombok.extern.log4j.Log4j2;
-import me.concision.unnamed.unpacker.cli.CommandArguments;
-import me.concision.unnamed.unpacker.cli.source.SourceCollector;
-import me.concision.unnamed.unpacker.cli.source.SourceType;
+import lombok.extern.java.Log;
 import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
 import me.concision.unnamed.decacher.api.TocStreamReader;
 import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.source.SourceCollector;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
 import org.apache.commons.compress.utils.BoundedInputStream;
-import org.apache.commons.compress.utils.CountingInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.BufferedInputStream;
@@ -24,7 +23,7 @@ import java.util.Optional;
  *
  * @author Concision
  */
-@Log4j2
+@Log
 public class FolderSourceCollector implements SourceCollector {
     @Override
     public InputStream generate(CommandArguments args) throws IOException {
