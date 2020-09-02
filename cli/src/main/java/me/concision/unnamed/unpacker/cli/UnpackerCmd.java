@@ -36,19 +36,31 @@ public class UnpackerCmd {
                 .build()
                 .description("Extracts and processes data from Packages.bin");
 
-        // source flags
+        // additional flags
         val flagsGroup = parser.addArgumentGroup("flags");
+        // verbose logging
         flagsGroup.addArgument("--verbose")
                 .help("Verbosely logs information to standard error stream")
                 .dest("verbose_logging")
                 .action(Arguments.storeTrue());
+        // wine command
+        val wineCmdArgument = flagsGroup.addArgument("--wine-cmd")
+                .help("Specifies Wine command for Linux and macOS. UNPACKER_COMMAND is used as a placeholder\n" +
+                        "(e.g. --wine-cmd \"/usr/bin/wine64 UNPACKER_COMMAND\").\n" +
+                        "Must be specified when \"--source-type UPDATER\".")
+                .dest("wine_cmd")
+                .metavar("/usr/bin/wine64")
+                .nargs("?");
 
+        // source flags
         // data source
         val sourceGroup = parser.addArgumentGroup("source");
         sourceGroup.addArgument("--source-type")
                 .help("Method of obtaining a Packages.bin data source\n" +
+                        "UPDATER: Downloads and executes the game updater to fetch latest\n" +
+                        "         (note: 64-bit wine is required for Linux and macOS; see \"--wine-cmd\")\n" +
                         "ORIGIN: Streams cached CDN files directly from update servers\n" +
-                        "        (note: these files may be out of date)\n" +
+                        "        (note: these files may be out of date, use UPDATER for latest)\n" +
                         "INSTALL: Searches for last used install location\n" +
                         "FOLDER: Specifies H.Misc.cache/H.Misc.toc folder (specify a --source-location DIRECTORY)\n" +
                         "BINARY: Specifies a raw extracted Packages.bin file (specify a --source-location FILE)")
@@ -156,6 +168,13 @@ public class UnpackerCmd {
                     throw new ArgumentParserException("--output-format " + FormatType.BINARY + " is mutually exclusive", parser, outputConvertStringLiteralsArgument);
                 }
             }
+
+            if (sourceType == SourceType.UPDATER) {
+                boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+                if (!isWindows) {
+                    throw new ArgumentParserException("--source-type " + SourceType.UPDATER + " requires --wine-cmd flag on non-Windows OSes", parser, wineCmdArgument);
+                }
+            }
         } catch (ArgumentParserException exception) {
             parser.handleError(exception);
             System.exit(-1);
@@ -178,6 +197,7 @@ public class UnpackerCmd {
                     .execute();
         } catch (Throwable throwable) {
             log.fatal("An unexpected exception occurred during extraction", throwable);
+
             System.exit(-1);
         }
     }

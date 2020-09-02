@@ -1,0 +1,333 @@
+package me.concision.unnamed.unpacker.cli.source.collectors;
+
+import com.sun.jna.Native;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.Psapi;
+import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinNT;
+import com.sun.jna.ptr.IntByReference;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.extern.log4j.Log4j2;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.source.SourceCollector;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.logging.log4j.core.config.plugins.convert.Base64Converter;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.sun.jna.platform.win32.User32.INSTANCE;
+import static com.sun.jna.platform.win32.WinNT.PROCESS_QUERY_INFORMATION;
+import static com.sun.jna.platform.win32.WinUser.SW_HIDE;
+import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.ORIGIN_URL;
+
+/**
+ * See {@link SourceType#UPDATER}
+ *
+ * @author Concision
+ */
+@Log4j2
+public class UpdaterSourceCollector implements SourceCollector {
+    /**
+     * Game client executable filename
+     */
+    private static final String CLIENT_EXECUTABLE_FILENAME = new String(Base64Converter.parseBase64Binary("V2FyZnJhbWUueDY0LmV4ZQ=="), StandardCharsets.ISO_8859_1);
+
+    @Override
+    @SuppressWarnings("DuplicatedCode")
+    public InputStream generate(@NonNull CommandArguments args) throws IOException {
+        // obtain listing of CDN depot files
+        @RequiredArgsConstructor
+        @ToString
+        class DepotFile {
+            final String path;
+            final String name;
+            final long size;
+        }
+        List<DepotFile> files = new LinkedList<>();
+
+        log.info("Fetching index.txt.lzma manifest");
+        try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+                .addInterceptorLast(new OriginSourceCollector.HeaderFormatter())
+                .build()) {
+            // form index.txt.lzma request
+            HttpGet request = new HttpGet(ORIGIN_URL + "/index.txt.lzma");
+            request.setProtocolVersion(HttpVersion.HTTP_1_1);
+
+            // execute request
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            // parse response
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new LZMACompressorInputStream(response.getEntity().getContent())))) {
+                // path parsing pattern
+                Pattern pathPattern = Pattern.compile("^(?:/[^/]+)*/(?<filename>.+)\\.[0-9A-F]{32}\\.lzma$");
+                // parse entries in manifest
+                for (String entry; (entry = reader.readLine()) != null; ) {
+                    int commaIndex = entry.lastIndexOf(',');
+                    if (commaIndex == -1) {
+                        continue;
+                    }
+                    // parse parameter
+                    String path = entry.substring(0, commaIndex);
+                    long fileSize = Long.parseLong(entry.substring(commaIndex + 1));
+                    String name;
+
+                    Matcher matcher = pathPattern.matcher(path);
+                    if (matcher.find()) {
+                        name = matcher.group("filename");
+                    } else {
+                        name = path.substring(path.lastIndexOf('.') + 1);
+                    }
+
+                    files.add(new DepotFile(path, name, fileSize));
+                }
+            }
+        } catch (Throwable throwable) {
+            throw new RuntimeException("failed to fetch index.txt.lzma manifest", throwable);
+        }
+
+        // create temporary directory
+        log.info("Creating temporary directory");
+        File tempDirectory;
+        try {
+            tempDirectory = Files.createTempDirectory(Unpacker.class.getSimpleName()).toFile();
+        } catch (IOException exception) {
+            throw new RuntimeException("failed to create a temporary directory", exception);
+        }
+        // delete temporary directory on system exit
+        tempDirectory.deleteOnExit();
+        //noinspection ResultOfMethodCallIgnored
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> walk(tempDirectory, File::delete), "Unpacker::ShutdownHook"));
+        log.info("Using temporary directory: {}", tempDirectory.getAbsolutePath());
+
+        // find game client
+        log.info("Fetching game client");
+        File executableFile = new File(tempDirectory, CLIENT_EXECUTABLE_FILENAME);
+        try (CloseableHttpClient httpClient = HttpClientBuilder.create()
+                .addInterceptorLast(new OriginSourceCollector.HeaderFormatter())
+                .build()) {
+            // build TOC url
+            String tocUrl = files.stream()
+                    .filter(file -> file.name.equals(CLIENT_EXECUTABLE_FILENAME))
+                    .findFirst()
+                    .map(entry -> ORIGIN_URL + entry.path)
+                    .orElseThrow(() -> new RuntimeException("failed to find game client in manifest"));
+            log.info("Client url: " + tocUrl);
+
+            // form request
+            HttpGet request = new HttpGet(tocUrl);
+            request.setProtocolVersion(HttpVersion.HTTP_1_1);
+
+            // execute request
+            CloseableHttpResponse response = httpClient.execute(request);
+
+            // download game client and save it to temporary directory
+            try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
+                try (OutputStream executableStream = new BufferedOutputStream(new FileOutputStream(executableFile))) {
+                    IOUtils.copy(stream, executableStream);
+                }
+            }
+            response.close();
+        } catch (EOFException ignored) {
+            throw new RuntimeException("reached EOF before finding game client");
+        } catch (Throwable throwable) {
+            throw new RuntimeException("failed to fetch game client", throwable);
+        }
+
+        try {
+            // build game client command to execute
+            boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+            log.info("Is Windows: {}", isWindows);
+
+            // build command
+            String[] command;
+            if (isWindows) {
+                command = new String[]{executableFile.getAbsolutePath(), "-silent", "-cluster:public", "-applet:/EE/Types/Framework/ContentUpdate"};
+            } else {
+                command = new String[]{
+                        "sh",
+                        "-c",
+                        args.wineCmd.replace("UNPACKER_COMMAND", "\"" + executableFile.getAbsolutePath() + "\" -silent -cluster:public -applet:/EE/Types/Framework/ContentUpdate")
+                };
+            }
+            log.info("Client command: {}", String.join(" ", command));
+
+            // execute game client
+            Process updaterProcess = Runtime.getRuntime().exec(
+                    command,
+                    new String[]{
+                            "WINEARCH=win64",
+                            "WINEPREFIX=" + tempDirectory.getAbsolutePath() + "/.wine64",
+                            // solves a "Error opening terminal: unknown" (see https://askubuntu.com/a/1156144)
+                            "TERM=xterm-256color"
+                    }
+            );
+
+            // process watching threads to initialize
+            List<Thread> threads = new LinkedList<>();
+
+            // if on Windows, start a thread to hide any popups once the process is available
+            if (isWindows) {
+                threads.add(new Thread(() -> awaitHideWindow(executableFile), "Unpacker::ClientUpdater::HideWindow"));
+            }
+
+            // logging pipe threads
+            threads.add(new Thread(() -> log("STDOUT", updaterProcess.getInputStream()), "Unpacker::ClientUpdater::StandardInput"));
+            threads.add(new Thread(() -> log("STDERR", updaterProcess.getErrorStream()), "Unpacker::ClientUpdater::StandardError"));
+
+            // start all threads
+            for (Thread thread : threads) {
+                // do not allow this thread to hang the JVM on main thread exit
+                thread.setDaemon(true);
+                thread.start();
+            }
+
+            // wait for game client to finish
+            int exitCode = updaterProcess.waitFor();
+            log.info("Exit code: {}", exitCode);
+
+            log.info("Waiting for process management threads to finish");
+            for (Thread thread : threads) {
+                log.info("Awaiting " + thread.getName());
+                thread.interrupt();
+                thread.join();
+            }
+        } catch (IOException | InterruptedException exception) {
+            throw new RuntimeException("failed to run updater command", exception);
+        }
+
+        // clean up temporary directory
+        log.info("Cleaning up temporary directory");
+        File cacheFolder = new File(tempDirectory, "Cache.Windows");
+        Path cachePath = cacheFolder.toPath();
+        // delete all unnecessary files
+        walk(tempDirectory, (File file) -> {
+            // check if Packages.bin related file
+            if (file.toPath().startsWith(cachePath)) {
+                // delete when system exits
+                file.deleteOnExit();
+            } else {
+                // delete now
+                //noinspection ResultOfMethodCallIgnored
+                file.delete();
+            }
+        });
+
+        // delegate to folder source collector
+        return new FolderSourceCollector().generate(cacheFolder);
+    }
+
+    // threads
+
+    /**
+     * Waits for a process to be spawned and then hides all GUI windows using JNA
+     *
+     * @param executableFile Game client executable {@link File} to match
+     */
+    private static void awaitHideWindow(File executableFile) {
+        // found client hwnd
+        HWND[] clientHwnd = new HWND[1];
+
+        // JNA buffer
+        byte[] buffer = new byte[executableFile.getAbsolutePath().length() + 2];
+        IntByReference pointer = new IntByReference();
+
+        while (clientHwnd[0] == null) {
+            INSTANCE.EnumWindows((hwnd, __) -> {
+                // get process id
+                INSTANCE.GetWindowThreadProcessId(hwnd, pointer);
+                // read process information
+                WinNT.HANDLE process = Kernel32.INSTANCE.OpenProcess(PROCESS_QUERY_INFORMATION, false, pointer.getValue());
+                // read absolute filename
+                Psapi.INSTANCE.GetModuleFileNameExA(process, null, buffer, buffer.length - 1 /* null terminator */);
+
+                // convert to File
+                File processFile = new File(Native.toString(buffer));
+
+                // check if process is our executable
+                if (processFile.getName().equals(executableFile.getName()) || executableFile.equals(processFile)) {
+                    // save file
+                    clientHwnd[0] = hwnd;
+                    // exit iteration early
+                    return false;
+                }
+
+                // keep iterating
+                return true;
+            }, null);
+
+            // try again in 1 microsecond
+            if (clientHwnd[0] == null) {
+                try {
+                    //noinspection BusyWait
+                    Thread.sleep(0, (int) TimeUnit.MICROSECONDS.toNanos(1));
+                } catch (InterruptedException ignored) {
+                    return;
+                }
+            }
+        }
+
+        log.info("Detected running process; removing visibility");
+        INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
+    }
+
+    /**
+     * Redirects process {@link InputStream} to logger
+     *
+     * @param prefix logging prefix
+     * @param stream {@link InputStream} to read
+     */
+    private static void log(String prefix, InputStream stream) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            for (String line; (line = reader.readLine()) != null; ) {
+                log.info("[{}] {}", prefix, line);
+            }
+        } catch (IOException exception) {
+            log.error("[{}] Stream closed", prefix);
+        }
+    }
+
+    // utility
+
+    /**
+     * Traverse a directory recursively
+     *
+     * @param parent   root directory to traverse
+     * @param consumer {@link Consumer} callback
+     */
+    private static void walk(File parent, Consumer<File> consumer) {
+        File[] files = parent.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                walk(file, consumer);
+            }
+        }
+        consumer.accept(parent);
+    }
+}

@@ -17,7 +17,7 @@ import java.io.InputStream;
 public class BinaryFormatWriter extends SingleFormatWriter {
     @Override
     public void format(Unpacker unpacker, InputStream packagesStream) throws IOException {
-        log.info("Saving extracted Packages.bin to file");
+        log.info("Writing extracted Packages.bin");
         this.open(unpacker);
 
         try {

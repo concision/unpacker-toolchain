@@ -22,6 +22,9 @@ public class CommandArguments {
     @NonNull
     public final Namespace namespace;
 
+    // miscellaneous
+    public final String wineCmd;
+
     // source
     @NonNull
     public final SourceType source;
@@ -48,6 +51,8 @@ public class CommandArguments {
     public static CommandArguments from(Namespace namespace) {
         return new CommandArguments(
                 namespace,
+                // miscellaneous
+                namespace.getString("wine_cmd"),
                 // source
                 namespace.get("source_type"),
                 namespace.get("source_location"),

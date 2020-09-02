@@ -52,9 +52,10 @@ public class OriginSourceCollector implements SourceCollector {
      * Origin server; slightly obfuscated to prevent search indexing
      */
     @SuppressWarnings("SpellCheckingInspection")
-    private static final String ORIGIN_URL = new String(Base64Converter.parseBase64Binary("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20="), StandardCharsets.ISO_8859_1);
+    static final String ORIGIN_URL = new String(Base64Converter.parseBase64Binary("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20="), StandardCharsets.ISO_8859_1);
 
     @Override
+    @SuppressWarnings("DuplicatedCode")
     public InputStream generate(@NonNull CommandArguments args) {
         // obtain listing of CDN depot files
         @RequiredArgsConstructor
@@ -185,7 +186,7 @@ public class OriginSourceCollector implements SourceCollector {
     /**
      * Formats header to not provide much client information
      */
-    private static class HeaderFormatter implements HttpRequestInterceptor {
+    static class HeaderFormatter implements HttpRequestInterceptor {
         @Override
         public void process(HttpRequest request, HttpContext httpContext) {
             // preserve specific host and header

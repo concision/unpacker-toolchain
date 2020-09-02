@@ -1,12 +1,15 @@
 package me.concision.unnamed.unpacker.cli.source.collectors;
 
 import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
 import me.concision.unnamed.decacher.api.TocStreamReader;
 import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
+import org.apache.commons.compress.utils.BoundedInputStream;
+import org.apache.commons.compress.utils.CountingInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.BufferedInputStream;
@@ -21,6 +24,7 @@ import java.util.Optional;
  *
  * @author Concision
  */
+@Log4j2
 public class FolderSourceCollector implements SourceCollector {
     @Override
     public InputStream generate(CommandArguments args) throws IOException {
@@ -55,6 +59,7 @@ public class FolderSourceCollector implements SourceCollector {
         // skip offset in cache stream
         IOUtils.skip(cacheStream, cacheEntry.offset());
 
-        return new CacheDecompressionInputStream(cacheStream);
+        // limit the input stream
+        return new CacheDecompressionInputStream(new BoundedInputStream(cacheStream, cacheEntry.compressedSize()));
     }
 }

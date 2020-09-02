@@ -81,8 +81,10 @@ RUN apk add --no-cache \
 
 ## install Wine and minimize based on runtime analysis
 #RUN \
+#    # install strace for runtime analysis
+#    apk add --no-cache strace && \
 #    # take snapshot of filesystem before wine installation
-#    find / -type f | sort > original-snapshot.txt &&
+#    find / -type f | sort > original-snapshot.txt && \
 #    # install wine and dependencies
 #    apk add --no-cache \
 #        wine \
@@ -96,12 +98,14 @@ RUN apk add --no-cache \
 #    rm -f installed-snapshot.txt original-snapshot.txt && \
 #    # run unpacker using game updater
 #    java -jar /packages/cli/unpacker.jar \
+#        # log information
+#        --verbose \
 #        # use game updater to fetch latest
-#        --source-type LATEST \
+#        --source-type UPDATER \
 #        # output a raw binary Packages.bin
 #        --output-format BINARY \
 #        # set the default wine command
-#        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt wine64" \
+#        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 UNPACKER_COMMAND\"" \
 #        # pipe the Packages.bin output to /dev/null
 #        >/dev/null && \
 #    # sanitize strace log
@@ -109,7 +113,9 @@ RUN apk add --no-cache \
 #    # delete strace log
 #    rm -f strace.txt && \
 #    # compute difference to discover all unused wine files and delete them
-#    comm -2 -3 wine-files.txt used-files.txt | xargs rm -f
+#    comm -2 -3 wine-files.txt used-files.txt | xargs rm -f && \
+#    # uninstall strace
+#    apk --no-network del strace
 
 ## Project Artifacts
 # copy Linux scripts

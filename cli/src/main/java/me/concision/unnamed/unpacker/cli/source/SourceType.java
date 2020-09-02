@@ -8,6 +8,7 @@ import me.concision.unnamed.unpacker.cli.source.collectors.BinarySourceCollector
 import me.concision.unnamed.unpacker.cli.source.collectors.FolderSourceCollector;
 import me.concision.unnamed.unpacker.cli.source.collectors.InstallSourceCollector;
 import me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector;
+import me.concision.unnamed.unpacker.cli.source.collectors.UpdaterSourceCollector;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +21,10 @@ import java.util.function.Supplier;
  */
 @RequiredArgsConstructor
 public enum SourceType {
+    /**
+     * Launches game client updater to fetch latest files
+     */
+    UPDATER(false, UpdaterSourceCollector::new),
     /**
      * Streams cached files directly from origin server
      */
