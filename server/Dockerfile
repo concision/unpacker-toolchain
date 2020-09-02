@@ -161,5 +161,3 @@ ENV PATH="/opt/venv/bin:$PATH" VIRTUAL_ENV="/opt/venv"
 ## Project Artifacts
 # copy sources
 COPY ./server/src/ /unpacker/server/src/
-
-EXPOSE 80
