@@ -169,10 +169,12 @@ public class UnpackerCmd {
                 }
             }
 
-            if (sourceType == SourceType.UPDATER) {
-                boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-                if (!isWindows) {
-                    throw new ArgumentParserException("--source-type " + SourceType.UPDATER + " requires --wine-cmd flag on non-Windows OSes", parser, wineCmdArgument);
+            boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+            if (!isWindows) {
+                if (sourceType == SourceType.UPDATER) {
+                    if (namespace.get("wine_cmd") == null) {
+                        throw new ArgumentParserException("--source-type " + SourceType.UPDATER + " requires --wine-cmd flag on non-Windows OSes", parser, wineCmdArgument);
+                    }
                 }
             }
         } catch (ArgumentParserException exception) {
