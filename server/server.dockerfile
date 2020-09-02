@@ -10,7 +10,7 @@ RUN apt-get update \
 
 COPY . /home/api-server/app
 
-RUN pip install -r requirements.txt
+RUN pip install -r old-requirements.txt
 
 EXPOSE 80
 
