@@ -10,4 +10,8 @@
 !cli/src/
 
 ## API Server
+!server/Pipfile
+!server/Pipfile.lock
+!server/requirements.txt
+!server/src
 !server/docker

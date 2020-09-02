@@ -8,10 +8,10 @@ FROM alpine:3.12.0 as scripts
 # install dos2unix to remove \r's from scripts when compiling on Windows machines
 RUN apk add --no-cache dos2unix
 # copy updater script
-COPY ./server/docker/*.sh /packages/server/scripts/
+COPY ./server/docker/*.sh /unpacker/server/scripts/
 # remove \r's and set as executable
-RUN dos2unix /packages/server/scripts/*.sh && \
-    chmod +x /packages/server/scripts/*.sh
+RUN dos2unix /unpacker/server/scripts/*.sh && \
+    chmod +x /unpacker/server/scripts/*.sh
 
 
 ### Maven Precompiled Project Artifacts
@@ -20,15 +20,15 @@ FROM maven:3.6.3-openjdk-15 as unpacker
 
 ## Runtime configuration
 # set current work directory
-WORKDIR /packages/
+WORKDIR /unpacker/
 
 ## Copy Projects
 # copy root Maven module manifest
-COPY ./pom.xml ./lombok.config /packages/
+COPY ./pom.xml ./lombok.config /unpacker/
 # copy I/O api module
-COPY ./api/ /packages/api/
+COPY ./api/ /unpacker/api/
 # copy cli-tool module
-COPY ./cli/ /packages/cli/
+COPY ./cli/ /unpacker/cli/
 
 ## Compile Projects
 # compile project
@@ -42,13 +42,13 @@ RUN DOCKER=true mvn package -Dstyle.color=always -Djansi.force=true
 FROM openjdk:15-ea-jdk-alpine3.12 as jre
 
 # copy module information
-COPY --from=unpacker /packages/cli/target/unpacker.jar /packages/cli/unpacker.jar
+COPY --from=unpacker /unpacker/cli/target/unpacker.jar /unpacker/cli/unpacker.jar
 
 # create custom minimal JRE
 RUN jlink \
-    --module-path "/packages/cli/" \
+    --module-path "/unpacker/cli/" \
     --add-modules me.concision.unnamed.unpacker.cli \
-    --output /packages/jre/
+    --output /unpacker/jre/
 
 
 ### Build Runtime Application
@@ -59,19 +59,19 @@ FROM python:3.8.5-alpine3.12
 # add JRE to path
 ENV PATH="/opt/jre/bin:${PATH}"
 # set current working directory
-WORKDIR /packages/server/
+WORKDIR /unpacker/server/
 # dynamic server data (e.g. configuration, logs, etc)
-VOLUME /packages/server/data/
+VOLUME /unpacker/server/data/
 # set container "entrypoint"
-CMD /packages/server/entrypoint.sh
+CMD ["/unpacker/server/entrypoint.sh"]
 # expose default HTTP port
 EXPOSE 80
 
 ## Collect Linux Dependencies
 # copy custom minimal JRE
-COPY --from=jre /packages/jre/ /opt/jre/
+COPY --from=jre /unpacker/jre/ /opt/jre/
 # copy unpacker cli tool
-COPY --from=unpacker /packages/cli/target/unpacker.jar /packages/cli/unpacker.jar
+COPY --from=unpacker /unpacker/cli/target/unpacker.jar /unpacker/cli/unpacker.jar
 
 # install Wine and minimize based on runtime analysis
 RUN \
@@ -91,7 +91,7 @@ RUN \
     # remove filesystem snapshots
     rm -f installed-snapshot.txt original-snapshot.txt && \
     # run unpacker using game updater
-    java -jar /packages/cli/unpacker.jar \
+    java -jar /unpacker/cli/unpacker.jar \
         # log information
         --verbose \
         # use game updater to fetch latest
@@ -108,9 +108,33 @@ RUN \
     rm -f strace.txt && \
     # compute difference to discover all unused wine files and delete them
     comm -2 -3 wine-files.txt used-files.txt | xargs rm -f && \
+    # remove filesystem snapshots
+    rm -f wine-files.txt used-files.txt && \
     # uninstall strace
     apk --no-network del strace
 
 ## Project Artifacts
 # copy Linux scripts
-COPY --from=scripts /packages/server/scripts/*.sh /packages/server/
+COPY --from=scripts /unpacker/server/scripts/*.sh /unpacker/server/
+
+## Runtime Configuration
+# disable Python .pyc
+ENV PYTHONDONTWRITEBYTECODE 1
+
+## Python Dependencies
+# copy logical and transitive dependency manifests
+COPY ./server/requirements.txt ./server/Pipfile ./server/Pipfile.lock /unpacker/server/
+# install dependencies
+RUN \
+    # install pipenv
+    pip install -r requirements.txt && \
+    # install locked depenedencies with pipenv without creating a virtual environment
+    pipenv install --system --deploy && \
+    # uninstall pipenv
+    pip uninstall --yes -r requirements.txt
+
+## Project Artifacts
+# copy sources
+COPY ./server/src/ /unpacker/server/src/
+
+EXPOSE 80
