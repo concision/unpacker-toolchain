@@ -9,6 +9,7 @@ verify_ssl = true
 fastapi = "*"
 requests = "*"
 uvicorn = "*"
+psycopg2 = "*"
 
 [requires]
 python_version = "3.8.5"
