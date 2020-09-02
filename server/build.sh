@@ -10,17 +10,15 @@ __execute_local() {
     # script directory (see https://stackoverflow.com/a/246128)
     local DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-    # read project pom.xml for version
-    echo "Reading pom.xml"
-    # get maven version without mvn install (see https://stackoverflow.com/a/37079932)
-    local version=$(cd "${DIR}/.." && xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" pom.xml)
-    echo "Project version: ${version}"
+    # version tag
+    local PROJECT_VERSION=1.2.0
+    echo "Project version: ${PROJECT_VERSION}"
 
     # build project
     echo "Building docker image"
     docker build \
         `# tag image (see https://stackoverflow.com/a/3545363)` \
-        --tag "concision/unpacker:${version}" \
+        --tag "concision/unpacker:${PROJECT_VERSION}" \
         `# specify production dockerfile` \
         --file "${DIR}/Dockerfile" \
         `# set build target if specified` \
