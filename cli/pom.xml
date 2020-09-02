@@ -151,12 +151,21 @@
                                 </transformer>
                             </transformers>
                             <filters>
+                                <!-- Keep all Log4J2 files -->
                                 <filter>
                                     <artifact>org.apache.logging.log4j:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
+                                <!-- Required by httpclient -->
+                                <filter>
+                                    <artifact>commons-logging:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <!-- Filter various other resources -->
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
