@@ -19,9 +19,11 @@ __execute_local() {
     echo "Building docker image"
     docker build \
         `# tag image (see https://stackoverflow.com/a/3545363)` \
-        -t "concision/unpacker:${version}" \
-        `# specify production dockerfile + implied sibling dockerignore file` \
-        -f "${DIR}/Dockerfile" \
+        --tag "concision/unpacker:${version}" \
+        `# specify production dockerfile` \
+        --file "${DIR}/Dockerfile" \
+        `# set build target if specified` \
+        $([[ $# -ne 0  ]] && echo --target "${1}") \
         `# normalize path to workspace root` \
         "${DIR}/.."
 }
@@ -29,7 +31,7 @@ __execute_local() {
 
 # check if NOT inside a GitLab CI
 if [[ -z "${GITLAB_CI}" ]]; then
-    __execute_local
+    __execute_local "$@"
 else
     echo Unsupported CI
     exit 1
