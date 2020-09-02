@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 /**
  * Decompresses an cache entry's byte range from a {@link InputStream}.
@@ -59,41 +60,54 @@ public class CacheDecompressionInputStream extends InputStream {
             this.decompress();
         }
 
-        return bufferStream.read();
+        // if there are remaining bytes to be read, read them
+        if (bufferStream != null) {
+            return bufferStream.read();
+        }
+
+        // no more bytes available
+        return -1;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int read(@SuppressWarnings("NullableProblems") @NonNull byte[] buffer, int off, int len) throws IOException {
+    public int read(@NonNull byte[] buffer, int offset, int len) throws IOException {
+        Objects.checkFromIndexSize(offset, len, buffer.length);
+
         if (len == 0) {
             return 0;
         }
 
-        int bytesRead = 0;
-        for (int needed = len, offset = off; 0 < needed; ) {
+        int consumed = 0;
+        for (int needed = len; 0 < needed; ) {
             // decompress more bytes
             if (bufferStream == null || bufferStream.available() == 0) {
                 this.decompress();
+
+                // if there is still no buffer, then we have hit the end
+                if (bufferStream == null) {
+                    break;
+                }
             }
 
             // read bytes from a decompressed block
-            int read = bufferStream.read(buffer, offset, Math.min(needed, buffer.length - off + bytesRead));
+            int read = bufferStream.read(buffer, offset + consumed, Math.min(needed, buffer.length - offset));
 
             // break if the stream is fully consumed
-            if (read == -1) {
+            if (read <= 0) {
                 break;
             }
 
-            bytesRead += read;
+            consumed += read;
             needed -= read;
-            offset += read;
         }
-        if (bytesRead == 0) {
+
+        if (consumed == 0) {
             return -1;
         }
-        return bytesRead;
+        return consumed;
     }
 
     /**
@@ -102,7 +116,15 @@ public class CacheDecompressionInputStream extends InputStream {
      * @throws IOException if an underlying I/O exception occurs
      */
     private void decompress() throws IOException {
-        int blockSize = ((stream.read() & 0xff) << 8) | (stream.read() & 0xFF);
+        // read next byte
+        int next = stream.read();
+        // if negative, there are no more bytes in this stream
+        if (next < 0) {
+            this.release();
+            return;
+        }
+
+        int blockSize = ((next & 0xff) << 8) | (stream.read() & 0xFF);
         int decompressedSize = ((stream.read() & 0xFF) << 8) | (stream.read() & 0xFF);
 
         // decompress block
@@ -177,14 +199,21 @@ public class CacheDecompressionInputStream extends InputStream {
     }
 
     /**
+     * Releases internal buffers
+     */
+    private void release() {
+        // release buffers
+        buffer = null;
+        bufferStream = null;
+    }
+
+    /**
      * Disposes of internal buffer references on stream close.
      * {@inheritDoc}
      */
     @Override
     public void close() throws IOException {
-        // release buffers
-        buffer = null;
-        bufferStream = null;
+        this.release();
         stream.close();
     }
 }
