@@ -73,49 +73,43 @@ COPY --from=jre /packages/jre/ /opt/jre/
 # copy unpacker cli tool
 COPY --from=unpacker /packages/cli/target/unpacker.jar /packages/cli/unpacker.jar
 
-# install Wine
-RUN apk add --no-cache \
-    wine \
-    # wine runtime dependencies for our Windows application
-    libpng freetype
-
-## install Wine and minimize based on runtime analysis
-#RUN \
-#    # install strace for runtime analysis
-#    apk add --no-cache strace && \
-#    # take snapshot of filesystem before wine installation
-#    find / -type f | sort > original-snapshot.txt && \
-#    # install wine and dependencies
-#    apk add --no-cache \
-#        wine \
-#        # wine runtime dependencies for our Windows application
-#        libpng freetype && \
-#    # take snapshot of filesystem after wine installation
-#    find / -type f | sort > installed-snapshot.txt && \
-#    # compute difference to discover all new wine files
-#    comm -2 -3 installed-snapshot.txt original-snapshot.txt > wine-files.txt && \
-#    # remove filesystem snapshots
-#    rm -f installed-snapshot.txt original-snapshot.txt && \
-#    # run unpacker using game updater
-#    java -jar /packages/cli/unpacker.jar \
-#        # log information
-#        --verbose \
-#        # use game updater to fetch latest
-#        --source-type UPDATER \
-#        # output a raw binary Packages.bin
-#        --output-format BINARY \
-#        # set the default wine command
-#        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 UNPACKER_COMMAND\"" \
-#        # pipe the Packages.bin output to /dev/null
-#        >/dev/null && \
-#    # sanitize strace log
-#    grep -o "\".*\"" strace.txt | tr -d "\"" | xargs realpath 2>/dev/null | grep -v "%" | uniq | sort > used-files.txt && \
-#    # delete strace log
-#    rm -f strace.txt && \
-#    # compute difference to discover all unused wine files and delete them
-#    comm -2 -3 wine-files.txt used-files.txt | xargs rm -f && \
-#    # uninstall strace
-#    apk --no-network del strace
+# install Wine and minimize based on runtime analysis
+RUN \
+    # install strace for runtime analysis
+    apk add --no-cache strace && \
+    # take snapshot of filesystem before wine installation
+    find / -type f | sort > original-snapshot.txt && \
+    # install wine and dependencies
+    apk add --no-cache \
+        wine \
+        # wine runtime dependencies for our Windows application
+        libpng freetype && \
+    # take snapshot of filesystem after wine installation
+    find / -type f | sort > installed-snapshot.txt && \
+    # compute difference to discover all new wine files
+    comm -2 -3 installed-snapshot.txt original-snapshot.txt > wine-files.txt && \
+    # remove filesystem snapshots
+    rm -f installed-snapshot.txt original-snapshot.txt && \
+    # run unpacker using game updater
+    java -jar /packages/cli/unpacker.jar \
+        # log information
+        --verbose \
+        # use game updater to fetch latest
+        --source-type UPDATER \
+        # output a raw binary Packages.bin
+        --output-format BINARY \
+        # set the default wine command
+        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 UNPACKER_COMMAND\"" \
+        # pipe the Packages.bin output to /dev/null
+        >/dev/null && \
+    # sanitize strace log
+    grep -o "\".*\"" strace.txt | tr -d "\"" | xargs realpath 2>/dev/null | grep -v "%" | uniq | sort > used-files.txt && \
+    # delete strace log
+    rm -f strace.txt && \
+    # compute difference to discover all unused wine files and delete them
+    comm -2 -3 wine-files.txt used-files.txt | xargs rm -f && \
+    # uninstall strace
+    apk --no-network del strace
 
 ## Project Artifacts
 # copy Linux scripts
