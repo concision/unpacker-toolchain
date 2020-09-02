@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.source.collectors;
 
+import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
@@ -14,9 +15,18 @@ import java.io.InputStream;
  *
  * @author Concision
  */
+@Log
 public class BinarySourceCollector implements SourceCollector {
     @Override
     public InputStream generate(CommandArguments args) throws IOException {
-        return new BufferedInputStream(new FileInputStream(args.sourcePath.getAbsoluteFile()));
+        if (args.sourcePath == null) {
+            log.info("Using standard input for Packages.bin data source");
+            // use standard input
+            return new BufferedInputStream(System.in);
+        } else {
+            // use source path
+            log.info("Using source path for Packages.bin data source: " + args.sourcePath.getAbsolutePath());
+            return new BufferedInputStream(new FileInputStream(args.sourcePath.getAbsoluteFile()));
+        }
     }
 }

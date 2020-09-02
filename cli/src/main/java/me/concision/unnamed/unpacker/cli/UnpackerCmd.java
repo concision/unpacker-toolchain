@@ -119,7 +119,7 @@ public class UnpackerCmd {
                         "        (note: these files may slightly be out of date, use UPDATER for latest)\n" +
                         "INSTALL: Searches for install location in Windows registry (note: Windows only)\n" +
                         "FOLDER: Specifies Cache.Windows folder (requires '" + FLAG_SOURCE_LOCATION + " DIRECTORY')\n" +
-                        "BINARY: Specifies a raw extracted Packages.bin file (requires '" + FLAG_SOURCE_LOCATION + " FILE')")
+                        "BINARY: Specifies a raw extracted Packages.bin file (if '" + FLAG_SOURCE_LOCATION + " FILE' is unspecified, standard input is used)")
                 .dest(DEST_SOURCE_TYPE)
                 .type(Arguments.caseInsensitiveEnumType(SourceType.class))
                 .required(true);

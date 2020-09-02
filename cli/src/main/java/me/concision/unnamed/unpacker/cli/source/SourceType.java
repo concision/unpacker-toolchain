@@ -41,7 +41,7 @@ public enum SourceType {
     /**
      * Extracts from a raw Packages.bin file. {@link CommandArguments#sourcePath} indicates file.
      */
-    BINARY(true, BinarySourceCollector::new);
+    BINARY(false, BinarySourceCollector::new);
 
     /**
      * Requires an additional {@link CommandArguments#sourcePath}
