@@ -12,7 +12,8 @@ __execute_local() {
 
     # read project pom.xml for version
     echo "Reading pom.xml"
-    local version=$(cd .. && mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    # get maven version without mvn install (see https://stackoverflow.com/a/37079932)
+    local version=$(cd "${DIR}/.." && xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" pom.xml)
     echo "Project version: ${version}"
 
     # build project
