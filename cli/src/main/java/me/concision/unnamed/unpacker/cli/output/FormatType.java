@@ -3,6 +3,7 @@ package me.concision.unnamed.unpacker.cli.output;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.writers.multi.FlattenedFormatWriter;
 import me.concision.unnamed.unpacker.cli.output.writers.multi.RecursiveFormatWriter;
 import me.concision.unnamed.unpacker.cli.output.writers.single.BinaryFormatWriter;
@@ -11,6 +12,7 @@ import me.concision.unnamed.unpacker.cli.output.writers.single.MapFormatWriter;
 import me.concision.unnamed.unpacker.cli.output.writers.single.PathsFormatWriter;
 import me.concision.unnamed.unpacker.cli.output.writers.single.RecordsFormatWriter;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -69,15 +71,19 @@ public enum FormatType {
      * Type-specific format writer instance generator
      */
     @NonNull
-    private final Supplier<OutputFormatWriter> writerSupplier;
+    private final Function<Unpacker, OutputFormatWriter> writerGenerator;
+
+    FormatType(OutputMode mode, Supplier<OutputFormatWriter> supplier) {
+        this(mode, (Unpacker unpacker) -> supplier.get());
+    }
 
     /**
      * Constructs a new output format writer
      *
      * @return a new {@link OutputFormatWriter} instance
      */
-    public OutputFormatWriter newWriter() {
-        return writerSupplier.get();
+    public OutputFormatWriter newWriter(@NonNull Unpacker unpacker) {
+        return writerGenerator.apply(unpacker);
     }
 
 

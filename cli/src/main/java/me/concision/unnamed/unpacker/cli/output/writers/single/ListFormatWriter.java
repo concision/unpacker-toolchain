@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import lombok.RequiredArgsConstructor;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
@@ -12,14 +13,10 @@ import org.json.JSONArray;
  *
  * @author Concision
  */
+@RequiredArgsConstructor
 public class ListFormatWriter extends SingleRecordFormatWriter {
+    private final Unpacker unpacker;
     private final JSONArray list = new JSONArray();
-
-    @Override
-    public void close() {
-        outputStream.print(list.toString(2));
-        super.close();
-    }
 
     @Override
     public void publish(Unpacker unpacker, PackageEntry record) {
@@ -33,5 +30,15 @@ public class ListFormatWriter extends SingleRecordFormatWriter {
         }
 
         list.put(document);
+    }
+
+    @Override
+    public void close() {
+        if (unpacker.args().prettifyJson) {
+            outputStream.print(list.toString(2));
+        } else {
+            outputStream.print(list.toString());
+        }
+        super.close();
     }
 }

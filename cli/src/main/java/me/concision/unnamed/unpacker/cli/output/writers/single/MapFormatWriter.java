@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import lombok.RequiredArgsConstructor;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
@@ -12,7 +13,9 @@ import org.bson.json.JsonWriterSettings;
  *
  * @author Concision
  */
+@RequiredArgsConstructor
 public class MapFormatWriter extends SingleRecordFormatWriter {
+    private final Unpacker unpacker;
     private final Document document = new Document();
 
     @Override
@@ -29,7 +32,11 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
 
     @Override
     public void close() {
-        outputStream.print(document.toJson(JsonWriterSettings.builder().indent(true).build()));
+        if (unpacker.args().prettifyJson) {
+            outputStream.print(document.toJson(JsonWriterSettings.builder().indent(true).build()));
+        } else {
+            outputStream.print(document.toJson());
+        }
         super.close();
     }
 }

@@ -38,6 +38,7 @@ public class CommandArguments {
     // flags
     public final boolean skipJsonificiation;
     public final boolean convertStringLiterals;
+    public final boolean prettifyJson;
 
     @NonNull
     public final List<PathMatcher> packages;
@@ -62,6 +63,7 @@ public class CommandArguments {
                 // output flags
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_CONVERT_STRING_LITERALS),
+                namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_PRETTIFY_JSON),
                 // namespace.getBoolean("cache"),
                 // package glob patterns
                 Collections.unmodifiableList(namespace.getList(UnpackerCmd.ARGUMENT_PACKAGES))

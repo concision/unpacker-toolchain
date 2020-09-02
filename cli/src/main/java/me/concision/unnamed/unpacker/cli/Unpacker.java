@@ -61,7 +61,7 @@ public class Unpacker {
 
         // generate new writer
         log.info("Constructing format writer");
-        OutputFormatWriter formatWriter = args.outputFormat.newWriter();
+        OutputFormatWriter formatWriter = args.outputFormat.newWriter(this);
 
         log.info("Executing format writer");
         try (InputStream __ = packagesStream) {

@@ -33,28 +33,39 @@ public class UnpackerCmd {
      */
     public static final boolean IS_WINDOWS = System.getProperty("os.name", "").toLowerCase().contains("win");
 
+
     // miscellaneous flags
     public static final String FLAG_VERBOSE_LOGGING = "--verbose";
+    public static final String DEST_VERBOSE_LOGGING = "verbose_logging";
+
     public static final String FLAG_WINE_CMD = "--wine-cmd";
+    public static final String DEST_WINE_CMD = "wine_cmd";
+
+    // source flags
+    public static final String DEST_SOURCE_TYPE = "source_type";
     public static final String FLAG_SOURCE_TYPE = "--source-type";
+
     public static final String FLAG_SOURCE_LOCATION = "--source-location";
+    public static final String DEST_SOURCE_LOCATION = "source_location";
+
     // output flags
     public static final String FLAG_OUTPUT_LOCATION = "--output-location";
+    public static final String DEST_OUTPUT_LOCATION = "output_location";
+
     public static final String FLAG_OUTPUT_FORMAT = "--output-format";
+    public static final String DEST_OUTPUT_FORMAT = "output_format";
+
     public static final String FLAG_OUTPUT_SKIP_JSON = "--output-skip-json";
+    public static final String DEST_OUTPUT_SKIP_JSON = "output_skip_json";
+
     public static final String FLAG_OUTPUT_CONVERT_STRING_LITERALS = "--output-convert-string-literals";
-    static final String DEST_VERBOSE_LOGGING = "verbose_logging";
-    static final String DEST_WINE_CMD = "wine_cmd";
-    // source flags
-    static final String DEST_SOURCE_TYPE = "source_type";
-    static final String DEST_SOURCE_LOCATION = "source_location";
-    static final String DEST_OUTPUT_LOCATION = "output_location";
-    static final String DEST_OUTPUT_FORMAT = "output_format";
-    static final String DEST_OUTPUT_SKIP_JSON = "output_skip_json";
-    static final String DEST_OUTPUT_CONVERT_STRING_LITERALS = "output_convert_string_literals";
+    public static final String DEST_OUTPUT_CONVERT_STRING_LITERALS = "output_convert_string_literals";
+
+    public static final String FLAG_OUTPUT_PRETTIFY_JSON = "--output-prettify-json";
+    public static final String DEST_OUTPUT_PRETTIFY_JSON = "output_prettify_json";
 
     // positional arguments
-    static final String ARGUMENT_PACKAGES = "packages";
+    public static final String ARGUMENT_PACKAGES = "packages";
 
     public static void main(String... cliArgs) {
         // ensure arguments are specified if erroneously executed by
@@ -168,6 +179,13 @@ public class UnpackerCmd {
                         "Mutually exclusive with either '" + FLAG_OUTPUT_FORMAT + " BINARY' or '" + FLAG_OUTPUT_SKIP_JSON + "'")
                 .dest(DEST_OUTPUT_CONVERT_STRING_LITERALS)
                 .action(Arguments.storeTrue());
+        // prettify json
+        Argument outputPrettifyJsonArgument = outputGroup.addArgument(FLAG_OUTPUT_PRETTIFY_JSON)
+                .help("Prettifies outputted JSON with proper indentation (default: false).\n" +
+                        "Mutually exclusive with either '" + FLAG_OUTPUT_FORMAT + " BINARY', '" + FLAG_OUTPUT_FORMAT + " RECORDS', '"
+                        + FLAG_OUTPUT_FORMAT + " PATHS', or '" + FLAG_OUTPUT_SKIP_JSON + "'")
+                .dest(DEST_OUTPUT_PRETTIFY_JSON)
+                .action(Arguments.storeTrue());
 
         // positional glob patterns
         parser.addArgument(ARGUMENT_PACKAGES)
@@ -213,6 +231,17 @@ public class UnpackerCmd {
 
                 if (arguments.skipJsonificiation) {
                     throw new ArgumentParserException("'" + FLAG_OUTPUT_SKIP_JSON + "' is mutually exclusive", parser, outputConvertStringLiteralsArgument);
+                }
+            }
+
+            // validate mutually exclusive arguments
+            if (arguments.prettifyJson) {
+                if (arguments.outputFormat == FormatType.BINARY || arguments.outputFormat == FormatType.RECORDS) {
+                    throw new ArgumentParserException("'" + FLAG_OUTPUT_FORMAT + " " + arguments.outputFormat + "' is mutually exclusive", parser, outputPrettifyJsonArgument);
+                }
+
+                if (arguments.skipJsonificiation) {
+                    throw new ArgumentParserException("'" + FLAG_OUTPUT_SKIP_JSON + "' is mutually exclusive", parser, outputPrettifyJsonArgument);
                 }
             }
 

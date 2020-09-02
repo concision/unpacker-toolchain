@@ -2,6 +2,7 @@ package me.concision.unnamed.unpacker.cli.output;
 
 import lombok.NonNull;
 import me.concision.unnamed.unpacker.api.PackageParser;
+import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 
 import java.io.IOException;
@@ -22,7 +23,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
     @Override
     default void format(@NonNull Unpacker unpacker, @NonNull InputStream packagesStream) {
         // parse packages into record
-        Queue<PackageParser.PackageEntry> records;
+        Queue<PackageEntry> records;
         try {
             records = PackageParser.parseStream(packagesStream);
         } catch (Throwable throwable) {
@@ -32,7 +33,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
         // publish records
         while (!records.isEmpty()) {
             // read package record
-            PackageParser.PackageEntry record = records.poll();
+            PackageEntry record = records.poll();
 
             // check if matches any patterns
             if (unpacker.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.absolutePath())))) {
@@ -53,7 +54,7 @@ public interface RecordFormatWriter extends OutputFormatWriter {
      * Publishes a package record to the format writer
      *
      * @param unpacker associated {@link Unpacker} instance
-     * @param record   {@link PackageParser.PackageEntry} instance
+     * @param record   {@link PackageEntry} instance
      */
-    void publish(@NonNull Unpacker unpacker, @NonNull PackageParser.PackageEntry record) throws IOException;
+    void publish(@NonNull Unpacker unpacker, @NonNull PackageEntry record) throws IOException;
 }

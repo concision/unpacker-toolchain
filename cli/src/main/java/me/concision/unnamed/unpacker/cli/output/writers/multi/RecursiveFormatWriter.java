@@ -5,6 +5,7 @@ import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.FormatType;
 import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
+import org.bson.Document;
 import org.bson.json.JsonWriterSettings;
 
 import java.io.File;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  */
 public class RecursiveFormatWriter implements RecordFormatWriter {
     @Override
+    @SuppressWarnings("DuplicatedCode")
     public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
         File file = new File(unpacker.args().outputPath, record.absolutePath() + ".json").getAbsoluteFile();
         if (!file.getParentFile().mkdirs()) {
@@ -46,8 +48,12 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
             if (unpacker.args().skipJsonificiation) {
                 output.print(record.contents());
             } else {
-                output.print(Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals)
-                        .toJson(JsonWriterSettings.builder().indent(true).build()));
+                Document json = Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals);
+                if (unpacker.args().prettifyJson) {
+                    output.print(json.toJson(JsonWriterSettings.builder().indent(true).build()));
+                } else {
+                    output.print(json.toJson());
+                }
             }
             output.flush();
         }
