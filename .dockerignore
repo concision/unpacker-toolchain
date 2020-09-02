@@ -12,6 +12,6 @@
 ## API Server
 !server/Pipfile
 !server/Pipfile.lock
-!server/requirements.txt
+!server/pipenv-requirements.txt
 !server/src
 !server/docker

@@ -51,6 +51,37 @@ RUN jlink \
     --output /unpacker/jre/
 
 
+### Collect Python Dependencies ###
+FROM python:3.8.5-alpine3.12 as python-deps
+## Runtime Configuration
+# set current working directory
+WORKDIR /unpacker/server/
+
+## Linux Dependencies
+# install build tools to compile the postgres python dependency
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    postgresql-dev
+
+## Pipenv
+# pipenv dependencies
+COPY ./server/pipenv-requirements.txt /unpacker/server/
+# install pipenv
+RUN pip install --no-cache-dir -r pipenv-requirements.txt
+
+## Python Dependencies
+# initialize virtual environment
+RUN python -m venv /opt/venv
+# set virtual environment path
+ENV PATH="/opt/venv/bin:$PATH" VIRTUAL_ENV="/opt/venv"
+
+# copy dependency manifests
+COPY ./server/Pipfile ./server/Pipfile.lock /unpacker/server/
+# install locked depenedencies with pipenv without creating a virtual environment
+RUN pipenv install --deploy
+
+
 ### Build Runtime Application
 # Build Docker image with all project artifacts
 FROM python:3.8.5-alpine3.12
@@ -121,23 +152,11 @@ COPY --from=scripts /unpacker/server/scripts/*.sh /unpacker/server/
 # disable Python .pyc
 ENV PYTHONDONTWRITEBYTECODE 1
 
-## Linux Dependencies
-RUN apk add --no-cache --virtual .build-deps \
-    gcc \
-    musl-dev \
-    postgresql-dev
-
 ## Python Dependencies
-# copy logical and transitive dependency manifests
-COPY ./server/requirements.txt ./server/Pipfile ./server/Pipfile.lock /unpacker/server/
-# install dependencies
-RUN \
-    # install pipenv
-    pip install -r requirements.txt && \
-    # install locked depenedencies with pipenv without creating a virtual environment
-    pipenv install --system --deploy && \
-    # uninstall pipenv
-    pip uninstall --yes -r requirements.txt
+# copy the virtual environment
+COPY --from=python-deps /opt/venv /opt/venv
+# add venv to path
+ENV PATH="/opt/venv/bin:$PATH" VIRTUAL_ENV="/opt/venv"
 
 ## Project Artifacts
 # copy sources
