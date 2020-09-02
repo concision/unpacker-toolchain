@@ -7,10 +7,11 @@ verify_ssl = true
 
 [packages]
 fastapi = "*"
-requests = "*"
 uvicorn = "*"
 psycopg2 = "*"
 beautifulsoup4 = "*"
+aiohttp = "*"
+async-timeout = "*"
 
 [requires]
 python_version = "3.8.5"
