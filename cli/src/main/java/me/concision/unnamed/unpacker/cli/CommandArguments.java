@@ -35,7 +35,6 @@ public class CommandArguments {
     // flags
     public final boolean rawMode;
     public final boolean convertStringLiterals;
-    // public final boolean cache;
 
     @NonNull
     public final List<PathMatcher> packages;
