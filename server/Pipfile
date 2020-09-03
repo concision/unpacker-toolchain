@@ -12,6 +12,7 @@ psycopg2 = "*"
 beautifulsoup4 = "*"
 aiohttp = "*"
 async-timeout = "*"
+lxml = "*"
 
 [requires]
 python_version = "3.8.5"
