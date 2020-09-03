@@ -57,25 +57,29 @@ FROM python:3.9.0rc1-alpine3.12 as python-deps
 # set current working directory
 WORKDIR /unpacker/server/
 
-## Linux Dependencies
-# install build tools to compile the postgres python dependency
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    postgresql-dev
-
 ## Pipenv
 # pipenv dependencies
 COPY ./server/pipenv-requirements.txt /unpacker/server/
 # install pipenv
 RUN pip install --no-cache-dir -r pipenv-requirements.txt
 
-## Python Dependencies
+## Python Virtual Environment
 # initialize virtual environment
 RUN python -m venv /opt/venv
 # set virtual environment path
 ENV PATH="/opt/venv/bin:$PATH" VIRTUAL_ENV="/opt/venv"
 
+## Linux Dependencies
+# install build tools to compile the postgres python dependency
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    # lxml
+    libxml2 libxml2-dev libxslt-dev \
+    # postgres
+    postgresql-dev
+
+## Python Dependencies
 # copy dependency manifests
 COPY ./server/Pipfile ./server/Pipfile.lock /unpacker/server/
 # install locked depenedencies with pipenv without creating a virtual environment
