@@ -9,6 +9,7 @@ import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class PackageParser {
         // wrap with a DataInputStream for ease of reading
         try (DataInputStream stream = new DataInputStream(inputStream)) {
             // unknown classified header bytes
-            stream.skipBytes(17);
+            skipNBytes(stream, 17);
 
             // read file format version
             int patch = stream.readInt();
@@ -74,10 +75,10 @@ public class PackageParser {
                 // string length
                 int stringLength = Integer.reverseBytes(stream.readInt());
                 // string is also terminated by NUL
-                stream.skipBytes(stringLength);
+                skipNBytes(stream, stringLength);
 
                 // unknown integer
-                stream.skipBytes(unknownLength);
+                skipNBytes(stream, unknownLength);
             }
 
 
@@ -135,17 +136,17 @@ public class PackageParser {
                 }
 
                 // unknown bytes
-                stream.skipBytes(5);
+                skipNBytes(stream, 5);
 
                 // "base package"; no idea what it is, not really useful (e.g. @\n, @\b, A\n, B\n, etc).
                 {
                     int length = Integer.reverseBytes(stream.readInt());
                     // string
-                    stream.skipBytes(length);
+                    skipNBytes(stream, length);
                 }
 
                 // unknown bytes
-                stream.skipBytes(4);
+                skipNBytes(stream, 4);
 
                 // add to package chunks
                 entries.add(new PackageEntry(
@@ -157,6 +158,64 @@ public class PackageParser {
         }
 
         return entries;
+    }
+
+    /**
+     * Implementation of {@link InputStream#skipNBytes(long)} for JREs before Java 12.
+     * <p>
+     * Skips over and discards exactly {@code n} bytes of data from this input
+     * stream.  If {@code n} is zero, then no bytes are skipped.
+     * If {@code n} is negative, then no bytes are skipped.
+     * Subclasses may handle the negative value differently.
+     *
+     * <p> This method blocks until the requested number of bytes have been
+     * skipped, end of file is reached, or an exception is thrown.
+     *
+     * <p> If end of stream is reached before the stream is at the desired
+     * position, then an {@code EOFException} is thrown.
+     *
+     * <p> If an I/O error occurs, then the input stream may be
+     * in an inconsistent state. It is strongly recommended that the
+     * stream be promptly closed if an I/O error occurs.
+     *
+     * @param n the number of bytes to be skipped.
+     * @throws EOFException if end of stream is encountered before the
+     *                      stream can be positioned {@code n} bytes beyond its position
+     *                      when this method was invoked.
+     * @throws IOException  if the stream cannot be positioned properly or
+     *                      if an I/O error occurs.
+     * @implNote Subclasses are encouraged to provide a more efficient implementation
+     * of this method.
+     * @implSpec If {@code n} is zero or negative, then no bytes are skipped.
+     * If {@code n} is positive, the default implementation of this method
+     * invokes {@link InputStream#skip(long) skip()} with parameter {@code n}.  If the
+     * return value of {@code skip(n)} is non-negative and less than {@code n},
+     * then {@link InputStream#read()} is invoked repeatedly until the stream is {@code n}
+     * bytes beyond its position when this method was invoked or end of stream
+     * is reached.  If the return value of {@code skip(n)} is negative or
+     * greater than {@code n}, then an {@code IOException} is thrown.  Any
+     * exception thrown by {@code skip()} or {@code read()} will be propagated.
+     * @see java.io.InputStream#skip(long)
+     */
+    public void skipNBytes(InputStream inputStream, long n) throws IOException {
+        if (0 < n) {
+            long ns = inputStream.skip(n);
+            //noinspection ConstantConditions
+            if (0 <= ns && ns < n) { // skipped too few bytes
+                // adjust number to skip
+                n -= ns;
+                // read until requested number skipped or EOS reached
+                while (0 < n && inputStream.read() != -1) {
+                    n--;
+                }
+                // if not enough skipped, then EOFE
+                if (n != 0) {
+                    throw new EOFException();
+                }
+            } else if (ns != n) { // skipped negative or too many bytes
+                throw new IOException("Unable to skip exactly");
+            }
+        }
     }
 
     /**
