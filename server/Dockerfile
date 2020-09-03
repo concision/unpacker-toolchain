@@ -74,8 +74,6 @@ ENV PATH="/opt/venv/bin:$PATH" VIRTUAL_ENV="/opt/venv"
 RUN apk add --no-cache \
     gcc \
     musl-dev \
-    # lxml
-    libxml2 libxml2-dev libxslt-dev \
     # postgres
     postgresql-dev
 
