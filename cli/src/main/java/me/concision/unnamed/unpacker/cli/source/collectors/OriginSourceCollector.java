@@ -175,7 +175,7 @@ public class OriginSourceCollector implements SourceCollector {
             // Packages.bin decompressor
             return new DependentInputStream(new CacheDecompressionInputStream(new BoundedInputStream(
                     input,
-                    ((int) Math.round(Math.ceil(cacheEntry.compressedSize() / (double) Character.MAX_VALUE)) + 1) * Character.MAX_VALUE
+                    cacheEntry.compressedSize()
             )), httpClient);
         } catch (Throwable throwable) {
             IOUtils.closeQuietly(httpClient);
