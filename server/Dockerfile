@@ -22,9 +22,17 @@ FROM maven:3.6.3-openjdk-15 as unpacker
 # set current work directory
 WORKDIR /unpacker/
 
-## Copy Projects
-# copy root Maven module manifest
+## Copy Project Configuration
+# copy root module manifest
 COPY ./pom.xml ./lombok.config /unpacker/
+# copy I/O api module manifest
+COPY ./api/pom.xml /unpacker/api/pom.xml
+# copy cli-tool module manifest
+COPY ./cli/pom.xml /unpacker/cli/pom.xml
+# cache dependencies
+RUN mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies -Dstyle.color=always -Djansi.force=true
+
+## Copy Sources
 # copy I/O api module
 COPY ./api/ /unpacker/api/
 # copy cli-tool module
