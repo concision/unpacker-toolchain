@@ -132,7 +132,7 @@ RUN \
         # output a raw binary Packages.bin
         --output-format BINARY \
         # set the default wine command
-        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 UNPACKER_COMMAND\"" \
+        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 %UNPACKER_COMMAND%\"" \
         # pipe the Packages.bin output to /dev/null
         >/dev/null && \
     # sanitize strace log

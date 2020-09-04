@@ -163,16 +163,17 @@ public class UpdaterSourceCollector implements SourceCollector {
         // build game client command to execute
         boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
         log.info("Is Windows: " + isWindows);
+        String clientPath = executableFile.getAbsolutePath();
         try {
             // build command
             String[] command;
             if (isWindows) {
-                command = new String[]{executableFile.getAbsolutePath(), "-silent", "-cluster:public", "-applet:/EE/Types/Framework/ContentUpdate"};
+                command = new String[]{clientPath, "-silent", "-cluster:public", "-applet:/EE/Types/Framework/ContentUpdate"};
             } else {
                 command = new String[]{
                         "sh",
                         "-c",
-                        args.wineCmd.replace("UNPACKER_COMMAND", "\"" + executableFile.getAbsolutePath() + "\" -silent -cluster:public -applet:/EE/Types/Framework/ContentUpdate")
+                        args.wineCmd.replace("%UNPACKER_COMMAND%", (clientPath.contains("\"") ? "\"" + clientPath + "\"" : clientPath) + " -silent -cluster:public -applet:/EE/Types/Framework/ContentUpdate")
                 };
             }
             log.info("Client command: " + String.join(" ", command));
@@ -230,7 +231,7 @@ public class UpdaterSourceCollector implements SourceCollector {
         if (!isWindows) {
             // native acceleration must be used for performance
             Process deleteProcess = Runtime.getRuntime().exec(new String[]{
-                    "rm", "-rf", executableFile.getAbsolutePath(), new File(tempDirectory, ".wine64").getAbsolutePath()
+                    "rm", "-rf", clientPath, new File(tempDirectory, ".wine64").getAbsolutePath()
             });
             try {
                 deleteProcess.waitFor();
