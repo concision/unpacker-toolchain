@@ -8,7 +8,7 @@
     <artifactId>unpacker</artifactId>
     <version>1.2.0</version>
 
-    <description>Extracts package information from an unnamed game's files</description>
+    <description>Tooling for extracting package manifest entries from an unnamed game's cache files</description>
 
     <developers>
         <developer>

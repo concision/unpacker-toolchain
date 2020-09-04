@@ -20,7 +20,8 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>bson</artifactId>
-            <version>3.11.0</version>
+            <version>4.1.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -45,6 +46,7 @@
                     <!-- Compile project with Java 9 to ensure module-info.java is valid -->
                     <execution>
                         <id>module-compile</id>
+                        <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
@@ -59,6 +61,7 @@
                     <!-- Recompile as Java 8 to overwrite Java 9 class files, except module-info.java -->
                     <execution>
                         <id>jdk8-compile</id>
+                        <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>

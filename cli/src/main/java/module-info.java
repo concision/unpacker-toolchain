@@ -8,8 +8,8 @@ module me.concision.unnamed.unpacker.cli {
     requires static org.mongodb.bson;
     requires static org.apache.httpcomponents.httpclient;
     requires static org.apache.httpcomponents.httpcore;
-    requires static jna;
-    requires static jna.platform;
+    requires static com.sun.jna.platform;
+    requires static com.sun.jna;
     requires static org.apache.commons.compress;
 
     // java runtime

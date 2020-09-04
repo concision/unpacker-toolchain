@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>me.concision.unnamed.unpacker</groupId>
-    <artifactId>cli-tool</artifactId>
+    <artifactId>cli</artifactId>
 
-    <description>A CLI tool to extract manifest files from package caches</description>
+    <description>A CLI tool to extract package manifest entries from an unnamed game's cache files</description>
 
     <dependencies>
         <!-- Unpacker I/O API: Manipulate package streams -->
@@ -34,21 +34,21 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20190722</version>
+            <version>20200518</version>
             <scope>compile</scope>
         </dependency>
         <!-- HTTPClient: Performing HTTP requests -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.7</version>
+            <version>4.5.12</version>
             <scope>compile</scope>
         </dependency>
         <!-- compress: wrapped LZMA compression API -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.19</version>
+            <version>1.20</version>
             <scope>compile</scope>
         </dependency>
         <!-- xz: underlying LZMA decompression implementation -->
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
-            <version>4.5.2</version>
+            <version>5.6.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
