@@ -32,16 +32,16 @@ public class FolderSourceCollector implements SourceCollector {
 
     InputStream generate(@NonNull File folder) throws IOException {
         return generate(
-                new BufferedInputStream(new FileInputStream(new File(folder, "H.Misc.toc").getAbsoluteFile())),
-                new BufferedInputStream(new FileInputStream(new File(folder, "H.Misc.cache").getAbsoluteFile()))
+                new BufferedInputStream(new FileInputStream(new File(folder, TOC_NAME).getAbsoluteFile())),
+                new BufferedInputStream(new FileInputStream(new File(folder, CACHE_NAME).getAbsoluteFile()))
         );
     }
 
     /**
      * Generates Packages.bin stream from cache files
      *
-     * @param tocStream   H.Misc.toc stream
-     * @param cacheStream H.Misc.cache stream
+     * @param tocStream   {@link #TOC_NAME} stream
+     * @param cacheStream {@link #CACHE_NAME} stream
      * @return Packages.bin stream
      * @throws IOException if an exception occurs while reading from disk
      */
@@ -50,7 +50,7 @@ public class FolderSourceCollector implements SourceCollector {
         Optional<CacheEntry> entry = new TocStreamReader(tocStream).findEntry("/Packages.bin");
         // verify discovered
         if (!entry.isPresent()) {
-            throw new RuntimeException("Packages.bin entry not found in H.Misc.toc");
+            throw new RuntimeException("Packages.bin entry not found in " + TOC_NAME);
         }
         // read entry
         CacheEntry cacheEntry = entry.get();

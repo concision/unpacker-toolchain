@@ -40,11 +40,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.sun.jna.platform.win32.User32.INSTANCE;
 import static com.sun.jna.platform.win32.WinNT.PROCESS_QUERY_INFORMATION;
 import static com.sun.jna.platform.win32.WinUser.SW_HIDE;
+import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.DEPOT_FILE_PATTERN;
+import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.INDEX_MANIFEST;
 import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.ORIGIN_URL;
 
 /**
@@ -59,100 +60,6 @@ public class UpdaterSourceCollector implements SourceCollector {
      */
     private static final String CLIENT_EXECUTABLE_FILENAME = new String(Base64.getDecoder().decode("V2FyZnJhbWUueDY0LmV4ZQ=="), StandardCharsets.ISO_8859_1);
 
-    /**
-     * Waits for a process to be spawned and then hides all GUI windows using JNA
-     *
-     * @param executableFile Game client executable {@link File} to match
-     */
-    @SuppressWarnings("BusyWait")
-    private static void awaitHideWindow(File executableFile) {
-        // found client hwnd
-        HWND[] clientHwnd = new HWND[1];
-
-        // JNA buffer
-        byte[] buffer = new byte[executableFile.getAbsolutePath().length() + 2];
-        IntByReference pointer = new IntByReference();
-
-        while (clientHwnd[0] == null) {
-            INSTANCE.EnumWindows((hwnd, __) -> {
-                // get process id
-                INSTANCE.GetWindowThreadProcessId(hwnd, pointer);
-                // read process information
-                WinNT.HANDLE process = Kernel32.INSTANCE.OpenProcess(PROCESS_QUERY_INFORMATION, false, pointer.getValue());
-                // read absolute filename
-                Psapi.INSTANCE.GetModuleFileNameExA(process, null, buffer, buffer.length - 1 /* null terminator */);
-
-                // convert to File
-                File processFile = new File(Native.toString(buffer));
-
-                // check if process is our executable
-                if (processFile.getName().equals(executableFile.getName()) || executableFile.equals(processFile)) {
-                    // save file
-                    clientHwnd[0] = hwnd;
-                    // exit iteration early
-                    return false;
-                }
-
-                // keep iterating
-                return true;
-            }, null);
-
-            // try again in 1 microsecond
-            if (clientHwnd[0] == null) {
-                try {
-                    Thread.sleep(0, (int) TimeUnit.MICROSECONDS.toNanos(1));
-                } catch (InterruptedException ignored) {
-                    return;
-                }
-            }
-        }
-
-        log.info("Detected running process; removing visibility");
-        try {
-            while (true) {
-                INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
-                Thread.sleep(1);
-            }
-        } catch (InterruptedException ignored) {
-        }
-    }
-
-    // threads
-
-    /**
-     * Redirects process {@link InputStream} to logger
-     *
-     * @param prefix logging prefix
-     * @param stream {@link InputStream} to read
-     */
-    private static void log(String prefix, InputStream stream) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-            for (String line; (line = reader.readLine()) != null; ) {
-                log.info("[" + prefix + "] " + line);
-            }
-        } catch (IOException exception) {
-            log.severe("[" + prefix + "] Stream closed");
-        }
-    }
-
-    /**
-     * Traverse a directory recursively
-     *
-     * @param parent   root directory to traverse
-     * @param consumer {@link Consumer} callback
-     */
-    private static void walk(File parent, Consumer<File> consumer) {
-        File[] files = parent.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                walk(file, consumer);
-            }
-        }
-        consumer.accept(parent);
-    }
-
-    // utility
-
     @Override
     @SuppressWarnings("DuplicatedCode")
     public InputStream generate(@NonNull CommandArguments args) throws IOException {
@@ -165,13 +72,12 @@ public class UpdaterSourceCollector implements SourceCollector {
             final long size;
         }
         List<DepotFile> files = new LinkedList<>();
-
-        log.info("Fetching index.txt.lzma manifest");
+        log.info("Fetching " + INDEX_MANIFEST + " manifest");
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new OriginSourceCollector.HeaderFormatter())
                 .build()) {
-            // form index.txt.lzma request
-            HttpGet request = new HttpGet(ORIGIN_URL + "/index.txt.lzma");
+            // form index request
+            HttpGet request = new HttpGet(ORIGIN_URL + "/" + INDEX_MANIFEST);
             request.setProtocolVersion(HttpVersion.HTTP_1_1);
 
             // execute request
@@ -179,31 +85,31 @@ public class UpdaterSourceCollector implements SourceCollector {
 
             // parse response
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new LZMACompressorInputStream(response.getEntity().getContent())))) {
-                // path parsing pattern
-                Pattern pathPattern = Pattern.compile("^(?:/[^/]+)*/(?<filename>.+)\\.[0-9A-F]{32}\\.lzma$");
                 // parse entries in manifest
                 for (String entry; (entry = reader.readLine()) != null; ) {
-                    int commaIndex = entry.lastIndexOf(',');
-                    if (commaIndex == -1) {
+                    Matcher matcher = DEPOT_FILE_PATTERN.matcher(entry);
+
+                    if (!matcher.matches()) {
+                        log.warning("Unknown manifest format: " + entry);
                         continue;
                     }
-                    // parse parameter
-                    String path = entry.substring(0, commaIndex);
-                    long fileSize = Long.parseLong(entry.substring(commaIndex + 1));
-                    String name;
 
-                    Matcher matcher = pathPattern.matcher(path);
-                    if (matcher.find()) {
-                        name = matcher.group("filename");
-                    } else {
-                        name = path.substring(path.lastIndexOf('.') + 1);
+                    // parse depot
+                    String path = matcher.group("path");
+                    String filename = matcher.group("filename");
+                    long filesize;
+                    try {
+                        filesize = Long.parseLong(matcher.group("filesize"));
+                    } catch (NumberFormatException exception) {
+                        log.warning("Invalid filesize: " + matcher.group("filesize"));
+                        continue;
                     }
 
-                    files.add(new DepotFile(path, name, fileSize));
+                    files.add(new DepotFile(path, filename, filesize));
                 }
             }
         } catch (Throwable throwable) {
-            throw new RuntimeException("failed to fetch index.txt.lzma manifest", throwable);
+            throw new RuntimeException("failed to fetch " + INDEX_MANIFEST + " manifest", throwable);
         }
 
         // create temporary directory
@@ -226,16 +132,16 @@ public class UpdaterSourceCollector implements SourceCollector {
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new OriginSourceCollector.HeaderFormatter())
                 .build()) {
-            // build TOC url
-            String tocUrl = files.stream()
+            // build game client url
+            String clientUrl = files.stream()
                     .filter(file -> file.name.equals(CLIENT_EXECUTABLE_FILENAME))
                     .findFirst()
                     .map(entry -> ORIGIN_URL + entry.path)
                     .orElseThrow(() -> new RuntimeException("failed to find game client in manifest"));
-            log.info("Client url: " + tocUrl);
+            log.info("Game client URL: " + clientUrl);
 
             // form request
-            HttpGet request = new HttpGet(tocUrl);
+            HttpGet request = new HttpGet(clientUrl);
             request.setProtocolVersion(HttpVersion.HTTP_1_1);
 
             // execute request
@@ -305,6 +211,7 @@ public class UpdaterSourceCollector implements SourceCollector {
             int exitCode = updaterProcess.waitFor();
             log.info("Client exit code: " + exitCode);
 
+            // cleanup threads
             log.info("Waiting for process management threads to finish");
             for (Thread thread : threads) {
                 log.info("Awaiting " + thread.getName());
@@ -344,5 +251,99 @@ public class UpdaterSourceCollector implements SourceCollector {
 
         // delegate to folder source collector
         return new FolderSourceCollector().generate(cacheFolder);
+    }
+
+    // threads
+
+    /**
+     * Redirects process {@link InputStream} to logger
+     *
+     * @param prefix logging prefix
+     * @param stream {@link InputStream} to read
+     */
+    private static void log(String prefix, InputStream stream) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            for (String line; (line = reader.readLine()) != null; ) {
+                log.info("[" + prefix + "] " + line);
+            }
+        } catch (IOException exception) {
+            log.severe("[" + prefix + "] Stream closed");
+        }
+    }
+
+    /**
+     * Waits for a process to be spawned and then hides all GUI windows using JNA
+     *
+     * @param executableFile Game client executable {@link File} to match
+     */
+    @SuppressWarnings("BusyWait")
+    private static void awaitHideWindow(File executableFile) {
+        // found client hwnd
+        HWND[] clientHwnd = new HWND[1];
+
+        // JNA buffer
+        byte[] buffer = new byte[executableFile.getAbsolutePath().length() + 2];
+        IntByReference pointer = new IntByReference();
+
+        while (clientHwnd[0] == null) {
+            INSTANCE.EnumWindows((hwnd, __) -> {
+                // get process id
+                INSTANCE.GetWindowThreadProcessId(hwnd, pointer);
+                // read process information
+                WinNT.HANDLE process = Kernel32.INSTANCE.OpenProcess(PROCESS_QUERY_INFORMATION, false, pointer.getValue());
+                // read absolute filename
+                Psapi.INSTANCE.GetModuleFileNameExA(process, null, buffer, buffer.length - 1 /* null terminator */);
+
+                // convert to File
+                File processFile = new File(Native.toString(buffer));
+
+                // check if process is our executable
+                if (processFile.getName().equals(executableFile.getName()) || executableFile.equals(processFile)) {
+                    // save file
+                    clientHwnd[0] = hwnd;
+                    // exit iteration early
+                    return false;
+                }
+
+                // keep iterating
+                return true;
+            }, null);
+
+            // try again in 1 microsecond
+            if (clientHwnd[0] == null) {
+                try {
+                    Thread.sleep(0, (int) TimeUnit.MICROSECONDS.toNanos(1));
+                } catch (InterruptedException ignored) {
+                    return;
+                }
+            }
+        }
+
+        log.info("Detected running process; removing visibility");
+        try {
+            while (true) {
+                INSTANCE.ShowWindow(clientHwnd[0], SW_HIDE);
+                Thread.sleep(1);
+            }
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    // utility
+
+    /**
+     * Traverse a directory recursively
+     *
+     * @param parent   root directory to traverse
+     * @param consumer {@link Consumer} callback
+     */
+    private static void walk(File parent, Consumer<File> consumer) {
+        File[] files = parent.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                walk(file, consumer);
+            }
+        }
+        consumer.accept(parent);
     }
 }

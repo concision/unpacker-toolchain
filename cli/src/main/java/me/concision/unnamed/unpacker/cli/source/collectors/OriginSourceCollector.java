@@ -54,6 +54,15 @@ public class OriginSourceCollector implements SourceCollector {
     @SuppressWarnings("SpellCheckingInspection")
     static final String ORIGIN_URL = new String(Base64.getDecoder().decode("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20="), StandardCharsets.ISO_8859_1);
 
+    /**
+     * Matches depot files from index manifest
+     */
+    static final Pattern DEPOT_FILE_PATTERN = Pattern.compile("^(?<path>/(?:[^/]+/)*(?<filename>.+)\\.[0-9A-F]{32}\\.lzma),(?<filesize>\\d+)$");
+    /**
+     * Origin index manifest file
+     */
+    static final String INDEX_MANIFEST = new String(Base64.getDecoder().decode("aW5kZXgudHh0Lmx6bWE="), StandardCharsets.ISO_8859_1);
+
     @Override
     @SuppressWarnings("DuplicatedCode")
     public InputStream generate(@NonNull CommandArguments args) {
@@ -66,13 +75,12 @@ public class OriginSourceCollector implements SourceCollector {
             final long size;
         }
         List<DepotFile> files = new LinkedList<>();
-
-        log.info("Fetching index.txt.lzma manifest");
+        log.info("Fetching " + INDEX_MANIFEST + " manifest");
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new HeaderFormatter())
                 .build()) {
-            // form index.txt.lzma request
-            HttpGet request = new HttpGet(ORIGIN_URL + "/index.txt.lzma");
+            // form index manifest request
+            HttpGet request = new HttpGet(ORIGIN_URL + "/" + INDEX_MANIFEST);
             request.setProtocolVersion(HttpVersion.HTTP_1_1);
 
             // execute request
@@ -80,106 +88,108 @@ public class OriginSourceCollector implements SourceCollector {
 
             // parse response
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new LZMACompressorInputStream(response.getEntity().getContent())))) {
-                // path parsing pattern
-                Pattern pathPattern = Pattern.compile("^(?:/[^/]+)*/(.+)\\.[0-9A-F]{32}\\.lzma$");
                 // parse entries in manifest
                 for (String entry; (entry = reader.readLine()) != null; ) {
-                    int commaIndex = entry.lastIndexOf(',');
-                    if (commaIndex == -1) {
+                    Matcher matcher = DEPOT_FILE_PATTERN.matcher(entry);
+
+                    if (!matcher.matches()) {
+                        log.warning("Unknown manifest format: " + entry);
                         continue;
                     }
-                    // parse parameter
-                    String path = entry.substring(0, commaIndex);
-                    long fileSize = Long.parseLong(entry.substring(commaIndex + 1));
-                    String name;
 
-                    Matcher matcher = pathPattern.matcher(path);
-                    if (matcher.find()) {
-                        name = matcher.group(1);
-                    } else {
-                        name = path.substring(path.lastIndexOf('.') + 1);
+                    // parse depot
+                    String path = matcher.group("path");
+                    String filename = matcher.group("filename");
+                    long filesize;
+                    try {
+                        filesize = Long.parseLong(matcher.group("filesize"));
+                    } catch (NumberFormatException exception) {
+                        log.warning("Invalid filesize: " + matcher.group("filesize"));
+                        continue;
                     }
 
-                    files.add(new DepotFile(path, name, fileSize));
+                    files.add(new DepotFile(path, filename, filesize));
                 }
             }
         } catch (Throwable throwable) {
-            throw new RuntimeException("failed to fetch index.txt.lzma manifest", throwable);
+            throw new RuntimeException("failed to fetch " + INDEX_MANIFEST + " manifest", throwable);
         }
 
         // find Packages.bin TOC entry
-        log.info("Fetching H.Misc.toc");
-        CacheEntry cacheEntry;
+        log.info("Fetching " + TOC_NAME);
+        CacheEntry packagesBinEntry;
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new HeaderFormatter())
                 .build()) {
             // build TOC url
             String tocUrl = files.stream()
-                    .filter(file -> file.name.equals("H.Misc.toc"))
+                    .filter(file -> file.name.equals(TOC_NAME))
                     .findFirst()
                     .map(entry -> ORIGIN_URL + entry.path)
-                    .orElseThrow(() -> new RuntimeException("failed to find H.Misc.toc in manifest"));
-            log.info("TOC Url: " + tocUrl);
+                    .orElseThrow(() -> new RuntimeException("failed to find " + TOC_NAME + " in manifest"));
+            log.info("TOC URL: " + tocUrl);
 
-            // form request
+            // build request
             HttpGet request = new HttpGet(tocUrl);
             request.setProtocolVersion(HttpVersion.HTTP_1_1);
 
             // execute request
-            CloseableHttpResponse response = httpClient.execute(request);
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                log.info(TOC_NAME + " response code: " + response.getStatusLine());
+                // parse response in real-time
+                try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
+                    // search for Packages.bin
+                    Optional<CacheEntry> cacheEntry = new TocStreamReader(new BufferedInputStream(stream)).findEntry("/Packages.bin");
 
-            // parse response in real-time
-            try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
-                Optional<CacheEntry> xd = new TocStreamReader(new BufferedInputStream(stream)).findEntry("/Packages.bin");
+                    if (!cacheEntry.isPresent()) {
+                        throw new RuntimeException("failed to find Packages.bin");
+                    }
 
-                if (!xd.isPresent()) {
-                    throw new RuntimeException("failed to find Packages.bin");
+                    packagesBinEntry = cacheEntry.get();
                 }
-
-                cacheEntry = xd.get();
             }
-            response.close();
         } catch (EOFException ignored) {
             throw new RuntimeException("reached EOF before finding Packages.bin");
         } catch (Throwable throwable) {
-            throw new RuntimeException("failed to parse H.Misc.toc or find Packages.bin entry", throwable);
+            throw new RuntimeException("failed to parse " + TOC_NAME + " or find Packages.bin entry", throwable);
         }
 
-        log.info("Retrieving H.Misc.cache...");
+        log.info("Fetching " + CACHE_NAME + "...");
         CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new HeaderFormatter())
                 .build();
         try {
-            // build TOC url
+            // build cache url
             String cacheUrl = files.stream()
-                    .filter(file -> file.name.equals("H.Misc.cache"))
+                    .filter(file -> file.name.equals(CACHE_NAME))
                     .findFirst()
                     .map(entry -> ORIGIN_URL + entry.path)
-                    .orElseThrow(() -> new RuntimeException("failed to find H.Misc.cache in manifest"));
+                    .orElseThrow(() -> new RuntimeException("failed to find " + CACHE_NAME + " in manifest"));
             log.info("Cache URL: " + cacheUrl);
 
-            // download APK file
+            // download cache file
             HttpGet request = new HttpGet(cacheUrl);
             request.setProtocolVersion(HttpVersion.HTTP_1_1);
+
+            // execute response
             CloseableHttpResponse response = httpClient.execute(request);
             HttpEntity entity = response.getEntity();
-
-            log.info("H.Misc.cache response code: " + response.getStatusLine());
+            log.info(CACHE_NAME + " response code: " + response.getStatusLine());
 
             InputStream input = new BufferedInputStream(new LZMACompressorInputStream(new BufferedInputStream(entity.getContent())));
             // skip bytes
             log.info("Skipping until Packages.bin");
-            IOUtils.skip(input, cacheEntry.offset());
-            log.info("Found Packages.bin; streaming to next format writer");
+            IOUtils.skip(input, packagesBinEntry.offset());
+            log.info("Reached Packages.bin; streaming to next format writer");
 
             // Packages.bin decompressor
             return new DependentInputStream(new CacheDecompressionInputStream(new BoundedInputStream(
                     input,
-                    cacheEntry.compressedSize()
+                    packagesBinEntry.compressedSize()
             )), httpClient);
         } catch (Throwable throwable) {
             IOUtils.closeQuietly(httpClient);
-            throw new RuntimeException("failed to fetch H.Misc.cache", throwable);
+            throw new RuntimeException("failed to fetch " + CACHE_NAME, throwable);
         }
     }
 
