@@ -37,7 +37,10 @@ class LabelFetcher:
     FORUMS = b64decode("aHR0cHM6Ly9mb3J1bXMud2FyZnJhbWUuY29tL2ZvcnVtLzMtcGMtdXBkYXRlLW5vdGVzLw==").decode()
     RSS = FORUMS + ".xml"
 
-    _client = HTTPClient()
+    _client: HTTPClient
+
+    def __init__(self):
+        self._client = HTTPClient()
 
     async def fetch_build_label(self) -> str:
         r = json.loads(await self._client.request(Route("GET", self.WSTATE)))
