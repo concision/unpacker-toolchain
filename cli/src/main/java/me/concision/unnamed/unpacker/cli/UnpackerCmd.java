@@ -45,26 +45,26 @@ public class UnpackerCmd {
     public static final String DEST_WINE_CMD = "wine_cmd";
 
     // source flags
+    public static final String FLAG_SOURCE_TYPE = "--source";
     public static final String DEST_SOURCE_TYPE = "source_type";
-    public static final String FLAG_SOURCE_TYPE = "--source-type";
 
-    public static final String FLAG_SOURCE_LOCATION = "--source-location";
-    public static final String DEST_SOURCE_LOCATION = "source_location";
+    public static final String FLAG_SOURCE_PATH = "--source-path";
+    public static final String DEST_SOURCE_PATH = "source_path";
 
     // output flags
-    public static final String FLAG_OUTPUT_LOCATION = "--output-location";
-    public static final String DEST_OUTPUT_LOCATION = "output_location";
-
-    public static final String FLAG_OUTPUT_FORMAT = "--output-format";
+    public static final String FLAG_OUTPUT_FORMAT = "--output";
     public static final String DEST_OUTPUT_FORMAT = "output_format";
 
-    public static final String FLAG_OUTPUT_SKIP_JSON = "--output-skip-json";
+    public static final String FLAG_OUTPUT_PATH = "--output-path";
+    public static final String DEST_OUTPUT_PATH = "output_path";
+
+    public static final String FLAG_OUTPUT_SKIP_JSON = "--skip-json";
     public static final String DEST_OUTPUT_SKIP_JSON = "output_skip_json";
 
-    public static final String FLAG_OUTPUT_CONVERT_STRING_LITERALS = "--output-convert-string-literals";
+    public static final String FLAG_OUTPUT_CONVERT_STRING_LITERALS = "--convert-string-literals";
     public static final String DEST_OUTPUT_CONVERT_STRING_LITERALS = "output_convert_string_literals";
 
-    public static final String FLAG_OUTPUT_PRETTIFY_JSON = "--output-prettify-json";
+    public static final String FLAG_OUTPUT_PRETTIFY_JSON = "--prettify-json";
     public static final String DEST_OUTPUT_PRETTIFY_JSON = "output_prettify_json";
 
     // positional arguments
@@ -118,15 +118,15 @@ public class UnpackerCmd {
                         "ORIGIN: Streams cached CDN files directly from origin servers\n" +
                         "        (note: these files may slightly be out of date, use UPDATER for latest)\n" +
                         "INSTALL: Searches for install location in Windows registry (note: Windows only)\n" +
-                        "FOLDER: Specifies Cache.Windows folder (requires '" + FLAG_SOURCE_LOCATION + " DIRECTORY')\n" +
-                        "BINARY: Specifies a raw extracted Packages.bin file (if '" + FLAG_SOURCE_LOCATION + " FILE' is unspecified, standard input is used)")
+                        "FOLDER: Specifies Cache.Windows folder (requires '" + FLAG_SOURCE_PATH + " DIRECTORY')\n" +
+                        "BINARY: Specifies a raw extracted Packages.bin file (if '" + FLAG_SOURCE_PATH + " FILE' is unspecified, standard input is used)")
                 .dest(DEST_SOURCE_TYPE)
                 .type(Arguments.caseInsensitiveEnumType(SourceType.class))
                 .required(true);
         // source location
-        Argument sourceLocationArgument = sourceGroup.addArgument(FLAG_SOURCE_LOCATION)
+        Argument sourceLocationArgument = sourceGroup.addArgument(FLAG_SOURCE_PATH)
                 .help("Filesystem path to source location, if required by the specified '" + FLAG_SOURCE_TYPE + "'")
-                .dest(DEST_SOURCE_LOCATION)
+                .dest(DEST_SOURCE_PATH)
                 .metavar("PATH")
                 .required(false)
                 .nargs("?")
@@ -136,9 +136,9 @@ public class UnpackerCmd {
         ArgumentGroup outputGroup = parser.addArgumentGroup("output");
         outputGroup.description("Processed Packages.bin output format; there are two types of outputs:\n" +
                 "Single: Outputs matching package records into one output (e.g. file, stdout)\n" +
-                "        if '" + FLAG_OUTPUT_LOCATION + " FILE' is unspecified, output is written to standard out\n" +
+                "        if '" + FLAG_OUTPUT_PATH + " FILE' is unspecified, output is written to standard out\n" +
                 "Multiple: Outputs matching package records into multiple independent files\n" +
-                "          '" + FLAG_OUTPUT_LOCATION + " DIRECTORY' argument must be specified");
+                "          '" + FLAG_OUTPUT_PATH + " DIRECTORY' argument must be specified");
         // output format
         outputGroup.addArgument(FLAG_OUTPUT_FORMAT)
                 .help("Specifies the output format\n" +
@@ -152,21 +152,21 @@ public class UnpackerCmd {
                         "       (e.g. {\"/Path/Directory/...PackageName\": ..., ...})\n" +
                         "  LIST: Outputs all matching packages into a JSON array\n" +
                         "        (e.g. [{\"path\": \"/Path/Directory/.../PackageName\", \"package\": ...}, ...])\n" +
-                        "Multiple targets ('" + FLAG_SOURCE_LOCATION + " DIRECTORY' is required):\n" +
+                        "Multiple targets ('" + FLAG_SOURCE_PATH + " DIRECTORY' is required):\n" +
                         "  RECURSIVE: Outputs each matching package as a file with replicated directory structure\n" +
-                        "             (e.g. ${" + FLAG_OUTPUT_LOCATION + "}/Path/Directory/.../PackageName)\n" +
+                        "             (e.g. ${" + FLAG_OUTPUT_PATH + "}/Path/Directory/.../PackageName)\n" +
                         "  FLATTENED: Outputs each matching package as a file without replicating directory structure\n" +
-                        "             (e.g. ${" + FLAG_OUTPUT_LOCATION + "}/PackageName)")
+                        "             (e.g. ${" + FLAG_OUTPUT_PATH + "}/PackageName)")
                 .metavar("FORMAT")
                 .dest(DEST_OUTPUT_FORMAT)
                 .type(Arguments.caseInsensitiveEnumType(FormatType.class))
                 .required(true)
                 .nargs("?");
         // output location
-        Argument outputLocationArgument = outputGroup.addArgument(FLAG_OUTPUT_LOCATION)
+        Argument outputLocationArgument = outputGroup.addArgument(FLAG_OUTPUT_PATH)
                 .help("Output path destination; omitting this flag will print the output to standard output if '" + FLAG_OUTPUT_FORMAT + "' is a single target")
                 .metavar("PATH")
-                .dest(DEST_OUTPUT_LOCATION)
+                .dest(DEST_OUTPUT_PATH)
                 .nargs("?")
                 .type(new FileArgumentType().verifyCanCreate());
         // skip jsonification
@@ -179,6 +179,7 @@ public class UnpackerCmd {
         Argument outputConvertStringLiteralsArgument = outputGroup.addArgument(FLAG_OUTPUT_CONVERT_STRING_LITERALS)
                 .help("Strips quotes for string literals when converting LUA tables to JSON " +
                         "(e.g. \"\\\"string\\\"\" is converted to \"string\") (default: false).\n" +
+                        "Note: This operation is lossy.\n" +
                         "Mutually exclusive with either '" + FLAG_OUTPUT_FORMAT + " BINARY' or '" + FLAG_OUTPUT_SKIP_JSON + "'")
                 .dest(DEST_OUTPUT_CONVERT_STRING_LITERALS)
                 .action(Arguments.storeTrue());
@@ -218,18 +219,18 @@ public class UnpackerCmd {
         try {
             // validate a source location is specified
             if (arguments.sourceType.requiresSource() && arguments.sourcePath == null) {
-                throw new ArgumentParserException("'" + FLAG_SOURCE_TYPE + " " + arguments.sourceType + "' requires a specified '" + FLAG_SOURCE_LOCATION + " PATH'", parser, sourceLocationArgument);
+                throw new ArgumentParserException("'" + FLAG_SOURCE_TYPE + " " + arguments.sourceType + "' requires a specified '" + FLAG_SOURCE_PATH + " PATH'", parser, sourceLocationArgument);
             }
 
             // validate a output destination is specified
             if (arguments.outputFormat.mode() == OutputMode.MULTIPLE && arguments.outputPath == null) {
-                throw new ArgumentParserException("'" + FLAG_OUTPUT_FORMAT + " " + arguments.outputFormat + "' requires a specified '" + FLAG_OUTPUT_LOCATION + " DIRECTORY'", parser, outputLocationArgument);
+                throw new ArgumentParserException("'" + FLAG_OUTPUT_FORMAT + " " + arguments.outputFormat + "' requires a specified '" + FLAG_OUTPUT_PATH + " DIRECTORY'", parser, outputLocationArgument);
             }
 
             // validate mutually exclusive arguments
             if (arguments.convertStringLiterals) {
                 if (arguments.sourceType == SourceType.BINARY) {
-                    throw new ArgumentParserException("'" + FLAG_SOURCE_LOCATION + " BINARY' is mutually exclusive", parser, outputConvertStringLiteralsArgument);
+                    throw new ArgumentParserException("'" + FLAG_SOURCE_PATH + " BINARY' is mutually exclusive", parser, outputConvertStringLiteralsArgument);
                 }
 
                 if (arguments.skipJsonificiation) {

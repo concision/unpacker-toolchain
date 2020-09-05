@@ -56,9 +56,9 @@ public class CommandArguments {
                 namespace.getString(UnpackerCmd.DEST_WINE_CMD),
                 // source
                 namespace.get(UnpackerCmd.DEST_SOURCE_TYPE),
-                namespace.get(UnpackerCmd.DEST_SOURCE_LOCATION),
+                namespace.get(UnpackerCmd.DEST_SOURCE_PATH),
                 // output
-                namespace.get(UnpackerCmd.DEST_OUTPUT_LOCATION),
+                namespace.get(UnpackerCmd.DEST_OUTPUT_PATH),
                 namespace.get(UnpackerCmd.DEST_OUTPUT_FORMAT),
                 // output flags
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
