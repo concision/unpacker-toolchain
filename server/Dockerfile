@@ -136,9 +136,9 @@ RUN \
         # log information
         --verbose \
         # use game updater to fetch latest
-        --source-type UPDATER \
+        --source UPDATER \
         # output a raw binary Packages.bin
-        --output-format BINARY \
+        --output BINARY \
         # set the default wine command
         --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 %UNPACKER_COMMAND%\"" \
         # pipe the Packages.bin output to /dev/null
