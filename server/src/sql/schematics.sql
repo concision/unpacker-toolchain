@@ -1,11 +1,12 @@
 -- drop database tables for testing (topologically sorted)
+-- DROP TABLE IF EXISTS packages_bin;
 -- DROP TABLE IF EXISTS package_entries;
 -- DROP TABLE IF EXISTS package_blobs;
 -- DROP TABLE IF EXISTS packages;
 
 
--- Stores Packages.bin and version metadata
-CREATE TABLE IF NOT EXISTS packages
+-- Stores Packages.bin version metadata
+CREATE TABLE IF NOT EXISTS package_labels
 (
     -- approximate fetch time
     timestamp             TIMESTAMP NOT NULL /* INDEXED */,
@@ -15,8 +16,6 @@ CREATE TABLE IF NOT EXISTS packages
     forum_version         TEXT      CHECK (forum_version ~ '^\d+(?:\.\d+)*$'),
     -- optional forum post URL where the `forum_version` was obtained
     forum_url             TEXT,
-    -- compressed Packages.bin file
-    packages              BYTEA     NOT NULL,
 
     -- partial build version (e.g. '2020.09.03.14.57')
     build_version         TEXT      PRIMARY KEY GENERATED ALWAYS AS (split_part(build_label, '/', 1)) STORED /* INDEXED */,
@@ -26,10 +25,18 @@ CREATE TABLE IF NOT EXISTS packages
     -- forum_version ordinal for ranged/order operations
     forum_version_ordinal BIGINT    GENERATED ALWAYS AS (version(forum_version)) STORED /* INDEXED */
 );
-CREATE INDEX packages__timestamp ON packages (timestamp);
-CREATE INDEX packages__forum_version ON packages (forum_version);
-CREATE INDEX packages__build_version_ordinal ON packages (build_version_ordinal);
-CREATE INDEX packages__forum_version_ordinal ON packages (forum_version_ordinal);
+CREATE INDEX packages__timestamp ON package_labels (timestamp);
+CREATE INDEX packages__forum_version ON package_labels (forum_version);
+CREATE INDEX packages__build_version_ordinal ON package_labels (build_version_ordinal);
+CREATE INDEX packages__forum_version_ordinal ON package_labels (forum_version_ordinal);
+
+
+-- Stores compressed Packages.bin
+CREATE TABLE IF NOT EXISTS packages_bin (
+    build_version TEXT  PRIMARY KEY REFERENCES package_labels (build_version),
+    -- compressed Packages.bin file
+    packages      BYTEA NOT NULL
+);
 
 
 -- Package entries do not significantly change on each update and thus have a high duplication rate.
@@ -48,7 +55,7 @@ CREATE TABLE IF NOT EXISTS package_blobs
 CREATE TABLE IF NOT EXISTS package_entries
 (
     -- partial build version (e.g. '2020.09.03.14.57')
-    build_version TEXT  NOT NULL REFERENCES packages (build_version) /* INDEXED */,
+    build_version TEXT  NOT NULL REFERENCES package_labels (build_version) /* INDEXED */,
     -- package's absolute path (e.g. '/Package/Path/X')
     path          TEXT  NOT NULL /* INDEXED */,
     -- package's content hash
