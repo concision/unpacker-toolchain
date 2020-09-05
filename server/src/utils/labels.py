@@ -16,7 +16,7 @@ class UpdateVersion:
     minor: str
     hotfix: Union[str, type(None)]
 
-    def __init__(self, update: str, major: str, minor: str, hotfix=None):
+    def __init__(self, update: str, major: str = "0", minor: str = "0", hotfix: str = None):
         self.update = update
         self.major = major
         self.minor = minor
