@@ -15,7 +15,7 @@ services:
       # enables uvicorn hot reloading
       DEVELOPMENT: "true"
       # database URL
-      POSTGRES_URL: "postgresql://unpacker:${DATABASE_PASSWORD:-SecurePasswordTM}:5432/packages?application_name=unpacker"
+      POSTGRES_URL: "postgresql://unpacker:5432/packages?user=unpacker&password=${DATABASE_PASSWORD:-SecurePasswordTM}&application_name=unpacker"
   database:
     image: postgres:13
     volumes:
