@@ -27,7 +27,7 @@ class UpdateVersion:
         return (s + '.' + str(self.hotfix)) if self.hotfix else s
 
     @classmethod
-    def from_version_str(cls, version_string: str):
+    def from_str(cls, version_string: str):
         matches = re.findall(r"(\d+(?:\.\d+)*)", version_string)
         return cls(*(matches[-1]).split('.'))
 
