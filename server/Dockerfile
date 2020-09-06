@@ -88,8 +88,21 @@ RUN apk add --no-cache \
 ## Python Dependencies
 # copy dependency manifests
 COPY ./server/Pipfile ./server/Pipfile.lock /unpacker/server/
-# install locked depenedencies with pipenv without creating a virtual environment
+# install locked depenedencies with pipenv in the created virtual environment
 RUN pipenv install --deploy
+
+
+### Development Tests & Linting ###
+FROM python-deps as tests
+
+## Python Dependencies
+# install locked development depenedencies
+RUN pipenv install --deploy --dev
+
+## Copy Sources
+# copy sources
+COPY ./server/src/ /unpacker/server/src/
+# copy tests?
 
 
 ### Build Runtime Application
