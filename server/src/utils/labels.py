@@ -3,11 +3,11 @@ from typing import Union
 import re
 import json
 from xml.etree import ElementTree
-from base64 import b64decode
 
 from bs4 import BeautifulSoup
 
 from .http import Route, HTTPClient
+from.sanitization import desanitize
 
 
 class UpdateVersion:
@@ -33,8 +33,8 @@ class UpdateVersion:
 
 
 class LabelFetcher:
-    WSTATE = b64decode("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20vZHluYW1pYy93b3JsZFN0YXRlLnBocA==").decode()
-    FORUMS = b64decode("aHR0cHM6Ly9mb3J1bXMud2FyZnJhbWUuY29tL2ZvcnVtLzMtcGMtdXBkYXRlLW5vdGVzLw==").decode()
+    WSTATE = desanitize("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20vZHluYW1pYy93b3JsZFN0YXRlLnBocA==")
+    FORUMS = desanitize("aHR0cHM6Ly9mb3J1bXMud2FyZnJhbWUuY29tL2ZvcnVtLzMtcGMtdXBkYXRlLW5vdGVzLw==")
     RSS = FORUMS + ".xml"
 
     _client: HTTPClient
