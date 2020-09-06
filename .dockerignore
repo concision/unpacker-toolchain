@@ -14,5 +14,6 @@
 !server/Pipfile.lock
 !server/pipenv-requirements.txt
 !server/tox.ini
+!server/tests
 !server/src
 !server/docker

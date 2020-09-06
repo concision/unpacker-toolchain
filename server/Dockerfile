@@ -104,10 +104,14 @@ RUN pipenv install --deploy --dev
 COPY ./server/src/ /unpacker/server/src/
 # copy configs
 COPY ./server/tox.ini /unpacker/server/tox.ini
+# copy tests
+COPY ./server/tests /unpacker/server/tests
 
 ## Analyze Project
 # execute linter on project sources
 RUN flake8 /unpacker/server/src/
+# execute tests
+RUN pytest /unpacker/server/tests/
 
 
 ### Build Runtime Application
