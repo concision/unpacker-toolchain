@@ -99,10 +99,15 @@ FROM python-deps as tests
 # install locked development depenedencies
 RUN pipenv install --deploy --dev
 
-## Copy Sources
+## Copy Project
 # copy sources
 COPY ./server/src/ /unpacker/server/src/
-# copy tests?
+# copy configs
+COPY ./server/tox.ini /unpacker/server/tox.ini
+
+## Analyze Project
+# execute linter on project sources
+RUN flake8 /unpacker/server/src/
 
 
 ### Build Runtime Application
