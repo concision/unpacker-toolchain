@@ -23,11 +23,10 @@
 ## Table of Contents
 - [About](#about)
 - [Intentional Ambiguity](#intentional-ambiguity)
-- [Project](#project)
-  - [Motivations](#motivations)
-  - [Toolchain Modules](#toolchain-modules)
-    - [CLI Usage](#cli-usage)
-  - [Compilation](#compilation)
+- [Motivations](#motivations)
+- [Toolchain Modules](#toolchain-modules)
+  - [CLI Usage](#cli-usage)
+- [Compilation](#compilation)
 - [Acknowledgements](#acknowledgements)
 
 
@@ -46,8 +45,7 @@ There is a certain level of intentional ambiguity present in this project's docu
 This repository is publicly available for responsible developers who are made aware of its existence.
 
 
-## Project
-### Motivations
+## Motivations
 The unnamed game provides a public API for obtaining game data that allows developers to develop useful tools and applications for the game's community. However, there are several distinct issues with the current support provided:
 - **coverage**: only a very limited subset of useful game data is publicly available.
 - **out-of-date**: provided data is may be outdated by months or, in some cases, years.
@@ -61,7 +59,7 @@ A small portion of this data can be manually obtained by analytical testing in-g
 The game itself contains a plethora of useful internal data within the 40GiB+ installation, which is obtainable by reading the game's proprietary file formats. However, there is currently no publicly available (and working) tool that is able to extract this desirable data and output the data in a standardized output format. Upon request by a few acquaintances, this project was designed and implemented, and has been maintained since.
 
 
-### Toolchain Modules
+## Toolchain Modules
 The developed toolchain was designed to address a few issues from previous known (but not necessarily distributed) implementations:
 - ease of portability (for most features) - the project is implemented in Java, a popular platform-independent runtime.
 - reduced memory footprint - only a working subset of the data is streamed into memory.
@@ -76,7 +74,7 @@ The toolchain is provided in 2 distinct modules, implemented in Java:
 > Note: A third module encapsulating this functionality in a dockerized HTTP server is in development under the `development` branch.
 
 
-#### CLI Usage
+### CLI Usage
 The CLI application is sufficiently self documented with a built in `--help` command, and general usage will be omitted from here. Several various input sources are supported (e.g. local game install, cached CDN servers, game updater, etc) as well as several various output sources (files, standard out, JSON vs raw, etc).
  
 Invoking the CLI application is dependent on the build distribution of choice:
@@ -96,7 +94,7 @@ Requirements (warning: subject to changes based on the game's development team):
   - x86_64 CPU architecture support with Windows (or Wine for Linux & macOS) support for fetching data using the game updater.
 
 
-### Compilation
+## Compilation
 As a further extension to the intentional ambiguity on this project, compilation instructions have been excluded to circumvent a layman from using or distributing the toolchain. Regardless, compiling should be relatively straightforward to a developer with previous experience with standardized build systems.
 
 Effectively, it can be noted that *project compilation has been left as an exercise to the reader*.
