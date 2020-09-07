@@ -7,13 +7,14 @@
     <parent>
         <groupId>me.concision.unnamed</groupId>
         <artifactId>unpacker</artifactId>
-        <version>1.2.0</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <groupId>me.concision.unnamed.unpacker</groupId>
     <artifactId>cli</artifactId>
+    <version>2.0.0-SNAPSHOT</version>
 
-    <description>A CLI tool to extract package manifest entries from an unnamed game's cache files</description>
+    <description>A command-line application that automates the data extraction process for humans and upstream applications</description>
 
     <dependencies>
         <!-- Unpacker I/O API: Manipulate package streams -->
