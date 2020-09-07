@@ -1,0 +1,19 @@
+### Ignore Everything ###
+**
+
+### Whitelist Project ###
+## Maven Build
+!pom.xml
+!lombok.config
+!**/pom.xml
+!api/src/
+!cli/src/
+
+## API Server
+!server/Pipfile
+!server/Pipfile.lock
+!server/pipenv-requirements.txt
+!server/tox.ini
+!server/tests
+!server/src
+!server/docker

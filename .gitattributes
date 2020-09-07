@@ -1,0 +1,5 @@
+# automatically detect text files and use LF as line end-of-line
+* text=auto eol=lf
+
+# explicitly declare script files as text
+*.sh text

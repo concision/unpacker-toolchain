@@ -1,104 +1,106 @@
-# Packages Extractor
-[![license](https://img.shields.io/github/license/concision/packages-extractor?style=flat-square)](https://github.com/concision/packages-extractor/blob/master/LICENSE)
-![version](https://img.shields.io/github/v/tag/concision/packages-extractor?style=flat-square)
+<h1 align="center">
+    Packages Extraction Toolchain
+</h1>
 
-A CLI tool designed to easily extract data manifests from an unnamed game's package cache.
+<p align="center">
+    <a href="https://github.com/concision/packages-unpacker/blob/master/LICENSE">
+        <img alt="repository license" src="https://img.shields.io/github/license/concision/packages-unpacker?style=for-the-badge"/>
+    </a>
+    <a href="https://github.com/concision/unpacker-api/releases">
+        <img alt="release version" src="https://img.shields.io/github/v/tag/concision/packages-unpacker?style=for-the-badge&logo=apache-maven"/>
+    </a>
+    <img alt="supported java versions" src="https://img.shields.io/badge/java-%5E1.8-informational?style=for-the-badge&logo=java"/>
+    <a href="https://github.com/concision/unpacker-api/graphs/contributors">
+        <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/concision/unpacker-api?color=green&logo=github&style=for-the-badge"/>
+    </a>
+</p>
 
-> Note: While reading through the following documentation, you may sense a significant amount of ambiguity or abstractness - this is intentional, due to the nature of the project. 
+<p align="center">
+    <i>A developer toolchain for extracting internal data from an unnamed game's files.</i>
+</p>
+
+
+## Table of Contents
+- [About](#about)
+- [Intentional Ambiguity](#intentional-ambiguity)
+- [Motivations](#motivations)
+- [Toolchain Modules](#toolchain-modules)
+  - [CLI Usage](#cli-usage)
+- [Compilation](#compilation)
+- [Acknowledgements](#acknowledgements)
+
+
+## About
+This repository features a developer toolchain for extracting useful internal data from an unnamed game's files by reading proprietary file formats.
+ 
+Accordingly, this enables:
+- developing upstream applications with data that is not fully available from any other source (i.e. exclusive in nature).
+- retrieving precise values used in internal game calculations or for various game mechanics.
+- generating automated changelogs by tracking diffs from successive updates.
+
+
+## Intentional Ambiguity
+There is a certain level of intentional ambiguity present in this project's documentation to mitigate *Search Engine Optimization* (SEO). While the public release of extracted data is not necessarily harmful, reversing the algorithms to write (rather than read) the proprietary file formats may enable malicious behavior from a bad actor. Used irresponsibly, a problematic cat and mouse security game might initiate between reverse engineers and the unnamed game's development team. Therefore, several game references have been mildly obfuscated (but still quite reversible) in the codebase to prevent an actor from being able to find this project using certain keywords related to the unnamed game.
+
+This repository is publicly available for responsible developers who are made aware of its existence.
+
 
 ## Motivations
-The associated unnamed game provides a public API for obtaining game data that allows the community to develop useful tools for the playerbase. However, there are several distinct issues with the current support:
-- **coverage**: there is only a very limited subset of useful game data publicly available
-- **missing information**: for the subset of publicly available data, some data attributes are arbitrarily missing
-- **outdated**: exposed data is, more than often, outdated by months or even years
-- **disinterest**: Unnamed game's developers are not particularly interested in devoting time to build a more exhaustive API
+The unnamed game provides a public API for obtaining game data that allows developers to develop useful tools and applications for the game's community. However, there are several distinct issues with the current support provided:
+- **coverage**: only a very limited subset of useful game data is publicly available.
+- **out-of-date**: provided data is may be outdated by months or, in some cases, years.
+- **usability**: available data is typically in less than developer-friendly formats and may require significant parsing.
+- **disinterest**: the development team have no particular interest in devoting time to build a more expansive API.
 
-> Note: The data referred to here relates to various aspects of the game's mechanics, not to be confused with any association with user data.
+A small portion of this data can be manually obtained by analytical testing in-game; however, this model is unsustainable since it is rather time-intensive and not (easily) automated.
 
-This data exists within each installation of the game; although, it may only be obtained by reading the game's proprietary package format. There currently exists no (working) tool that is built that is able to extract this desired data. Ideally, a flexible tool could automate this extraction process, allowing developers to build useful applications from the extracted data. 
+> Note: The data referred to here should not be confused with any association of user data - it is solely related to data used in various game mechanics.
 
-Upon request by a few acquaintances, this project was designed and implemented.
+The game itself contains a plethora of useful internal data within the 40GiB+ installation, which is obtainable by reading the game's proprietary file formats. However, there is currently no publicly available (and working) tool that is able to extract this desirable data and output the data in a standardized output format. Upon request by a few acquaintances, this project was designed and implemented, and has been maintained since.
 
-## Solution
-A platform-independent CLI tool was promptly written that supports data extraction for manifest files. 
 
-This project's implementation solves a few issues in previously known implementations:
-- ease of portability (Java is a quite popular platform-independent runtime)
-- reduced memory footprint (only a working subset of assets are loaded into memory)
-- support for exporting the data to JSON, a more well known and usable data format (the internal manifests have a near 1-to-1 mapping to JSON)
-- increased code readability (e.g. control structure)
+## Toolchain Modules
+The developed toolchain was designed to address a few issues from previous known (but not necessarily distributed) implementations:
+- ease of portability (for most features) - the project is implemented in Java, a popular platform-independent runtime.
+- reduced memory footprint - only a working subset of the data is streamed into memory.
+- reduce storage requirements - the host machine is not required to have a full game installation (40GiB+) to extract data.
+- standardized file format output - JSON exportation is supported (the internal data format has a near 1-to-1 mapping to JSON).
+- increased code readability - there is sufficient internal documentation defining high level control flow, enabling ease of translating to other languages.
 
-This Java project is broken up into two submodules:
-- **io-api**: An api to directly manipulate data formats from I/O streams
-- **cli**: A tool that wraps the I/O api in an easy-to-use CLI application
+The toolchain is provided in 2 distinct modules, implemented in Java:
+- **I/O api**: A Java I/O stream API for reading internal data from the game's proprietary file formats.
+- **CLI**: A command-line application that automates the data extraction process for humans and upstream applications.
 
-> Note: This project's ability to read the proprietary data formats is based off of [cheahjs](https://github.com/cheahjs)'s work. Their public contributions in the community are indisputably invaluable for creating this tool.
+> Note: A third module encapsulating this functionality in a dockerized HTTP server is in development under the `development` branch.
 
-## Ambiguity
-As noted before, this documentation is rather abstract and ambiguous; this is intentional to prevent SEO of this repository. As such, most references to the game have been sanitized or obfuscated such that they do not appear when using certain terms on a search engine.
 
-The effective goal here is to prevent the project from being accidentally stumbled upon by an irresponsible individual, but is still publicly available to individuals who are made aware of the project.
+### CLI Usage
+The CLI application is sufficiently self documented with a built in `--help` command, and general usage will be omitted from here. Several various input sources are supported (e.g. local game install, cached CDN servers, game updater, etc) as well as several various output sources (files, standard out, JSON vs raw, etc).
+ 
+Invoking the CLI application is dependent on the build distribution of choice:
+- **Windows**: `unpacker.exe --help` or with Cygwin derivatives: `./unpacker.exe --help`
+- **Java**: `java -jar unpacker.jar --help`
 
-### Compilation
-Instructions are intentionally not included for compiling this project. Regardless, this task should be relatively straightforward to anyone with experience with build systems.
+> Note: The Windows build is a helpful wrapper around Java invocation for humans, and still requires an installed compatible Java runtime.
 
-Effectively, project compilation is left as an exercise to the reader.
+Requirements (warning: subject to changes based on the game's development team):
+- **Minimal**:
+  - 256MB of RAM
+  - 256MB of disk storage for file outputs
+  - x86_64 CPU architecture support with Windows (or Wine for Linux & macOS) support for fetching data using the game updater.
+- **Recommended**:
+  - 512MB+ of RAM
+  - 256MB+ of disk storage for file outputs
+  - x86_64 CPU architecture support with Windows (or Wine for Linux & macOS) support for fetching data using the game updater.
 
-## CLI Usage
-Command usage is available with ```extractor -h```; however, it is provided below for convenience:
-```
-usage: extractor [-h] [--verbose] --source-type {ORIGIN,INSTALL,FOLDER,BINARY} [--source-location [PATH]]
-                [--output-location [PATH]] --output-format FORMAT [--output-raw]
-                [/glob/**/pattern/*file* [/glob/**/pattern/*file* ...]]
 
-Extracts and processes data from Packages.bin
+## Compilation
+As a further extension to the intentional ambiguity on this project, compilation instructions have been excluded to circumvent a layman from using or distributing the toolchain. Regardless, compiling should be relatively straightforward to a developer with previous experience with standardized build systems.
 
-positional arguments:
-  /glob/**/pattern/*file*
-                         List of packages to extract using glob patterns (default: "**/*")
+Effectively, it can be noted that *project compilation has been left as an exercise to the reader*.
 
-named arguments:
-  -h, --help             show this help message and exit
 
-flags:
-  --verbose              Verbosely logs information to standard error stream
-
-source:
-  --source-type {ORIGIN,INSTALL,FOLDER,BINARY}
-                         Method of obtaining a Packages.bin data source
-                         ORIGIN: Streams directly from update servers
-                         INSTALL: Searches for last used install location
-                         FOLDER: Specifies [REDACTED] folder (specify a --source-location DIRECTORY)
-                         BINARY: Specifies a raw extracted Packages.bin file (specify a --source-location FILE)
-  --source-location [PATH]
-                         A path to a source location on the filesystem, if required by the specified --source-type
-
-output:
-  Specifies how output is controlled; there are two types of outputs:
-  SINGLE: Outputs all relevant package records into single output (e.g. file, stdout)
-          if '--output-location FILE' is specified, writes to file, otherwise to stdout
-  MULTIPLE: Outputs relevant package records into multiple independent files
-            '--output-location DIRECTORY' argument must be specified
-
-  --output-location [PATH]
-                         Output path destination
-  --output-format FORMAT
-                         Specifies the output format
-                         SINGLE:
-                           PATHS: Outputs matching package paths on each line
-                                  (e.g. /Path/.../PackageName\r\n)
-                           RECORDS: Outputs a matching package JSON record on each line
-                                    (e.g. {"path": "/Path/...", "package": ...}\r\n)
-                           MAP: Outputs all matching packages into a JSON map
-                                (e.g. {"/Path/...": ..., ...})
-                           LIST: Outputs all matching packages into a JSON array
-                                 (e.g. [{"path": "/Path/...", "package": ...}, ...])
-                         MULTIPLE:
-                           RECURSIVE: Outputs each matching package as a file with replicated directory structure
-                                      (e.g. ${--output-location}/Path/.../PackageName)
-                           FLATTENED: Outputs each matching package as a file without replicating directory structure
-                                      (e.g. ${--output-location}/PackageName)
-  --output-raw           Skips conversion of LUA Tables to JSON (default: false)
-
-In lieu of a package list, a file containing a list may be specified with "@file"
-```
+## Acknowledgements
+This project's ability to read proprietary data formats has been derived from the following two developers; their contributions have been indisputably invaluable for creating the tool.
+- [@cheahjs](https://github.com/cheahjs)' public reverse engineering work
+- a developer acquaintance who wishes to remain anonymous
