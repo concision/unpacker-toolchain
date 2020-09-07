@@ -49,7 +49,7 @@ import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCo
 import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.ORIGIN_URL;
 
 /**
- * See {@link SourceType#UPDATER}
+ * See {@link SourceType#UPDATER}.
  *
  * @author Concision
  */
@@ -62,7 +62,7 @@ public class UpdaterSourceCollector implements SourceCollector {
 
     @Override
     @SuppressWarnings("DuplicatedCode")
-    public InputStream generate(@NonNull CommandArguments args) throws IOException {
+    public InputStream acquire(@NonNull CommandArguments args) throws IOException {
         // obtain listing of CDN depot files
         @RequiredArgsConstructor
         @ToString
@@ -225,8 +225,8 @@ public class UpdaterSourceCollector implements SourceCollector {
 
         // clean up temporary directory
         log.info("Cleaning up temporary directory");
-        File cacheFolder = new File(tempDirectory, "Cache.Windows");
-        Path cachePath = cacheFolder.toPath();
+        File cacheDirectory = new File(tempDirectory, "Cache.Windows");
+        Path cachePath = cacheDirectory.toPath();
         // delete all unnecessary files
         if (!isWindows) {
             // native acceleration must be used for performance
@@ -250,14 +250,14 @@ public class UpdaterSourceCollector implements SourceCollector {
             }
         });
 
-        // delegate to folder source collector
-        return new FolderSourceCollector().generate(cacheFolder);
+        // delegate to directory source collector
+        return new DirectorySourceCollector().generate(cacheDirectory);
     }
 
     // threads
 
     /**
-     * Redirects process {@link InputStream} to logger
+     * Redirects process {@link InputStream} to logger.
      *
      * @param prefix logging prefix
      * @param stream {@link InputStream} to read
@@ -273,7 +273,7 @@ public class UpdaterSourceCollector implements SourceCollector {
     }
 
     /**
-     * Waits for a process to be spawned and then hides all GUI windows using JNA
+     * Waits for a process to be spawned and subsequently hides all GUI windows using JNA. Windows only.
      *
      * @param executableFile Game client executable {@link File} to match
      */

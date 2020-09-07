@@ -11,17 +11,20 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * See {@link SourceType#BINARY}
+ * See {@link SourceType#BINARY}.
  *
  * @author Concision
  */
 @Log
 public class BinarySourceCollector implements SourceCollector {
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public InputStream generate(CommandArguments args) throws IOException {
+    public InputStream acquire(CommandArguments args) throws IOException {
         if (args.sourcePath == null) {
-            log.info("Using standard input for Packages.bin data source");
             // use standard input
+            log.info("Using standard input for Packages.bin data source");
             return new BufferedInputStream(System.in);
         } else {
             // use source path

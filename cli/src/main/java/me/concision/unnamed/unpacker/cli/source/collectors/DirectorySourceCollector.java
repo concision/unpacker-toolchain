@@ -19,36 +19,47 @@ import java.io.InputStream;
 import java.util.Optional;
 
 /**
- * See {@link SourceType#FOLDER}
+ * See {@link SourceType#DIRECTORY}
  *
  * @author Concision
  */
 @Log
-public class FolderSourceCollector implements SourceCollector {
+public class DirectorySourceCollector implements SourceCollector {
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public InputStream generate(CommandArguments args) throws IOException {
+    public InputStream acquire(CommandArguments args) throws IOException {
         return generate(args.sourcePath);
     }
 
-    InputStream generate(@NonNull File folder) throws IOException {
+    /**
+     * Acquires a Packages.bin {@link InputStream} from a cache directory containing a {@link #TOC_NAME} file and
+     * {@link #CACHE_NAME} file.
+     *
+     * @param directory .toc and .cache file directory
+     * @return Packages.bin {@link InputStream}
+     * @throws IOException if an underlying I/O exception occurs
+     */
+    public InputStream generate(@NonNull File directory) throws IOException {
         return generate(
-                new BufferedInputStream(new FileInputStream(new File(folder, TOC_NAME).getAbsoluteFile())),
-                new BufferedInputStream(new FileInputStream(new File(folder, CACHE_NAME).getAbsoluteFile()))
+                new BufferedInputStream(new FileInputStream(new File(directory, TOC_NAME).getAbsoluteFile())),
+                new BufferedInputStream(new FileInputStream(new File(directory, CACHE_NAME).getAbsoluteFile()))
         );
     }
 
     /**
-     * Generates Packages.bin stream from cache files
+     * Acquires a Packages.bin {@link InputStream} from a {@link #TOC_NAME} file and {@link #CACHE_NAME} file.
      *
-     * @param tocStream   {@link #TOC_NAME} stream
-     * @param cacheStream {@link #CACHE_NAME} stream
-     * @return Packages.bin stream
-     * @throws IOException if an exception occurs while reading from disk
+     * @param tocStream   {@link #TOC_NAME} {@link InputStream}
+     * @param cacheStream {@link #CACHE_NAME} {@link InputStream}
+     * @return Packages.bin {@link InputStream}
+     * @throws IOException if an underlying I/O exception occurs
      */
-    InputStream generate(@NonNull InputStream tocStream, @NonNull InputStream cacheStream) throws IOException {
+    public InputStream generate(@NonNull InputStream tocStream, @NonNull InputStream cacheStream) throws IOException {
         // read Packages.bin entry
         Optional<CacheEntry> entry = new TocStreamReader(tocStream).findEntry("/Packages.bin");
-        // verify discovered
+        // verify an entry is present
         if (!entry.isPresent()) {
             throw new RuntimeException("Packages.bin entry not found in " + TOC_NAME);
         }

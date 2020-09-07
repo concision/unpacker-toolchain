@@ -3,7 +3,7 @@ package me.concision.unnamed.unpacker.cli;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import me.concision.unnamed.unpacker.cli.output.FormatType;
+import me.concision.unnamed.unpacker.cli.output.OutputType;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 import net.sourceforge.argparse4j.inf.Namespace;
 
@@ -13,12 +13,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A runtime configuration to allow code to be more concise when referencing arguments
+ * A runtime configuration enabling more concise code when referencing arguments.
  *
  * @author Concision
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommandArguments {
+    /**
+     * Original parsed namespace from CLI arguments
+     */
     @NonNull
     public final Namespace namespace;
 
@@ -33,10 +36,10 @@ public class CommandArguments {
     // output
     public final File outputPath;
     @NonNull
-    public final FormatType outputFormat;
+    public final OutputType outputFormat;
 
     // flags
-    public final boolean skipJsonificiation;
+    public final boolean skipJsonification;
     public final boolean convertStringLiterals;
     public final boolean prettifyJson;
 
@@ -64,7 +67,6 @@ public class CommandArguments {
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_CONVERT_STRING_LITERALS),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_PRETTIFY_JSON),
-                // namespace.getBoolean("cache"),
                 // package glob patterns
                 Collections.unmodifiableList(namespace.getList(UnpackerCmd.ARGUMENT_PACKAGES))
         );

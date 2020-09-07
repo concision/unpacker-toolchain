@@ -3,14 +3,13 @@ package me.concision.unnamed.unpacker.cli;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
 
 import java.io.InputStream;
 
 /**
- * Control flow for unpacking process
+ * High level control flow for executing the unpacking process.
  *
  * @author Concision
  */
@@ -25,9 +24,8 @@ public class Unpacker {
     private final CommandArguments args;
 
     /**
-     * Execute decaching with namespaced parameters
+     * Initiate unpacking process with the specified arguments
      */
-    @SneakyThrows
     public void execute() {
         // prepare environment
         this.prepare();
@@ -39,14 +37,15 @@ public class Unpacker {
      * Prepares decaching environment
      */
     private void prepare() {
+        // sets Windows compatible line endings
         System.setProperty("line.separator", "\r\n");
     }
 
     /**
-     * Obtains Packages.bin input stream from source and writes it to destination
+     * Obtains Packages.bin input stream from source and writes it to output destination
      */
     private void decache() {
-        log.info("Generating Packages.bin stream");
+        log.info("Generating Packages.bin source stream");
         // generate packages.bin input stream
         InputStream packagesStream;
         try {
@@ -59,16 +58,16 @@ public class Unpacker {
             throw new RuntimeException("failed to generate Packages.bin input stream", throwable);
         }
 
-        // generate new writer
-        log.info("Constructing format writer");
-        OutputFormatWriter formatWriter = args.outputFormat.newWriter(this);
-
-        log.info("Executing format writer");
+        // instantiate output writer
+        log.info("Initializing output writer");
+        OutputFormatWriter writer = args.outputFormat.newWriter(this);
+        // publish stream to output writer
+        log.info("Processing output writing");
         try (InputStream __ = packagesStream) {
-            formatWriter.format(this, packagesStream);
+            writer.write(this, packagesStream);
         } catch (Throwable throwable) {
             throw new RuntimeException("formatter " + args.outputFormat + " failed to write", throwable);
         }
-        log.info("Finished unpacking. Goodbye.");
+        log.info("Completed unpacking. Goodbye.");
     }
 }

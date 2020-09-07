@@ -1,7 +1,8 @@
 package me.concision.unnamed.unpacker.cli;
 
-import me.concision.unnamed.unpacker.cli.output.FormatType;
-import me.concision.unnamed.unpacker.cli.output.FormatType.OutputMode;
+import me.concision.unnamed.unpacker.cli.logging.UnpackerLoggerFormatter;
+import me.concision.unnamed.unpacker.cli.output.OutputType;
+import me.concision.unnamed.unpacker.cli.output.OutputType.OutputMode;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -12,17 +13,11 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.util.Collections;
-import java.util.Date;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -32,7 +27,7 @@ import java.util.regex.PatternSyntaxException;
  */
 public class UnpackerCmd {
     /**
-     * Checks if OS is Windows
+     * Indicates if the underlying HOST OS is Windows
      */
     public static final boolean IS_WINDOWS = System.getProperty("os.name", "").toLowerCase().contains("win");
 
@@ -70,10 +65,12 @@ public class UnpackerCmd {
     // positional arguments
     public static final String ARGUMENT_PACKAGES = "packages";
 
+
     public static void main(String... cliArgs) {
-        // ensure arguments are specified if erroneously executed by
-        if (cliArgs == null) {
-            cliArgs = new String[]{};
+        // ensure arguments are specified if erroneously executed by a caller in the current runtime environment
+        // default arguments to --help flag
+        if (cliArgs == null || cliArgs.length == 0) {
+            cliArgs = new String[]{"--help"};
         }
 
 
@@ -118,7 +115,7 @@ public class UnpackerCmd {
                         "ORIGIN: Streams cached CDN files directly from origin servers\n" +
                         "        (note: these files may slightly be out of date, use UPDATER for latest)\n" +
                         "INSTALL: Searches for install location in Windows registry (note: Windows only)\n" +
-                        "FOLDER: Specifies Cache.Windows folder (requires '" + FLAG_SOURCE_PATH + " DIRECTORY')\n" +
+                        "DIRECTORY: Specifies Cache.Windows directory (requires '" + FLAG_SOURCE_PATH + " DIRECTORY')\n" +
                         "BINARY: Specifies a raw extracted Packages.bin file (if '" + FLAG_SOURCE_PATH + " FILE' is unspecified, standard input is used)")
                 .dest(DEST_SOURCE_TYPE)
                 .type(Arguments.caseInsensitiveEnumType(SourceType.class))
@@ -159,7 +156,7 @@ public class UnpackerCmd {
                         "             (e.g. ${" + FLAG_OUTPUT_PATH + "}/PackageName)")
                 .metavar("FORMAT")
                 .dest(DEST_OUTPUT_FORMAT)
-                .type(Arguments.caseInsensitiveEnumType(FormatType.class))
+                .type(Arguments.caseInsensitiveEnumType(OutputType.class))
                 .required(true)
                 .nargs("?");
         // output location
@@ -207,12 +204,13 @@ public class UnpackerCmd {
                 .metavar("/glob/**/pattern/*file*")
                 .setDefault(Collections.singletonList(FileSystems.getDefault().getPathMatcher("glob:**/*")));
 
-        // trailing help
+        // description
         parser.epilog("In lieu of a package list, a file containing a list may be specified with \"@file\"");
 
 
         // parse namespace, or exit runtime
         Namespace namespace = parser.parseArgsOrFail(cliArgs);
+        // convert to runtime configuration
         CommandArguments arguments = CommandArguments.from(namespace);
 
         // validate additional constraints
@@ -233,18 +231,18 @@ public class UnpackerCmd {
                     throw new ArgumentParserException("'" + FLAG_SOURCE_PATH + " BINARY' is mutually exclusive", parser, outputConvertStringLiteralsArgument);
                 }
 
-                if (arguments.skipJsonificiation) {
+                if (arguments.skipJsonification) {
                     throw new ArgumentParserException("'" + FLAG_OUTPUT_SKIP_JSON + "' is mutually exclusive", parser, outputConvertStringLiteralsArgument);
                 }
             }
 
             // validate mutually exclusive arguments
             if (arguments.prettifyJson) {
-                if (arguments.outputFormat == FormatType.BINARY || arguments.outputFormat == FormatType.RECORDS) {
+                if (arguments.outputFormat == OutputType.BINARY || arguments.outputFormat == OutputType.RECORDS) {
                     throw new ArgumentParserException("'" + FLAG_OUTPUT_FORMAT + " " + arguments.outputFormat + "' is mutually exclusive", parser, outputPrettifyJsonArgument);
                 }
 
-                if (arguments.skipJsonificiation) {
+                if (arguments.skipJsonification) {
                     throw new ArgumentParserException("'" + FLAG_OUTPUT_SKIP_JSON + "' is mutually exclusive", parser, outputPrettifyJsonArgument);
                 }
             }
@@ -266,51 +264,24 @@ public class UnpackerCmd {
         }
 
 
-        // initialize logging mechanism
+        // initialize and configure logging mechanism
         Logger log = Logger.getLogger(UnpackerCmd.class.getPackageName());
         log.setUseParentHandlers(false);
         ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new SimpleFormatter() {
-            private final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-            private final PrintStream printStream = new PrintStream(byteStream);
-
-            @Override
-            public synchronized String format(LogRecord record) {
-                StringBuilder builder = new StringBuilder();
-                builder.append(String.format(
-                        "[%1$tF %1$tT] %2$-7s %3$s %n",
-                        new Date(record.getMillis()),
-                        record.getLevel().getLocalizedName(),
-                        record.getMessage()
-                ));
-                Throwable thrown = record.getThrown();
-                if (thrown != null) {
-                    thrown.printStackTrace(printStream);
-                    for (String line : new String(byteStream.toByteArray(), StandardCharsets.ISO_8859_1).split("[\r\n]+")) {
-                        builder.append(String.format(
-                                "[%1$tF %1$tT] %2$-7s %3$s %n",
-                                new Date(record.getMillis()),
-                                record.getLevel().getLocalizedName(),
-                                line
-                        ));
-                    }
-                    byteStream.reset();
-                }
-                return builder.toString();
-            }
-        });
+        handler.setFormatter(new UnpackerLoggerFormatter());
         log.addHandler(handler);
-        // set logging verbosity
+        // configure logging verbosity
         if (!namespace.getBoolean(DEST_VERBOSE_LOGGING)) {
             log.setLevel(Level.OFF);
         }
 
-        // start extraction
+
+        // execute extraction process
         log.config("Argument namespace: " + namespace);
         try {
             new Unpacker(arguments).execute();
         } catch (Throwable throwable) {
-            log.log(Level.SEVERE, "An unexpected exception occurred during unpacking", throwable);
+            log.log(Level.SEVERE, "An unexpected exception occurred during the unpacking process", throwable);
             System.exit(-1);
         }
     }

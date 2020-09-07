@@ -42,30 +42,32 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * See {@link SourceType#ORIGIN}
+ * See {@link SourceType#ORIGIN}.
  *
  * @author Concision
  */
 @Log
 public class OriginSourceCollector implements SourceCollector {
     /**
-     * Origin server; slightly obfuscated to prevent search indexing
+     * Origin server URL
      */
     @SuppressWarnings("SpellCheckingInspection")
     static final String ORIGIN_URL = new String(Base64.getDecoder().decode("aHR0cDovL29yaWdpbi53YXJmcmFtZS5jb20="), StandardCharsets.ISO_8859_1);
-
     /**
-     * Matches depot files from index manifest
-     */
-    static final Pattern DEPOT_FILE_PATTERN = Pattern.compile("^(?<path>/(?:[^/]+/)*(?<filename>.+)\\.[0-9A-F]{32}\\.lzma),(?<filesize>\\d+)$");
-    /**
-     * Origin index manifest file
+     * Origin index manifest file URI
      */
     static final String INDEX_MANIFEST = new String(Base64.getDecoder().decode("aW5kZXgudHh0Lmx6bWE="), StandardCharsets.ISO_8859_1);
+    /**
+     * Matches depot files format from index manifest
+     */
+    static final Pattern DEPOT_FILE_PATTERN = Pattern.compile("^(?<path>/(?:[^/]+/)*(?<filename>.+)\\.[0-9A-F]{32}\\.lzma),(?<filesize>\\d+)$");
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("DuplicatedCode")
-    public InputStream generate(@NonNull CommandArguments args) {
+    public InputStream acquire(@NonNull CommandArguments args) {
         // obtain listing of CDN depot files
         @RequiredArgsConstructor
         @ToString
@@ -97,7 +99,7 @@ public class OriginSourceCollector implements SourceCollector {
                         continue;
                     }
 
-                    // parse depot
+                    // parse depot format
                     String path = matcher.group("path");
                     String filename = matcher.group("filename");
                     long filesize;
@@ -115,7 +117,7 @@ public class OriginSourceCollector implements SourceCollector {
             throw new RuntimeException("failed to fetch " + INDEX_MANIFEST + " manifest", throwable);
         }
 
-        // find Packages.bin TOC entry
+        // find Packages.bin .toc entry
         log.info("Fetching " + TOC_NAME);
         CacheEntry packagesBinEntry;
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
@@ -154,6 +156,7 @@ public class OriginSourceCollector implements SourceCollector {
             throw new RuntimeException("failed to parse " + TOC_NAME + " or find Packages.bin entry", throwable);
         }
 
+        // fetch .cache file
         log.info("Fetching " + CACHE_NAME + "...");
         CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new HeaderFormatter())
@@ -218,15 +221,24 @@ public class OriginSourceCollector implements SourceCollector {
     }
 
     /**
-     * Closes another {@link Closeable instance} upon stream {@link InputStream#close()}
+     * Closes a {@link Closeable instance} upon stream {@link InputStream#close()} invocation.
      */
     @RequiredArgsConstructor
     private static class DependentInputStream extends InputStream implements Closeable {
+        /**
+         * {@link InputStream} to hook {@link InputStream#close()} call on.
+         */
         @Delegate(excludes = Closeable.class)
         private final InputStream stream;
 
+        /**
+         * {@link Closeable} to be closed.
+         */
         private final Closeable closeable;
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void close() throws IOException {
             IOUtils.closeQuietly(closeable);

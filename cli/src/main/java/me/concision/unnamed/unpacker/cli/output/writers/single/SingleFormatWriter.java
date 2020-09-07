@@ -4,6 +4,7 @@ import lombok.NonNull;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
+import me.concision.unnamed.unpacker.cli.output.OutputType.OutputMode;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.BufferedOutputStream;
@@ -11,21 +12,23 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 /**
- * An abstract format writer for writing to a single output destination
+ * An abstract {@link OutputFormatWriter} for writing to a single output destination {@link OutputMode}.
  *
  * @author Concision
  */
 public abstract class SingleFormatWriter implements OutputFormatWriter, Closeable {
     /**
-     * Destination output stream
+     * Destination {@link OutputStream}
      */
     protected PrintStream outputStream;
 
     /**
-     * Opens an output stream to the unpacker destination. If no {@link CommandArguments#outputPath} is specified, defaults to {@link System#out}
+     * Opens an output stream to the unpacker destination. If no {@link CommandArguments#outputPath} is specified,
+     * defaults to {@link System#out}.
      *
      * @param unpacker associated {@link Unpacker} instance
      */
@@ -43,7 +46,7 @@ public abstract class SingleFormatWriter implements OutputFormatWriter, Closeabl
     }
 
     /**
-     * Closes destination stream
+     * {@inheritDoc}
      */
     @Override
     public void close() {

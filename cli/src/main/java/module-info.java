@@ -1,7 +1,6 @@
 module me.concision.unnamed.unpacker.cli {
-    // require maven dependencies
+    // shaded maven dependencies
     requires static me.concision.unnamed.unpacker.api;
-
     requires static lombok;
     requires static argparse4j;
     requires static org.json;
@@ -12,13 +11,15 @@ module me.concision.unnamed.unpacker.cli {
     requires static com.sun.jna;
     requires static org.apache.commons.compress;
 
-    // java runtime
+
+    // java runtime environment
     requires java.base;
     requires java.logging;
+    // required by httpclient
+    requires java.naming;
 
-    requires java.naming; // required by httpclient
 
-    // export all packages
+    // export all CLI packages
     exports me.concision.unnamed.unpacker.cli;
     exports me.concision.unnamed.unpacker.cli.output;
     exports me.concision.unnamed.unpacker.cli.output.writers.multi;

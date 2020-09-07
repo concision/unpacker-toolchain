@@ -16,12 +16,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Specifies the output format type for a specified {@link OutputMode}
+ * Specifies the output format for writing Packages.bin.
  *
  * @author Concision
  */
 @RequiredArgsConstructor
-public enum FormatType {
+public enum OutputType {
     // single
     /**
      * Outputs Package.bin raw decompressed file
@@ -61,24 +61,27 @@ public enum FormatType {
     FLATTENED(OutputMode.MULTIPLE, FlattenedFormatWriter::new);
 
     /**
-     * Associated output mode
+     * {@link OutputMode} type
      */
     @Getter
     @NonNull
     private final OutputMode mode;
 
     /**
-     * Type-specific format writer instance generator
+     * Output type instance constructor
      */
     @NonNull
     private final Function<Unpacker, OutputFormatWriter> writerGenerator;
 
-    FormatType(OutputMode mode, Supplier<OutputFormatWriter> supplier) {
+    /**
+     * Cross-compatibility with {@link #OutputType(OutputMode, Function)}.
+     */
+    OutputType(OutputMode mode, Supplier<OutputFormatWriter> supplier) {
         this(mode, (Unpacker unpacker) -> supplier.get());
     }
 
     /**
-     * Constructs a new output format writer
+     * Instantiates a new {@link OutputFormatWriter} with a {@link Unpacker} instance.
      *
      * @return a new {@link OutputFormatWriter} instance
      */
@@ -88,7 +91,7 @@ public enum FormatType {
 
 
     /**
-     * Specifies how output is directed to destinations during the decaching process
+     * Specifies how output is directed to destinations during the unpacking process
      */
     public enum OutputMode {
         /**

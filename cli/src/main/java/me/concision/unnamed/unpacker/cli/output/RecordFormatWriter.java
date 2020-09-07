@@ -1,6 +1,7 @@
 package me.concision.unnamed.unpacker.cli.output;
 
 import lombok.NonNull;
+import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.api.PackageParser;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
@@ -18,10 +19,16 @@ import java.util.logging.Logger;
  * @author Concision
  */
 public interface RecordFormatWriter extends OutputFormatWriter {
+    /**
+     * {@link Log} is incompatible with interfaces.
+     */
     Logger log = Logger.getLogger(RecordFormatWriter.class.getName());
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    default void format(@NonNull Unpacker unpacker, @NonNull InputStream packagesStream) {
+    default void write(@NonNull Unpacker unpacker, @NonNull InputStream packagesStream) {
         // parse packages into record
         Queue<PackageEntry> records;
         try {
@@ -51,10 +58,10 @@ public interface RecordFormatWriter extends OutputFormatWriter {
     }
 
     /**
-     * Publishes a package record to the format writer
+     * Publishes a single {@link PackageEntry} to the output writer.
      *
      * @param unpacker associated {@link Unpacker} instance
-     * @param record   {@link PackageEntry} instance
+     * @param record   a {@link PackageEntry}
      */
     void publish(@NonNull Unpacker unpacker, @NonNull PackageEntry record) throws IOException;
 }

@@ -14,21 +14,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * See {@link SourceType#INSTALL}
+ * See {@link SourceType#INSTALL}.
  *
  * @author Concision
  */
 @Log
 public class InstallSourceCollector implements SourceCollector {
     /**
-     * Windows registry location; slightly obfuscated to prevent search indexing
+     * Installation path in Windows registry
      */
     @SuppressWarnings("SpellCheckingInspection")
     private static final String REGISTRY_PATH = new String(Base64.getDecoder().decode("U29mdHdhcmVcRGlnaXRhbCBFeHRyZW1lc1xXYXJmcmFtZVxMYXVuY2hlcg=="), StandardCharsets.ISO_8859_1);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public InputStream generate(CommandArguments args) throws IOException {
-        log.info("Searching for install");
+    public InputStream acquire(CommandArguments args) throws IOException {
+        // auto-discover installation directory
+        log.info("Discovering game installation directory");
         String launcherExe = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, REGISTRY_PATH, "LauncherExe");
         log.info("Launcher: " + launcherExe);
         String downloadDir = null;
@@ -36,8 +40,9 @@ public class InstallSourceCollector implements SourceCollector {
             downloadDir = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, REGISTRY_PATH, "DownloadDir");
         } catch (Throwable ignored) {
         }
-        log.info("Download directory: " + downloadDir);
 
+        // find game directory
+        log.info("Download directory: " + downloadDir);
         File gameDirectory;
         if (downloadDir != null) {
             gameDirectory = new File(downloadDir, "Public");
@@ -46,9 +51,11 @@ public class InstallSourceCollector implements SourceCollector {
         }
         log.info("Game directory: " + gameDirectory.getAbsolutePath());
 
+        // derive cache directory
         File cacheDirectory = new File(gameDirectory, "Cache.Windows");
         log.info("Cache directory: " + cacheDirectory.getAbsolutePath());
 
-        return new FolderSourceCollector().generate(cacheDirectory);
+        // delegate to directory source collector
+        return new DirectorySourceCollector().generate(cacheDirectory);
     }
 }
