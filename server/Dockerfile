@@ -1,19 +1,6 @@
 #### Packages Server
 # Note: The build context for this Dockerfile is at the project root, as maven requires the api-server's parent
 
-### Build Scripts
-# Windows build compatbility - sanitize Windows line endings and mark scripts as executable
-FROM alpine:3.12.0 as scripts
-
-# install dos2unix to remove \r's from scripts when compiling on Windows machines
-RUN apk add --no-cache dos2unix
-# copy updater script
-COPY ./server/docker/*.sh /unpacker/server/scripts/
-# remove \r's and set as executable
-RUN dos2unix /unpacker/server/scripts/*.sh && \
-    chmod +x /unpacker/server/scripts/*.sh
-
-
 ### Maven Precompiled Project Artifacts
 # Compiles the cli-tool
 FROM maven:3.6.3-openjdk-15 as unpacker
@@ -176,9 +163,11 @@ RUN \
     # uninstall strace
     apk --no-network del strace
 
-## Project Artifacts
-# copy Linux scripts
-COPY --from=scripts /unpacker/server/scripts/*.sh /unpacker/server/
+## Linux Scripts
+# copy Linux script(s)
+COPY ./server/docker/entrypoint.sh /unpacker/server/
+# mark script(s) as executable (Windows host support)
+RUN chmod +x /unpacker/server/entrypoint.sh
 
 ## Runtime Configuration
 # disable Python .pyc
