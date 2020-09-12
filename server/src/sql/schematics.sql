@@ -54,10 +54,10 @@ CREATE TABLE IF NOT EXISTS package_labels
     -- forum_version ordinal for ranged/order operations
     forum_version_ordinal BIGINT    GENERATED ALWAYS AS (version(forum_version)) STORED /* INDEXED */
 );
-CREATE INDEX packages__timestamp ON package_labels (timestamp);
-CREATE INDEX packages__forum_version ON package_labels (forum_version);
-CREATE INDEX packages__build_version_ordinal ON package_labels (build_version_ordinal);
-CREATE INDEX packages__forum_version_ordinal ON package_labels (forum_version_ordinal);
+CREATE INDEX IF NOT EXISTS packages__timestamp ON package_labels (timestamp);
+CREATE INDEX IF NOT EXISTS packages__forum_version ON package_labels (forum_version);
+CREATE INDEX IF NOT EXISTS packages__build_version_ordinal ON package_labels (build_version_ordinal);
+CREATE INDEX IF NOT EXISTS packages__forum_version_ordinal ON package_labels (forum_version_ordinal);
 
 
 -- Stores compressed Packages.bin
@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS package_entries
 
     PRIMARY KEY (build_version, path)
 );
-CREATE INDEX package_entries__build_version ON package_entries (build_version);
-CREATE INDEX package_entries__path ON package_entries (path);
+CREATE INDEX IF NOT EXISTS package_entries__build_version ON package_entries (build_version);
+CREATE INDEX IF NOT EXISTS package_entries__path ON package_entries (path);
 
 
 -- noinspection SqlResolve @ routine/"uuid_generate_v4"
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS user_authorizations
     -- logging display name (non-zero length); mutable
     display_name TEXT NOT NULL CHECK (display_name ~ '^.+$')
 );
-CREATE INDEX user_authorizations__uuid ON user_authorizations (uuid);
+CREATE INDEX IF NOT EXISTS user_authorizations__uuid ON user_authorizations (uuid);
 
 -- HTTP API request history of a user
 CREATE TABLE IF NOT EXISTS user_request_history
@@ -124,5 +124,5 @@ CREATE TABLE IF NOT EXISTS user_request_history
     -- request success
     success     BOOLEAN
 );
-CREATE INDEX user_request_history__user_uuid ON user_request_history (user_uuid);
-CREATE INDEX user_request_history__ip ON user_request_history (ip);
+CREATE INDEX IF NOT EXISTS user_request_history__user_uuid ON user_request_history (user_uuid);
+CREATE INDEX IF NOT EXISTS user_request_history__ip ON user_request_history (ip);
