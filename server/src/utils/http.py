@@ -28,6 +28,10 @@ class HTTPClient:
     def __init__(self):
         self.__session = aiohttp.ClientSession()
 
+    async def close(self):
+        if not self.__session.closed:
+            await self.__session.close()
+
     async def request(self, route: Route, **kwargs):
         method = route.method
         url = route.url

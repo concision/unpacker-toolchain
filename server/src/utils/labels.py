@@ -42,6 +42,9 @@ class LabelFetcher:
     def __init__(self):
         self._client = HTTPClient()
 
+    async def close(self):
+        await self._client.close()
+
     async def fetch_build_label(self) -> str:
         r = json.loads(await self._client.request(Route("GET", self.WSTATE)))
         if "BuildLabel" not in r:
