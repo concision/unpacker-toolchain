@@ -7,6 +7,8 @@ services:
       dockerfile: server/Dockerfile
     depends_on:
       - database
+    networks:
+      - backend
     ports:
       - 80:80
     volumes:
@@ -15,11 +17,13 @@ services:
       # enables uvicorn hot reloading
       DEVELOPMENT: "true"
       # database URL
-      POSTGRES_URL: "postgresql://unpacker:5432/packages?user=unpacker&password=${DATABASE_PASSWORD:-SecurePasswordTM}&application_name=unpacker"
+      POSTGRES_URL: "postgresql://database:5432/packages?user=unpacker&password=${DATABASE_PASSWORD:-SecurePasswordTM}&application_name=unpacker"
   database:
     image: postgres:13
     volumes:
       - database:/var/lib/postgresql/data/
+    networks:
+      - backend
     ports:
       - 5432:5432
     environment:
@@ -29,3 +33,6 @@ services:
 
 volumes:
   database:
+
+networks:
+  backend:
