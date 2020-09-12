@@ -66,11 +66,7 @@ ENV PATH="/opt/venv/bin:$PATH" VIRTUAL_ENV="/opt/venv"
 
 ## Linux Dependencies
 # install build tools to compile the postgres python dependency
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    # postgres
-    postgresql-dev
+RUN apk add --no-cache build-base
 
 ## Python Dependencies
 # copy dependency manifests
