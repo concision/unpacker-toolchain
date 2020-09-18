@@ -1,10 +1,14 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.OutputType;
-import org.bson.Document;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 /**
  * See {@link OutputType#RECORDS}.
@@ -12,21 +16,24 @@ import org.bson.Document;
  * @author Concision
  */
 public class RecordsFormatWriter extends SingleRecordFormatWriter {
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public void publish(Unpacker unpacker, PackageEntry record) {
-        Document document = new Document();
+    public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
+        JsonObject map = new JsonObject();
 
-        document.put("path", record.absolutePath());
+        map.addProperty("path", record.absolutePath());
         if (unpacker.args().skipJsonification) {
-            document.put("package", record.contents());
+            map.addProperty("package", record.contents());
         } else {
-            document.put("package", Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals));
+            map.add("package", Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals));
         }
 
-        outputStream.println(document.toJson());
+        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(outputStream));
+        unpacker.args().gson.toJson(map, jsonWriter);
+        jsonWriter.flush();
+
+        outputStream.println();
     }
 }

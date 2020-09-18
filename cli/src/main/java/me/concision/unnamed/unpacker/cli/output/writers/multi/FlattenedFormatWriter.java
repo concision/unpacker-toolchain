@@ -1,18 +1,18 @@
 package me.concision.unnamed.unpacker.cli.output.writers.multi;
 
+import com.google.gson.stream.JsonWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.OutputType;
 import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
-import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 
 /**
@@ -27,6 +27,8 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
     @Override
     @SuppressWarnings("DuplicatedCode")
     public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
+        CommandArguments args = unpacker.args();
+
         // create parent directory
         File outputPath = unpacker.args().outputPath;
         if (!outputPath.mkdirs()) {
@@ -50,15 +52,15 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
         File absoluteFile = new File(unpacker.args().outputPath, path + ".json").getAbsoluteFile();
         // write file
         try (PrintStream output = new PrintStream(new FileOutputStream(absoluteFile))) {
-            if (unpacker.args().skipJsonification) {
+            if (args.skipJsonification) {
                 output.print(record.contents());
             } else {
-                Document json = Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals);
-                if (unpacker.args().prettifyJson) {
-                    output.print(json.toJson(JsonWriterSettings.builder().indent(true).build()));
-                } else {
-                    output.print(json.toJson());
+                JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(output));
+                if (args.prettifyJson) {
+                    jsonWriter.setIndent(args.indentationString);
                 }
+                args.gson.toJson(Lua2JsonConverter.parse(record.contents(), args.convertStringLiterals), jsonWriter);
+                jsonWriter.flush();
             }
             output.flush();
         }

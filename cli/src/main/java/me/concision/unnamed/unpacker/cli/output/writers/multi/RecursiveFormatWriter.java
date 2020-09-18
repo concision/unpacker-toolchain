@@ -1,17 +1,18 @@
 package me.concision.unnamed.unpacker.cli.output.writers.multi;
 
+import com.google.gson.stream.JsonWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.OutputType;
 import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
-import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -28,8 +29,10 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
     @Override
     @SuppressWarnings("DuplicatedCode")
     public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
+        CommandArguments args = unpacker.args();
+
         // output file
-        File file = new File(unpacker.args().outputPath, record.absolutePath() + ".json").getAbsoluteFile();
+        File file = new File(args.outputPath, record.absolutePath() + ".json").getAbsoluteFile();
         // create parent directory
         if (!file.getParentFile().mkdirs()) {
             throw new FileNotFoundException("failed to create directory: " + file.getParentFile().getAbsolutePath());
@@ -52,15 +55,15 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
 
         // write file
         try (PrintStream output = new PrintStream(new FileOutputStream(filePath))) {
-            if (unpacker.args().skipJsonification) {
+            if (args.skipJsonification) {
                 output.print(record.contents());
             } else {
-                Document json = Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals);
-                if (unpacker.args().prettifyJson) {
-                    output.print(json.toJson(JsonWriterSettings.builder().indent(true).build()));
-                } else {
-                    output.print(json.toJson());
+                JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(output));
+                if (args.prettifyJson) {
+                    jsonWriter.setIndent(args.indentationString);
                 }
+                args.gson.toJson(Lua2JsonConverter.parse(record.contents(), args.convertStringLiterals), jsonWriter);
+                jsonWriter.flush();
             }
             output.flush();
         }
