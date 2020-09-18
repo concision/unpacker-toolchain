@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
@@ -31,7 +32,7 @@ public class RecordsFormatWriter extends SingleRecordFormatWriter {
         }
 
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(outputStream));
-        unpacker.args().gson.toJson(map, jsonWriter);
+        new Gson().toJson(map, jsonWriter);
         jsonWriter.flush();
 
         outputStream.println();
