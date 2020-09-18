@@ -56,9 +56,8 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
                 output.print(record.contents());
             } else {
                 JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(output));
-                jsonWriter.setSerializeNulls(true);
                 if (args.prettifyJson) {
-                    jsonWriter.setIndent("  ");
+                    jsonWriter.setIndent(args.indentationString);
                 }
                 args.gson.toJson(Lua2JsonConverter.parse(record.contents(), args.convertStringLiterals), jsonWriter);
                 jsonWriter.flush();

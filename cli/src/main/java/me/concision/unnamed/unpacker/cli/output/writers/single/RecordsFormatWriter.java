@@ -31,7 +31,6 @@ public class RecordsFormatWriter extends SingleRecordFormatWriter {
         }
 
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(outputStream));
-        jsonWriter.setSerializeNulls(true);
         unpacker.args().gson.toJson(map, jsonWriter);
         jsonWriter.flush();
 

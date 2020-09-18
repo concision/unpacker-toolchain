@@ -14,8 +14,6 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -63,6 +61,9 @@ public class UnpackerCmd {
 
     public static final String FLAG_OUTPUT_PRETTIFY_JSON = "--prettify-json";
     public static final String DEST_OUTPUT_PRETTIFY_JSON = "output_prettify_json";
+
+    public static final String FLAG_OUTPUT_JSON_INDENT = "--json-indent";
+    public static final String DEST_OUTPUT_JSON_INDENT = "output_json_indent";
 
     // positional arguments
     public static final String ARGUMENT_PACKAGES = "packages";
@@ -189,6 +190,13 @@ public class UnpackerCmd {
                         + FLAG_OUTPUT_FORMAT + " PATHS', or '" + FLAG_OUTPUT_SKIP_JSON + "'")
                 .dest(DEST_OUTPUT_PRETTIFY_JSON)
                 .action(Arguments.storeTrue());
+        // json indentation
+        outputGroup.addArgument(FLAG_OUTPUT_JSON_INDENT)
+                .help("Specifies the indentation string when prettifying JSON (default: '  ')")
+                .dest(DEST_OUTPUT_JSON_INDENT)
+                .type(String.class)
+                .required(false)
+                .setDefault("  ");
 
         // positional glob patterns
         parser.addArgument(ARGUMENT_PACKAGES)
