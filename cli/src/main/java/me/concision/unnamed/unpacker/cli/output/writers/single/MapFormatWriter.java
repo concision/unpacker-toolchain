@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +53,7 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
         if (unpacker.args().prettifyJson) {
             jsonWriter.setIndent(unpacker.args().indentationString);
         }
-        unpacker.args().gson.toJson(map, jsonWriter);
+        new Gson().toJson(map, jsonWriter);
         jsonWriter.flush();
 
         super.close();

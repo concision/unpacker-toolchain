@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.multi;
 
+import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
@@ -62,7 +63,7 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
                 if (args.prettifyJson) {
                     jsonWriter.setIndent(args.indentationString);
                 }
-                args.gson.toJson(Lua2JsonConverter.parse(record.contents(), args.convertStringLiterals), jsonWriter);
+                new Gson().toJson(Lua2JsonConverter.parse(record.contents(), args.convertStringLiterals), jsonWriter);
                 jsonWriter.flush();
             }
             output.flush();
