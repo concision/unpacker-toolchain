@@ -1,7 +1,8 @@
 import asyncio
 from contextlib import suppress
+from datetime import datetime
 
-from src.utils import labels
+from src.utils.labels import LabelFetcher
 
 
 class Tasker:
@@ -10,16 +11,15 @@ class Tasker:
         self.values = {}
         self._running_tasks = {}
 
-    def start_task(self, func, *args, **kwargs):
+    async def start_task(self, func, *args, **kwargs):
         """
         Create a task in the active event loop that calls func with args and kwargs
         If a task is running with the same name the old task will first be killed
         """
         name = func.__name__
-        prev = self._running_tasks.get(name)
 
-        if prev:
-            self.loop.run_until_complete(self.task_kill(name))
+        if self._running_tasks.get(name):
+            await self.task_kill(name)
 
         self._running_tasks.update({name: self.loop.create_task(func(*args, **kwargs))})
 
@@ -28,27 +28,29 @@ class Tasker:
         if target not in self._running_tasks:
             return None
 
-        to_kill = self._running_tasks.pop(target)
+        to_kill = self._running_tasks.get(target)
         to_kill.cancel()
 
         with suppress(asyncio.CancelledError):
-            return self.loop.run_until_complete(to_kill)
+            return await to_kill
 
     async def shutdown(self):
         """Kills all tasks in _running_tasks"""
         for t in self._running_tasks:
             await self.task_kill(t)
 
-    async def get_version(self, delay: int):
+    async def get_version(self, delay: int, fetcher: LabelFetcher):
         """Task to get current wstate version and store in values dict. Repeats every `delay` seconds"""
-        fetcher = labels.LabelFetcher()
-
         try:
             while True:
+                t1 = datetime.now()
                 latest = await fetcher.fetch_build_label()
-                self.values.update({'current_version': latest})
-                print({'current_version': latest})
-                await asyncio.sleep(delay)
+                if latest != self.values.get("current_version"):
+                    ...
+                t2 = datetime.now()
+                self.values.update({"current_version": latest})
+                print({"current_version": latest})
+                await asyncio.sleep(max(0, delay - (t2 - t1).seconds))
 
         except asyncio.CancelledError:
             return

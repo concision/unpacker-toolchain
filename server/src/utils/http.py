@@ -26,6 +26,10 @@ class HTTPClient:
     __session: aiohttp.ClientSession
 
     def __init__(self):
+        self.loop = asyncio.get_event_loop()
+        self.loop.create_task(self._initialize())
+
+    async def _initialize(self):
         self.__session = aiohttp.ClientSession()
 
     async def close(self):
