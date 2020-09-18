@@ -1,12 +1,15 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 import lombok.RequiredArgsConstructor;
 import me.concision.unnamed.unpacker.api.Lua2JsonConverter;
 import me.concision.unnamed.unpacker.api.PackageParser.PackageEntry;
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.OutputType;
-import org.bson.Document;
-import org.bson.json.JsonWriterSettings;
+
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 /**
  * See {@link OutputType#MAP}.
@@ -23,7 +26,7 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
     /**
      * Stores a map of all JSONified {@link PackageEntry} key-value records to later serialized in {@link #close()}.
      */
-    private final Document document = new Document();
+    private final JsonObject map = new JsonObject();
 
     /**
      * {@inheritDoc}
@@ -31,9 +34,9 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
     @Override
     public void publish(Unpacker unpacker, PackageEntry record) {
         if (unpacker.args().skipJsonification) {
-            document.put(record.absolutePath(), record.contents());
+            map.addProperty(record.absolutePath(), record.contents());
         } else {
-            document.put(
+            map.add(
                     record.absolutePath(),
                     Lua2JsonConverter.parse(record.contents(), unpacker.args().convertStringLiterals)
             );
@@ -44,12 +47,15 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
      * {@inheritDoc}
      */
     @Override
-    public void close() {
+    public void close() throws IOException {
+        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(outputStream));
+        jsonWriter.setSerializeNulls(true);
         if (unpacker.args().prettifyJson) {
-            outputStream.print(document.toJson(JsonWriterSettings.builder().indent(true).build()));
-        } else {
-            outputStream.print(document.toJson());
+            jsonWriter.setIndent("  ");
         }
+        unpacker.args().gson.toJson(map, jsonWriter);
+        jsonWriter.flush();
+
         super.close();
     }
 }

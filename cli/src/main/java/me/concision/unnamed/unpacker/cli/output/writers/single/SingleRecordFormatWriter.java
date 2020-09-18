@@ -2,6 +2,7 @@ package me.concision.unnamed.unpacker.cli.output.writers.single;
 
 import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.output.RecordFormatWriter;
+import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.InputStream;
 
@@ -24,7 +25,7 @@ public abstract class SingleRecordFormatWriter extends SingleFormatWriter implem
         try {
             RecordFormatWriter.super.write(unpacker, packagesStream);
         } finally {
-            this.close();
+            IOUtils.closeQuietly(this);
         }
     }
 }

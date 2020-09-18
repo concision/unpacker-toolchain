@@ -1,5 +1,7 @@
 package me.concision.unnamed.unpacker.cli;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class CommandArguments {
     public final boolean skipJsonification;
     public final boolean convertStringLiterals;
     public final boolean prettifyJson;
+    public final Gson gson;
 
     @NonNull
     public final List<PathMatcher> packages;
@@ -53,6 +56,11 @@ public class CommandArguments {
      * @return runtime configuration
      */
     public static CommandArguments from(Namespace namespace) {
+        GsonBuilder builder = new GsonBuilder().serializeNulls().disableHtmlEscaping();
+        if (namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_PRETTIFY_JSON)) {
+            builder.setPrettyPrinting();
+        }
+
         return new CommandArguments(
                 namespace,
                 // miscellaneous
@@ -67,6 +75,7 @@ public class CommandArguments {
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_CONVERT_STRING_LITERALS),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_PRETTIFY_JSON),
+                builder.create(),
                 // package glob patterns
                 Collections.unmodifiableList(namespace.getList(UnpackerCmd.ARGUMENT_PACKAGES))
         );
