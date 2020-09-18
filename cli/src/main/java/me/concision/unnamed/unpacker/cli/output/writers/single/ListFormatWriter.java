@@ -1,5 +1,6 @@
 package me.concision.unnamed.unpacker.cli.output.writers.single;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
@@ -55,7 +56,7 @@ public class ListFormatWriter extends SingleRecordFormatWriter {
         if (unpacker.args().prettifyJson) {
             jsonWriter.setIndent(unpacker.args().indentationString);
         }
-        unpacker.args().gson.toJson(records, jsonWriter);
+        new Gson().toJson(records, jsonWriter);
         jsonWriter.flush();
 
         super.close();
