@@ -49,9 +49,8 @@ public class MapFormatWriter extends SingleRecordFormatWriter {
     @Override
     public void close() throws IOException {
         JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(outputStream));
-        jsonWriter.setSerializeNulls(true);
         if (unpacker.args().prettifyJson) {
-            jsonWriter.setIndent("  ");
+            jsonWriter.setIndent(unpacker.args().indentationString);
         }
         unpacker.args().gson.toJson(map, jsonWriter);
         jsonWriter.flush();
