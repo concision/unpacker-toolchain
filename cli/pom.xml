@@ -31,13 +31,6 @@
             <version>0.8.1</version>
             <scope>compile</scope>
         </dependency>
-        <!-- JSON: JSON format -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20200518</version>
-            <scope>compile</scope>
-        </dependency>
         <!-- HTTPClient: Performing HTTP requests -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

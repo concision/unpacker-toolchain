@@ -3,8 +3,7 @@ module me.concision.unnamed.unpacker.cli {
     requires static me.concision.unnamed.unpacker.api;
     requires static lombok;
     requires static argparse4j;
-    requires static org.json;
-    requires static org.mongodb.bson;
+    requires static com.google.gson;
     requires static org.apache.httpcomponents.httpclient;
     requires static org.apache.httpcomponents.httpcore;
     requires static com.sun.jna.platform;
