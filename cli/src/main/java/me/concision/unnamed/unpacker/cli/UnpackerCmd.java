@@ -275,7 +275,7 @@ public class UnpackerCmd {
 
 
         // initialize and configure logging mechanism
-        Logger log = Logger.getLogger(UnpackerCmd.class.getPackageName());
+        Logger log = Logger.getLogger(UnpackerCmd.class.getPackage().getName());
         log.setUseParentHandlers(false);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new UnpackerLoggerFormatter());
