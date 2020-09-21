@@ -1,9 +1,9 @@
-from src.utils.sanitization import desanitize
-from src.utils.labels import UpdateVersion
+from src.utils import desanitize
+from src.utils.types import SemVer
 
 
 def helper(version: str, result: str):
-    return str(UpdateVersion.from_str(desanitize(version))) == result
+    return str(SemVer.from_str(desanitize(version))) == result
 
 
 def test_update_version_parser_0():

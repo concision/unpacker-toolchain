@@ -2,9 +2,9 @@ from typing import Optional
 
 from fastapi import FastAPI, Query, Path, HTTPException
 
-from src.utils.labels import LabelFetcher, UpdateVersion
-from src.background.tasks import Tasker
-from src.utils.database import Database
+from src.background import Tasker
+from src.utils import LabelFetcher, Database
+from src.utils.types import SemVer
 
 
 class Globals:
@@ -43,7 +43,7 @@ async def root():
     update_info = await _globals.fetcher.fetch_update_version()
     build_label = await _globals.fetcher.fetch_build_label()
     return {
-        "update_version": str(UpdateVersion.from_str(update_info[0])),
+        "update_version": str(SemVer.from_str(update_info[0])),
         "build_label": build_label,
         "update_name": update_info[0],
         "patch_notes": update_info[1]

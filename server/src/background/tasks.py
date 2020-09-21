@@ -2,7 +2,7 @@ import asyncio
 from contextlib import suppress
 from datetime import datetime
 
-from src.utils.labels import LabelFetcher
+from src.utils import LabelFetcher
 
 
 class Tasker:
