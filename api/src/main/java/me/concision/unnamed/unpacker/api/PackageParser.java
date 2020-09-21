@@ -197,24 +197,18 @@ public class PackageParser {
      * exception thrown by {@code skip()} or {@code read()} will be propagated.
      * @see java.io.InputStream#skip(long)
      */
-    public void skipNBytes(InputStream inputStream, long n) throws IOException {
-        if (0 < n) {
-            long ns = inputStream.skip(n);
-            //noinspection ConstantConditions
-            if (0 <= ns && ns < n) { // skipped too few bytes
-                // adjust number to skip
-                n -= ns;
-                // read until requested number skipped or EOS reached
-                while (0 < n && inputStream.read() != -1) {
-                    n--;
-                }
-                // if not enough skipped, then EOFE
-                if (n != 0) {
-                    throw new EOFException();
-                }
-            } else if (ns != n) { // skipped negative or too many bytes
-                throw new IOException("Unable to skip exactly");
+    private static void skipNBytes(InputStream inputStream, long n) throws IOException {
+        if (0 < n) { // skipped too few bytes
+            // read until requested number skipped or EOS reached
+            while (0 < n && inputStream.read() != -1) {
+                n--;
             }
+            // if not enough skipped, then EOFE
+            if (n != 0) {
+                throw new EOFException();
+            }
+        } else if (0 != n) { // skipped negative or too many bytes
+            throw new IOException("Unable to skip exactly");
         }
     }
 
