@@ -15,6 +15,7 @@ beautifulsoup4 = "*"
 aiohttp = "*"
 async-timeout = "*"
 asyncpg = "*"
+sentry-sdk = "*"
 
 [requires]
 python_version = "3.8.5"
