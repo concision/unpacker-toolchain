@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS package_labels
     forum_version         TEXT      CHECK (forum_version ~ '^\d+(?:\.\d+)*$'),
     -- optional forum post URL where the `forum_version` was obtained
     forum_url             TEXT,
+    -- optional linked steam depot manifest id (if this entry is from a steam database)
+    steam_manifest_id     BIGINT,
 
     -- partial build version (e.g. '2020.09.03.14.57')
     build_version         TEXT      PRIMARY KEY NOT NULL GENERATED ALWAYS AS (build_version(build_label)) STORED /* INDEXED */,
