@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+while ! nc -z database 5432; do
+  sleep 0.1
+done
+
 # run packages api server
 # shellcheck disable=SC2039
 uvicorn src.main:app \

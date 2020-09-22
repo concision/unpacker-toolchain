@@ -159,6 +159,8 @@ RUN \
     # uninstall strace
     apk --no-network del strace
 
+RUN apk add --no-cache netcat-openbsd
+
 ## Linux Scripts
 # copy Linux script(s)
 COPY ./server/docker/entrypoint.sh /unpacker/server/
