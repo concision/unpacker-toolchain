@@ -78,6 +78,9 @@ RUN pipenv install --deploy
 ### Development Tests & Linting ###
 FROM python-deps as tests
 
+## Development check
+ARG DEVELOPMENT=false
+
 ## Python Dependencies
 # install locked development depenedencies
 RUN pipenv install --deploy --dev
@@ -92,9 +95,13 @@ COPY ./server/tests /unpacker/server/tests
 
 ## Analyze Project
 # execute linter on project sources
-RUN flake8 /unpacker/server/src/
+RUN if [[ "${DEVELOPMENT}" == "false" ]]; then \
+        flake8 /unpacker/server/src/ \
+    ; fi
 # execute tests
-RUN pytest /unpacker/server/tests/
+RUN if [[ "${DEVELOPMENT}" == "false" ]]; then \
+        pytest /unpacker/server/tests/ \
+    ; fi
 
 
 ### Build Runtime Application

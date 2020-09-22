@@ -5,6 +5,8 @@ services:
     build:
       context: ..
       dockerfile: server/Dockerfile
+      args:
+        DEVELOPMENT: "true"
     depends_on:
       - database
     networks:
