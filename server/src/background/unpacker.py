@@ -3,7 +3,7 @@ import json
 from asyncio import StreamReader, StreamWriter
 from gzip import GzipFile
 from io import BytesIO
-from typing import Union, TypedDict
+from typing import Union, TypedDict, AsyncGenerator
 
 
 class PackageEntry(TypedDict):
@@ -37,7 +37,7 @@ class Unpacker:
     # verbose logging output from the package records producing process
     stderr_package_records: BytesIO = BytesIO()
 
-    async def unpack(self):
+    async def unpack(self) -> AsyncGenerator[PackageEntry, None]:
         """
         Initializes the unpacker executable to retrieve Packages.bin and produce JSON-serialized package entries. This
         function is an asynchronous generator that yields PackageEntry instances to the caller.
