@@ -81,17 +81,18 @@ class Unpacker:
         self.__consumed = True
 
         try:
-            # create unpacker process to produce a Packages.bin binary stream
-            self.__process_packages_bin = await asyncio.create_subprocess_exec(
-                "java", "-jar", "/unpacker/cli/unpacker.jar",
-                "--verbose",
-                "--source", "UPDATER",
-                "--output", "BINARY",
-                "--wine-cmd", "/usr/bin/wine64 %UNPACKER_COMMAND%",
-                limit=4 * 1024 * 1024,  # 4 MB
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
-            )
+            if source is None:
+                # create unpacker process to produce a Packages.bin binary stream
+                self.__process_packages_bin = await asyncio.create_subprocess_exec(
+                    "java", "-jar", "/unpacker/cli/unpacker.jar",
+                    "--verbose",
+                    "--source", "UPDATER",
+                    "--output", "BINARY",
+                    "--wine-cmd", "/usr/bin/wine64 %UNPACKER_COMMAND%",
+                    limit=4 * 1024 * 1024,  # 4 MB
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
             # create unpacker process to accept a Packages.bin binary stream and produce package records
             self.__process_package_records = await asyncio.create_subprocess_exec(
                 "java", "-jar", "/unpacker/cli/unpacker.jar",
@@ -108,23 +109,25 @@ class Unpacker:
 
         # pipe `process_packages_bin`'s standard output to `process_package_records`'s standard input AND a byte buffer
         self.__tasks.append(asyncio.create_task(self.__pipe_packages_bin(
-            input_stream=self.__process_packages_bin.stdout,
+            input_stream=self.__process_packages_bin.stdout if source is None else source,
             output_stream=self.__process_package_records.stdin,
         )))
-        # capture `process_packages_bin`'s standard error to a byte buffer
-        self.__tasks.append(asyncio.create_task(Unpacker.__pipe_stream(
-            stream=self.__process_packages_bin.stderr,
-            buffer=self.stderr_packages_bin,
-        )))
+        if source is None:
+            # capture `process_packages_bin`'s standard error to a byte buffer
+            self.__tasks.append(asyncio.create_task(Unpacker.__pipe_stream(
+                stream=self.__process_packages_bin.stderr,
+                buffer=self.stderr_packages_bin,
+            )))
         # capture `process_package_records`'s standard error to a byte buffer
         self.__tasks.append(asyncio.create_task(Unpacker.__pipe_stream(
             stream=self.__process_package_records.stderr,
             buffer=self.stderr_package_records,
         )))
-        # create watchdog task to raise an exception if Packages.bin is not generated
-        self.__tasks.append(asyncio.create_task(self.__watchdog(
-            process=self.__process_packages_bin
-        )))
+        if source is None:
+            # create watchdog task to raise an exception if Packages.bin is not generated
+            self.__tasks.append(asyncio.create_task(self.__watchdog(
+                process=self.__process_packages_bin
+            )))
 
         # process each JSON-serialized package record
         try:
