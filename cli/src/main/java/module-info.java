@@ -16,6 +16,8 @@ module me.concision.unnamed.unpacker.cli {
     requires java.logging;
     // required by httpclient
     requires java.naming;
+    // required by com.google.gson (unfortunately)
+    requires java.sql;
 
 
     // export all CLI packages
