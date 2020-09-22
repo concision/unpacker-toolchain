@@ -1,4 +1,5 @@
 import asyncio
+import json
 from asyncio import StreamReader, StreamWriter
 from gzip import GzipFile
 from io import BytesIO
@@ -98,7 +99,7 @@ class Unpacker:
                 if not package_record:
                     break
                 # return to iterating caller
-                yield package_record.decode("ASCII")
+                yield json.loads(package_record.decode("ASCII"))
         except Exception as exception:
             raise Exception("an unexpected exception occurred while reading JSON package records", exception)
 
