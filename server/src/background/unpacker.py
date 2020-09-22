@@ -152,10 +152,9 @@ class Unpacker:
         # if an underlying exception occurred with the pipe, raise it
         if pipe_exception is not None:
             raise Exception(
-                "an unexpected exception occurred while piping raw Packages.bin binary stream to the package records process",
-                # noqa
-                # noqa
-                exception
+                "an unexpected exception occurred while piping raw Packages.bin binary stream to the package records "
+                "process",
+                pipe_exception
             )
 
     @staticmethod
@@ -175,5 +174,5 @@ class Unpacker:
                     break
                 # write chunk to buffer
                 buffer.write(stream_bytes)
-        except:
+        except Exception:  # noqa
             pass
