@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import FastAPI, Query, Path, HTTPException
 
-from src.background import Tasker
+from src.background import Tasker, Unpacker
 from src.utils import LabelFetcher, Database
 from src.utils.types import SemVer
 
@@ -47,6 +47,19 @@ async def root():
         "build_label": build_label,
         "update_name": update_info[0],
         "patch_notes": update_info[1]
+    }
+
+
+@app.get("/exec_unpacker")
+async def unpacker_route():
+    paths = []
+
+    with Unpacker() as unpacker:
+        async for package_record in unpacker.unpack():
+            paths.append(package_record["path"])
+
+    return {
+        "packages": paths,
     }
 
 
