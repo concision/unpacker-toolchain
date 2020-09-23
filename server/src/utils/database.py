@@ -29,7 +29,12 @@ class Database:
         self.loop.create_task(self._initialize())
 
     async def _initialize(self):
-        self.conn = await asyncpg.connect(os.getenv("POSTGRES_URL"))
+        postgres_url = os.getenv("POSTGRES_URL")
+        while not isinstance(getattr(self, "conn", None), asyncpg.Connection):
+            try:
+                self.conn = await asyncpg.connect(postgres_url)
+            except asyncpg.exceptions.CannotConnectNowError:
+                continue
 
     async def close(self):
         await self.conn.close()
