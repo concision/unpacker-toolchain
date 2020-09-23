@@ -34,6 +34,7 @@ class Database:
             try:
                 self.conn = await asyncpg.connect(postgres_url)
             except asyncpg.exceptions.CannotConnectNowError:
+                await asyncio.sleep(3)
                 continue
 
     async def close(self):
