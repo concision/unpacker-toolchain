@@ -2,8 +2,8 @@ from typing import Optional
 
 from fastapi import FastAPI, Query, Path, HTTPException
 
-from src.background import Tasker, Unpacker
-from src.utils import LabelFetcher, Database
+from src.background import Tasker
+from src.utils import LabelFetcher, Database, Unpacker
 from src.utils.types import SemVer
 
 
