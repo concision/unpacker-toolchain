@@ -49,7 +49,7 @@ class Database:
     async def latest_version(self):
         data = await self.conn.fetchrow(
             "SELECT build_label FROM package_labels ORDER BY build_version_ordinal DESC LIMIT 1")
-        return data["build_label"]
+        return data["build_label"] if "build_label" in data else None
 
     @wait_until_ready("conn")
     async def new_packages(self, records: dict, packages: bytes, update_info: UpdateInfo):
