@@ -3,15 +3,15 @@
 </h1>
 
 <p align="center">
-    <a href="https://github.com/concision/packages-unpacker/blob/master/LICENSE">
-        <img alt="repository license" src="https://img.shields.io/github/license/concision/packages-unpacker?style=for-the-badge"/>
+    <a href="https://github.com/concision/unpacker-toolchain/blob/master/LICENSE">
+        <img alt="repository license" src="https://img.shields.io/github/license/concision/unpacker-toolchain?style=for-the-badge"/>
     </a>
-    <a href="https://github.com/concision/unpacker-api/releases">
-        <img alt="release version" src="https://img.shields.io/github/v/tag/concision/packages-unpacker?style=for-the-badge&logo=apache-maven"/>
+    <a href="https://github.com/concision/unpacker-toolchain/releases">
+        <img alt="release version" src="https://img.shields.io/github/v/tag/concision/unpacker-toolchain?style=for-the-badge&logo=apache-maven"/>
     </a>
     <img alt="supported java versions" src="https://img.shields.io/badge/java-%5E1.8-informational?style=for-the-badge&logo=java"/>
-    <a href="https://github.com/concision/unpacker-api/graphs/contributors">
-        <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/concision/unpacker-api?color=green&logo=github&style=for-the-badge"/>
+    <a href="https://github.com/concision/unpacker-toolchain/graphs/contributors">
+        <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/concision/unpacker-toolchain?color=green&logo=github&style=for-the-badge"/>
     </a>
 </p>
 
