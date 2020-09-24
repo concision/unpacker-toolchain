@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import asyncio
-import json
-from asyncio import StreamReader, StreamWriter, Task
-from asyncio.subprocess import Process
-from gzip import GzipFile
-from io import BytesIO
 from types import TracebackType
 from typing import Union, TypedDict, AsyncGenerator, List, Optional, Type
+
+import json
+import asyncio
+from asyncio import StreamReader, StreamWriter, Task
+from asyncio.subprocess import Process
+from io import BytesIO
+from gzip import GzipFile
 
 
 class PackageEntry(TypedDict):
