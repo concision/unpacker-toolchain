@@ -3,12 +3,9 @@
 -- DROP TABLE IF EXISTS package_entries;
 -- DROP TABLE IF EXISTS package_blobs;
 -- DROP TABLE IF EXISTS package_labels;
--- DROP TABLE IF EXISTS user_authorizations;
 -- DROP TABLE IF EXISTS user_request_history;
+-- DROP TABLE IF EXISTS user_authorizations;
 
-
--- Enable UUID extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 
 -- Converts forum or build versions (e.g. '29', '29.0.3', '2020.09.03.14.57', etc) to BIGINT (8-byte) ordinals.
@@ -25,8 +22,8 @@ AS
     RETURNS NULL ON NULL INPUT;
 
 -- Extracts build version from a build label.
--- e.g. build_version('2020.09.03.14.57/g8TiZeAvyMMhQvEOfkiCTA') = '2020.09.03.14.57'
-CREATE OR REPLACE FUNCTION build_version(build_label TEXT) RETURNS TEXT
+-- e.g. build_date('2020.09.03.14.57/g8TiZeAvyMMhQvEOfkiCTA') = '2020.09.03.14.57'
+CREATE OR REPLACE FUNCTION build_date(build_label TEXT) RETURNS TEXT
 AS
     'SELECT split_part(build_label, ''/'', 1)'
     LANGUAGE 'sql'
@@ -49,24 +46,23 @@ CREATE TABLE IF NOT EXISTS package_labels
     steam_manifest_id     BIGINT,
 
     -- partial build version (e.g. '2020.09.03.14.57')
-    build_version         TEXT      PRIMARY KEY NOT NULL GENERATED ALWAYS AS (build_version(build_label)) STORED /* INDEXED */,
-
-    -- build_version ordinal for ranged/order operations
-    build_version_ordinal BIGINT    GENERATED ALWAYS AS (version(build_version(build_label))) STORED /* INDEXED */,
+    build_date            TEXT      PRIMARY KEY NOT NULL GENERATED ALWAYS AS (build_date(build_label)) STORED /* INDEXED */,
+    -- build_date ordinal for ranged/order operations
+    build_date_ordinal    BIGINT    GENERATED ALWAYS AS (version(build_date(build_label))) STORED /* INDEXED */,
     -- forum_version ordinal for ranged/order operations
     forum_version_ordinal BIGINT    GENERATED ALWAYS AS (version(forum_version)) STORED /* INDEXED */
 );
 CREATE INDEX IF NOT EXISTS packages__timestamp ON package_labels (timestamp);
 CREATE INDEX IF NOT EXISTS packages__forum_version ON package_labels (forum_version);
-CREATE INDEX IF NOT EXISTS packages__build_version_ordinal ON package_labels (build_version_ordinal);
+CREATE INDEX IF NOT EXISTS packages__build_date_ordinal ON package_labels (build_date_ordinal);
 CREATE INDEX IF NOT EXISTS packages__forum_version_ordinal ON package_labels (forum_version_ordinal);
 
 
 -- Stores compressed Packages.bin
 CREATE TABLE IF NOT EXISTS package_bins (
-    build_version TEXT  PRIMARY KEY NOT NULL REFERENCES package_labels (build_version),
+    build_date TEXT  PRIMARY KEY NOT NULL REFERENCES package_labels (build_date),
     -- compressed Packages.bin file
-    packages      BYTEA NOT NULL
+    packages   BYTEA NOT NULL
 );
 
 
@@ -86,27 +82,29 @@ CREATE TABLE IF NOT EXISTS package_blobs
 CREATE TABLE IF NOT EXISTS package_entries
 (
     -- partial build version (e.g. '2020.09.03.14.57')
-    build_version TEXT  NOT NULL REFERENCES package_labels (build_version) /* INDEXED */,
+    build_date TEXT  NOT NULL REFERENCES package_labels (build_date) /* INDEXED */,
     -- package's absolute path (e.g. '/Package/Path/X')
-    path          TEXT  NOT NULL /* INDEXED */,
+    path       TEXT  NOT NULL /* INDEXED */,
     -- package's content hash
-    sha256        BYTEA NOT NULL REFERENCES package_blobs (sha256),
+    sha256     BYTEA NOT NULL REFERENCES package_blobs (sha256),
 
-    PRIMARY KEY (build_version, path)
+    PRIMARY KEY (build_date, path)
 );
-CREATE INDEX IF NOT EXISTS package_entries__build_version ON package_entries (build_version);
+CREATE INDEX IF NOT EXISTS package_entries__build_date ON package_entries (build_date);
 CREATE INDEX IF NOT EXISTS package_entries__path ON package_entries (path);
 
 
--- noinspection SqlResolve @ routine/"uuid_generate_v4"
+-- noinspection SqlResolve @ routine/"gen_random_uuid"
 CREATE TABLE IF NOT EXISTS user_authorizations
 (
     -- 32 hex token; mutable
-    token        TEXT PRIMARY KEY NOT NULL CHECK (token ~ '^[0-9A-F]{32}$'),
+    token         TEXT    PRIMARY KEY NOT NULL CHECK (token ~ '^[0-9A-F]{32}$'),
     -- unique user identifier (used as a foreign key)
-    uuid         UUID UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
+    uuid          UUID    UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     -- logging display name (non-zero length); mutable
-    display_name TEXT NOT NULL CHECK (display_name ~ '^.+$')
+    display_name  TEXT    NOT NULL CHECK (display_name ~ '^.+$'),
+    -- indicates the user has administrator privileges (e.g. can create new users)
+    administrator BOOLEAN DEFAULT FALSE
 );
 CREATE INDEX IF NOT EXISTS user_authorizations__uuid ON user_authorizations (uuid);
 
