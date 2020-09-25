@@ -10,12 +10,13 @@ from asyncio.subprocess import Process
 from io import BytesIO
 from gzip import GzipFile
 
+from fastapi import UploadFile
+
 
 class PackageEntry(TypedDict):
     """
     A JSON-deserialized package record produced by the unpacker process with --output RECORDS.
     """
-
     # the absolute package path of the record
     path: str
     # the package contents
@@ -28,10 +29,8 @@ class Unpacker:
     initialized object stores part of the logging and output of the executed unpacker processes (up until an exception
     is raised).
     """
-
     # indicates that this Unpacker instance has already been used
     __consumed: bool = False
-
     # tasks used to asynchronous I/O
     __tasks: List[Task] = []
     # unpacker process that produces a Packages.bin binary stream
@@ -62,19 +61,17 @@ class Unpacker:
             _type: Optional[Type[BaseException]],
             _value: Optional[BaseException],
             _traceback: Optional[TracebackType]
-    ) -> bool:
+    ):
         """
         Cleans up resources allocated for this object; Python support for `with` keyword.
         """
         asyncio.create_task(self.__cleanup())
-        return True
 
-    async def unpack(self, *, source: StreamReader = None) -> AsyncGenerator[PackageEntry, None]:
+    async def unpack(self, *, source: Union[StreamReader, UploadFile] = None) -> AsyncGenerator[PackageEntry, None]:
         """
         Initializes the unpacker executable to retrieve Packages.bin and produce JSON-serialized package entries. This
         function is an asynchronous generator that yields PackageEntry instances to the caller.
         """
-
         # ensure this object instance is fresh
         if self.__consumed:
             raise Exception(f"this {Unpacker.__name__} instance has already been consumed")
@@ -149,7 +146,6 @@ class Unpacker:
         """
         Cleans up resources allocated for this object instance
         """
-
         # cancel all asynchronous tasks
         for task in self.__tasks:
             task.cancel()
@@ -176,16 +172,16 @@ class Unpacker:
         # clear references
         self.__tasks.clear()
 
-    async def __pipe_packages_bin(self, *, input_stream: StreamReader, output_stream: StreamWriter):
+    async def __pipe_packages_bin(self, *, input_stream: Union[StreamReader, UploadFile], output_stream: StreamWriter):
         """
         Pipes the Packages.bin binary input stream to a GZIP compression stream and the package record's standard input
         stream.
+
         Note: If an underlying I/O exception occurs while piping to the standard input, the bytes will still attempt to
         be fully written to the GZIP compression before raising an exception.
         """
-
         # if an underlying exception occurred with the pipe, it is stored here
-        pipe_exception: Union[Exception, None] = None
+        pipe_exception: Optional[Exception] = None
 
         try:
             # initializes a GZIP compression stream with the compressed packages byte buffer
@@ -232,9 +228,9 @@ class Unpacker:
     async def __pipe_stream(*, stream: StreamReader, buffer: BytesIO):
         """
         Pipes bytes from a StreamReader into a BytesIO byte buffer.
+
         Note: If an underlying I/O exception occurs during piping, the exception is ignored.
         """
-
         try:
             # read chunk by chunk
             while True:
