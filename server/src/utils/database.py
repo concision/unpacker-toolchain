@@ -6,7 +6,7 @@ from hashlib import sha256
 from datetime import datetime
 
 import asyncpg
-from fastapi import UploadFile, Request
+from fastapi import UploadFile
 
 from .types import UpdateInfo
 from .unpacker import Unpacker
