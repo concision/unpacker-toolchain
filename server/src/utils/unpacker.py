@@ -34,9 +34,9 @@ class Unpacker:
     # tasks used to asynchronous I/O
     __tasks: List[Task] = []
     # unpacker process that produces a Packages.bin binary stream
-    __process_packages_bin: Optional[Process]
+    __process_packages_bin: Optional[Process] = None
     # unpacker process that accepts a Packages.bin binary stream and produces package records
-    __process_package_records: Optional[Process]
+    __process_package_records: Optional[Process] = None
 
     # GZIP compressed byte buffer of raw Packages.bin
     compressed_packages: BytesIO = BytesIO()
@@ -168,7 +168,7 @@ class Unpacker:
         self.__process_package_records = None
 
         # await for the tasks to finish
-        await asyncio.gather(*self.__tasks)
+        # await asyncio.gather(*self.__tasks)
         # clear references
         self.__tasks.clear()
 
