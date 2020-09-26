@@ -1,9 +1,9 @@
 from typing import Optional
 
-from fastapi import FastAPI, Query, Path, HTTPException
+from fastapi import FastAPI, Query, Path, HTTPException, UploadFile, File, Form
 
 from src.background import Tasker
-from src.utils import LabelFetcher, Database, Unpacker
+from src.utils import LabelFetcher, Database, Unpacker, types
 from src.utils.types import SemVer
 
 
@@ -61,6 +61,12 @@ async def unpacker_route():
     return {
         "packages": paths,
     }
+
+
+@app.put("/upload_packages")
+async def upload_historical_packages(build_label: str = Form(...), packages_bin: UploadFile = File(...)):
+    update_info = types.UpdateInfo(build_label=types.BuildLabel(build_label))
+    await _globals.db.new_packages(packages=packages_bin, update_info=update_info)
 
 
 @app.get("/versions")
