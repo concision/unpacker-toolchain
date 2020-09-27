@@ -85,7 +85,7 @@ class Unpacker:
                     "java", "-jar", "/unpacker/cli/unpacker.jar",
                     "--verbose",
                     "--source", "UPDATER",
-                    "--output", "BINARY",
+                    "--format", "BINARY",
                     "--wine-cmd", "/usr/bin/wine64 %UNPACKER_COMMAND%",
                     limit=4 * 1024 * 1024,  # 4 MB
                     stdout=asyncio.subprocess.PIPE,
@@ -96,7 +96,7 @@ class Unpacker:
                 "java", "-jar", "/unpacker/cli/unpacker.jar",
                 "--verbose",
                 "--source", "BINARY",
-                "--output", "RECORDS",
+                "--format", "RECORDS",
                 limit=16 * 1024 * 1024,  # 16 MB
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
