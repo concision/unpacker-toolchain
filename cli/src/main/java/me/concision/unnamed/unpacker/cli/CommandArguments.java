@@ -1,7 +1,5 @@
 package me.concision.unnamed.unpacker.cli;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +39,7 @@ public class CommandArguments {
     public final OutputType outputFormat;
 
     // flags
+    public final boolean printBuildVersion;
     public final boolean skipJsonification;
     public final boolean convertStringLiterals;
     public final boolean prettifyJson;
@@ -67,6 +66,7 @@ public class CommandArguments {
                 namespace.get(UnpackerCmd.DEST_OUTPUT_PATH),
                 namespace.get(UnpackerCmd.DEST_OUTPUT_FORMAT),
                 // output flags
+                namespace.getBoolean(UnpackerCmd.DEST_PRINT_BUILD_VERSION),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_CONVERT_STRING_LITERALS),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_PRETTIFY_JSON),

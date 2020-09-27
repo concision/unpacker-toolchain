@@ -53,6 +53,9 @@ public class UnpackerCmd {
     public static final String FLAG_OUTPUT_PATH = "--output";
     public static final String DEST_OUTPUT_PATH = "output_path";
 
+    public static final String FLAG_PRINT_BUILD_VERSION = "--print-build-version";
+    public static final String DEST_PRINT_BUILD_VERSION = "output_print_build_version";
+
     public static final String FLAG_OUTPUT_SKIP_JSON = "--skip-json";
     public static final String DEST_OUTPUT_SKIP_JSON = "output_skip_json";
 
@@ -169,6 +172,12 @@ public class UnpackerCmd {
                 .dest(DEST_OUTPUT_PATH)
                 .nargs("?")
                 .type(new FileArgumentType().verifyCanCreate());
+        // output printing build version
+        Argument printBuildVersionArgument = outputGroup.addArgument(FLAG_PRINT_BUILD_VERSION)
+                .help("For '" + FLAG_OUTPUT_FORMAT + " UPDATER', the game client version will be printed on its own line prior to any output\n" +
+                        "(e.g. \"xxxx.xx.xx.xx.xx\\r\\n<output>\")")
+                .dest(DEST_PRINT_BUILD_VERSION)
+                .action(Arguments.storeTrue());
         // skip jsonification
         outputGroup.addArgument(FLAG_OUTPUT_SKIP_JSON)
                 .help("Skips conversion of LUA Tables to JSON (default: false)\n" +
@@ -266,6 +275,13 @@ public class UnpackerCmd {
                     if (arguments.wineCmd == null) {
                         throw new ArgumentParserException("'" + FLAG_SOURCE_TYPE + " " + SourceType.UPDATER + "' requires " + FLAG_WINE_CMD + " flag on non-Windows OSes", parser, wineCmdArgument);
                     }
+                }
+            }
+
+            // validate printing build version only when UPDATER is specified
+            if (arguments.printBuildVersion) {
+                if (arguments.sourceType != SourceType.UPDATER) {
+                    throw new ArgumentParserException("'" + FLAG_PRINT_BUILD_VERSION + "' is only compatible with '" + FLAG_SOURCE_TYPE + " " + SourceType.UPDATER + "' ", parser, printBuildVersionArgument);
                 }
             }
         } catch (ArgumentParserException exception) {
