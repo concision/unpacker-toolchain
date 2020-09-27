@@ -47,10 +47,10 @@ public class UnpackerCmd {
     public static final String DEST_SOURCE_PATH = "source_path";
 
     // output flags
-    public static final String FLAG_OUTPUT_FORMAT = "--output";
+    public static final String FLAG_OUTPUT_FORMAT = "--format";
     public static final String DEST_OUTPUT_FORMAT = "output_format";
 
-    public static final String FLAG_OUTPUT_PATH = "--output-path";
+    public static final String FLAG_OUTPUT_PATH = "--output";
     public static final String DEST_OUTPUT_PATH = "output_path";
 
     public static final String FLAG_OUTPUT_SKIP_JSON = "--skip-json";

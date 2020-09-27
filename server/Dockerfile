@@ -152,7 +152,7 @@ RUN apk add --no-cache wine libpng freetype netcat-openbsd
 #        # use game updater to fetch latest
 #        --source UPDATER \
 #        # output a raw binary Packages.bin
-#        --output BINARY \
+#        --format BINARY \
 #        # set the default wine command
 #        --wine-cmd "strace --follow-forks --quiet=all --trace=open --silence=all --no-abbrev --output=strace.txt /bin/sh -c \"/usr/bin/wine64 %UNPACKER_COMMAND%\"" \
 #        # pipe the Packages.bin output to /dev/null
