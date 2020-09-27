@@ -51,12 +51,12 @@ public enum OutputType {
     // multiple
     /**
      * Outputs each matching package as a file with replicated directory structure
-     * (e.g. ${--output-location}/Lotus/Path/.../PackageName)
+     * (e.g. ${--output}/Lotus/Path/.../PackageName)
      */
     RECURSIVE(OutputMode.MULTIPLE, RecursiveFormatWriter::new),
     /**
      * Outputs each matching package as a file without replicating directory structure
-     * (e.g. ${--output-location}/PackageName)
+     * (e.g. ${--output}/PackageName)
      */
     FLATTENED(OutputMode.MULTIPLE, FlattenedFormatWriter::new);
 
