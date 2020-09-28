@@ -5,7 +5,7 @@ import lombok.extern.java.Log;
 import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
 import me.concision.unnamed.decacher.api.TocStreamReader;
 import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
-import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 import org.apache.commons.compress.utils.BoundedInputStream;
@@ -29,8 +29,8 @@ public class DirectorySourceCollector implements SourceCollector {
      * {@inheritDoc}
      */
     @Override
-    public InputStream acquire(CommandArguments args) throws IOException {
-        return generate(args.sourcePath);
+    public InputStream acquire(@NonNull Unpacker unpacker) throws IOException {
+        return generate(unpacker.args().sourcePath);
     }
 
     /**

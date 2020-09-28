@@ -2,8 +2,10 @@ package me.concision.unnamed.unpacker.cli.source.collectors;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
+import lombok.NonNull;
 import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 
@@ -30,7 +32,9 @@ public class InstallSourceCollector implements SourceCollector {
      * {@inheritDoc}
      */
     @Override
-    public InputStream acquire(CommandArguments args) throws IOException {
+    public InputStream acquire(@NonNull Unpacker unpacker) throws IOException {
+        CommandArguments args = unpacker.args();
+
         // auto-discover installation directory
         log.info("Discovering game installation directory");
         String launcherExe = Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, REGISTRY_PATH, "LauncherExe");

@@ -2,7 +2,7 @@ package me.concision.unnamed.unpacker.cli.source;
 
 import lombok.NonNull;
 import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
-import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,8 +27,8 @@ public interface SourceCollector {
     /**
      * Acquires a Packages.bin {@link InputStream}.
      *
-     * @param args {@link CommandArguments} execution parameters
+     * @param unpacker {@link Unpacker} instance
      * @return a Packages.bin {@link InputStream}
      */
-    InputStream acquire(@NonNull CommandArguments args) throws IOException;
+    InputStream acquire(@NonNull Unpacker unpacker) throws IOException;
 }

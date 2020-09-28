@@ -9,6 +9,7 @@ import me.concision.unnamed.decacher.api.CacheDecompressionInputStream;
 import me.concision.unnamed.decacher.api.TocStreamReader;
 import me.concision.unnamed.decacher.api.TocStreamReader.CacheEntry;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
@@ -67,7 +68,9 @@ public class OriginSourceCollector implements SourceCollector {
      */
     @Override
     @SuppressWarnings("DuplicatedCode")
-    public InputStream acquire(@NonNull CommandArguments args) {
+    public InputStream acquire(@NonNull Unpacker unpacker) throws IOException {
+        CommandArguments args = unpacker.args();
+
         // obtain listing of CDN depot files
         @RequiredArgsConstructor
         @ToString

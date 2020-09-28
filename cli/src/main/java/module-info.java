@@ -8,6 +8,7 @@ module me.concision.unnamed.unpacker.cli {
     requires static org.apache.httpcomponents.httpcore;
     requires static com.sun.jna.platform;
     requires static com.sun.jna;
+    requires static pecoff4j;
     requires static org.apache.commons.compress;
 
 
