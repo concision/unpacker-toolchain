@@ -28,6 +28,7 @@ _globals = Globals()
 
 @app.on_event("startup")
 async def startup_event():
+    await _globals.db.initialize()
     await _globals.db.db_init()
     _globals.tasker.values['current_version'] = await _globals.db.latest_version()
     await _globals.tasker.start_task(_globals.tasker.get_version, 600, fetcher=_globals.fetcher)
