@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.source.collectors.BinarySourceCollector;
 import me.concision.unnamed.unpacker.cli.source.collectors.DirectorySourceCollector;
 import me.concision.unnamed.unpacker.cli.source.collectors.InstallSourceCollector;
@@ -57,12 +58,12 @@ public enum SourceType {
     private final Supplier<SourceCollector> collector;
 
     /**
-     * Instantiates a new {@link SourceCollector} and executes {@link SourceCollector#acquire(CommandArguments)}.
+     * Instantiates a new {@link SourceCollector} and executes {@link SourceCollector#acquire(Unpacker)}.
      *
-     * @param arguments {@link CommandArguments} execution parameters
+     * @param unpacker {@link Unpacker} instance
      * @return acquired Packages.bin {@link InputStream}
      */
-    public InputStream generate(@NonNull CommandArguments arguments) throws IOException {
-        return collector.get().acquire(arguments);
+    public InputStream generate(@NonNull Unpacker unpacker) throws IOException {
+        return collector.get().acquire(unpacker);
     }
 }

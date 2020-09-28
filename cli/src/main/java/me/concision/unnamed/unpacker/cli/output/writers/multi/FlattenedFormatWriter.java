@@ -53,6 +53,9 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
         File absoluteFile = new File(unpacker.args().outputPath, path + ".json").getAbsoluteFile();
         // write file
         try (PrintStream output = new PrintStream(new FileOutputStream(absoluteFile))) {
+            if (unpacker.buildVersion() != null) {
+                output.println(unpacker.buildVersion());
+            }
             if (args.skipJsonification) {
                 output.print(record.contents());
             } else {

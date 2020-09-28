@@ -1,7 +1,9 @@
 package me.concision.unnamed.unpacker.cli.source.collectors;
 
+import lombok.NonNull;
 import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
 import me.concision.unnamed.unpacker.cli.source.SourceCollector;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 
@@ -21,7 +23,9 @@ public class BinarySourceCollector implements SourceCollector {
      * {@inheritDoc}
      */
     @Override
-    public InputStream acquire(CommandArguments args) throws IOException {
+    public InputStream acquire(@NonNull Unpacker unpacker) throws IOException {
+        CommandArguments args = unpacker.args();
+
         if (args.sourcePath == null) {
             // use standard input
             log.info("Using standard input for Packages.bin data source");

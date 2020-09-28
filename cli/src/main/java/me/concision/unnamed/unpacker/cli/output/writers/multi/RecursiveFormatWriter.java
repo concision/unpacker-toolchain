@@ -56,6 +56,9 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
 
         // write file
         try (PrintStream output = new PrintStream(new FileOutputStream(filePath))) {
+            if (unpacker.buildVersion() != null) {
+                output.println(unpacker.buildVersion());
+            }
             if (args.skipJsonification) {
                 output.print(record.contents());
             } else {

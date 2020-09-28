@@ -3,6 +3,7 @@ package me.concision.unnamed.unpacker.cli;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.java.Log;
 import me.concision.unnamed.unpacker.cli.output.OutputFormatWriter;
 
@@ -22,6 +23,10 @@ public class Unpacker {
     @NonNull
     @Getter
     private final CommandArguments args;
+
+    @Getter
+    @Setter
+    private String buildVersion;
 
     /**
      * Initiate unpacking process with the specified arguments
@@ -49,7 +54,7 @@ public class Unpacker {
         // generate packages.bin input stream
         InputStream packagesStream;
         try {
-            packagesStream = args.sourceType.generate(args);
+            packagesStream = args.sourceType.generate(this);
 
             if (packagesStream == null) {
                 throw new NullPointerException("source type " + args.sourceType + " generated a null stream");
