@@ -8,8 +8,8 @@ import me.concision.unnamed.unpacker.cli.Unpacker;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.Queue;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +43,15 @@ public interface RecordFormatWriter extends OutputFormatWriter {
             PackageEntry record = records.poll();
 
             // check if matches any patterns
-            if (unpacker.args().packages.stream().anyMatch(matcher -> matcher.matches(Paths.get(record.absolutePath())))) {
+            boolean matches = false;
+            for (Predicate<String> pathPredicate : unpacker.args().packages) {
+                if (pathPredicate.test(record.absolutePath())) {
+                    matches = true;
+                    break;
+                }
+            }
+
+            if (matches) {
                 // process record
                 log.info("Publishing package: " + record.absolutePath());
 
