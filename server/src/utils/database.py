@@ -70,3 +70,9 @@ class Database:
                         "INSERT INTO package_bins (build_date, packages) VALUES ($1, $2)",
                         update_info.build_label.build_date, unpacker.compressed_packages.getvalue()
                     )
+
+    async def all_versions(self, fetch_all: bool = False):
+        async with self.pool.acquire() as conn:
+            return await conn.fetch(
+                f"SELECT {'*' if fetch_all else 'build_label, forum_version, forum_url'} FROM package_labels"
+            )
