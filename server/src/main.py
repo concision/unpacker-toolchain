@@ -42,10 +42,10 @@ async def shutdown_event():
 @app.get("/")
 async def root():
     update_info = await _globals.fetcher.fetch_update_version()
-    build_label = await _globals.fetcher.fetch_build_label()
+    buildlabel = await _globals.fetcher.fetch_buildlabel()
     return {
         "update_version": str(SemVer.from_str(update_info[0])),
-        "build_label": build_label,
+        "buildlabel": buildlabel,
         "update_name": update_info[0],
         "patch_notes": update_info[1]
     }
@@ -65,8 +65,8 @@ async def unpacker_route():
 
 
 @app.put("/upload_packages")
-async def upload_historical_packages(build_label: str = Form(...), packages_bin: UploadFile = File(...)):
-    update_info = types.UpdateInfo(build_label=types.BuildLabel(build_label))
+async def upload_historical_packages(buildlabel: str = Form(...), packages_bin: UploadFile = File(...)):
+    update_info = types.UpdateInfo(buildlabel=types.BuildLabel(buildlabel))
     await _globals.db.new_packages(packages=packages_bin, update_info=update_info)
 
 

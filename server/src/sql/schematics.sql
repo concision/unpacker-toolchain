@@ -5,6 +5,8 @@
 -- DROP TABLE IF EXISTS package_labels;
 -- DROP TABLE IF EXISTS user_request_history;
 -- DROP TABLE IF EXISTS user_authorizations;
+-- DROP FUNCTION IF EXISTS version(TEXT);
+-- DROP FUNCTION IF EXISTS build_date(TEXT);
 
 
 
@@ -23,9 +25,9 @@ AS
 
 -- Extracts build version from a build label.
 -- e.g. build_date('2020.09.03.14.57/g8TiZeAvyMMhQvEOfkiCTA') = '2020.09.03.14.57'
-CREATE OR REPLACE FUNCTION build_date(build_label TEXT) RETURNS TEXT
+CREATE OR REPLACE FUNCTION build_date(buildlabel TEXT) RETURNS TEXT
 AS
-    'SELECT split_part(build_label, ''/'', 1)'
+    'SELECT split_part(buildlabel, ''/'', 1)'
     LANGUAGE 'sql'
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;
@@ -37,23 +39,23 @@ CREATE TABLE IF NOT EXISTS package_labels
     -- approximate fetch time
     timestamp             TIMESTAMP NOT NULL /* INDEXED */,
     -- partial or full build label from w-state (e.g. '2020.09.03.14.57', '2020.09.03.14.57/g8TiZeAvyMMhQvEOfkiCTA')
-    build_label           TEXT      NOT NULL /* INDEXED */,
+    buildlabel            TEXT      NOT NULL /* INDEXED */,
     -- optional semver-esque format declared in forum update post (e.g. '29.0.1.3') (but not semver compliant)
-    forum_version         TEXT      CHECK (forum_version ~ '^\d+(?:\.\d+)*$'),
-    -- optional forum post URL where the `forum_version` was obtained
+    semver                TEXT      CHECK (semver ~ '^\d+(?:\.\d+)*$'),
+    -- optional forum post URL where the `semver` was obtained
     forum_url             TEXT,
     -- optional linked steam depot manifest id (if this entry is from a steam database)
     steam_manifest_id     BIGINT,
 
     -- partial build version (e.g. '2020.09.03.14.57')
-    build_date            TEXT      PRIMARY KEY NOT NULL GENERATED ALWAYS AS (build_date(build_label)) STORED /* INDEXED */,
+    build_date            TEXT      PRIMARY KEY NOT NULL GENERATED ALWAYS AS (build_date(buildlabel)) STORED /* INDEXED */,
     -- build_date ordinal for ranged/order operations
-    build_date_ordinal    BIGINT    GENERATED ALWAYS AS (version(build_date(build_label))) STORED /* INDEXED */,
-    -- forum_version ordinal for ranged/order operations
-    forum_version_ordinal BIGINT    GENERATED ALWAYS AS (version(forum_version)) STORED /* INDEXED */
+    build_date_ordinal    BIGINT    GENERATED ALWAYS AS (version(build_date(buildlabel))) STORED /* INDEXED */,
+    -- semver ordinal for ranged/order operations
+    forum_version_ordinal BIGINT    GENERATED ALWAYS AS (version(semver)) STORED /* INDEXED */
 );
 CREATE INDEX IF NOT EXISTS packages__timestamp ON package_labels (timestamp);
-CREATE INDEX IF NOT EXISTS packages__forum_version ON package_labels (forum_version);
+CREATE INDEX IF NOT EXISTS packages__forum_version ON package_labels (semver);
 CREATE INDEX IF NOT EXISTS packages__build_date_ordinal ON package_labels (build_date_ordinal);
 CREATE INDEX IF NOT EXISTS packages__forum_version_ordinal ON package_labels (forum_version_ordinal);
 

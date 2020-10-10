@@ -20,7 +20,7 @@ class LabelFetcher:
     async def close(self):
         await self._client.close()
 
-    async def fetch_build_label(self) -> str:
+    async def fetch_buildlabel(self) -> str:
         r = json.loads(await self._client.request(Route("GET", self.WSTATE)))
         if "BuildLabel" not in r:
             raise ValueError

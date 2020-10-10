@@ -34,20 +34,20 @@ class Database:
     async def latest_version(self):
         async with self.pool.acquire() as conn:
             data = await conn.fetchrow(
-                "SELECT build_label FROM package_labels ORDER BY build_date_ordinal DESC LIMIT 1")
-            return data["build_label"] if data is not None else None
+                "SELECT buildlabel FROM package_labels ORDER BY build_date_ordinal DESC LIMIT 1")
+            return data["buildlabel"] if data is not None else None
 
     async def new_packages(self, packages: UploadFile, update_info: UpdateInfo):
-        build_label = str(update_info.build_label)
-        forum_version = str(update_info.semver) if update_info.semver else None
+        buildlabel = str(update_info.buildlabel)
+        semver = str(update_info.semver) if update_info.semver else None
         forum_url = update_info.forum_link
 
         async with self.pool.acquire() as conn:
             async with conn.transaction():
                 await conn.execute(
-                    "INSERT INTO package_labels (timestamp, build_label, forum_version, forum_url) "
+                    "INSERT INTO package_labels (timestamp, buildlabel, semver, forum_url) "
                     "VALUES ($1, $2, $3, $4)",
-                    datetime.now(), build_label, forum_version, forum_url
+                    datetime.now(), buildlabel, semver, forum_url
                 )
                 try:
                     async with conn.transaction():
@@ -63,16 +63,16 @@ class Database:
                                 )
                                 await conn.execute(
                                     "INSERT INTO package_entries (build_date, path, sha256) VALUES ($1, $2, $3)",
-                                    update_info.build_label.build_date, package_record["path"], _hash
+                                    update_info.buildlabel.build_date, package_record["path"], _hash
                                 )
                 finally:
                     await conn.execute(
                         "INSERT INTO package_bins (build_date, packages) VALUES ($1, $2)",
-                        update_info.build_label.build_date, unpacker.compressed_packages.getvalue()
+                        update_info.buildlabel.build_date, unpacker.compressed_packages.getvalue()
                     )
 
     async def all_versions(self, fetch_all: bool = False):
         async with self.pool.acquire() as conn:
             return await conn.fetch(
-                f"SELECT {'*' if fetch_all else 'build_label, forum_version, forum_url'} FROM package_labels"
+                f"SELECT {'*' if fetch_all else 'buildlabel, semver, forum_url'} FROM package_labels"
             )

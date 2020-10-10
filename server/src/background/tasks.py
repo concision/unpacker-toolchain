@@ -44,7 +44,7 @@ class Tasker:
         try:
             while True:
                 t1 = datetime.now()
-                latest = await fetcher.fetch_build_label()
+                latest = await fetcher.fetch_buildlabel()
                 if latest != self.values.get("current_version"):
                     ...
                 t2 = datetime.now()

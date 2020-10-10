@@ -4,7 +4,7 @@ import re
 from functools import reduce
 
 
-_build_label_pattern = re.compile(r"\d{4}(?:\.\d{2}){4}/\S*")
+_buildlabel_pattern = re.compile(r"\d{4}(?:\.\d{2}){4}/\S*")
 
 
 class BuildLabel(str):
@@ -12,12 +12,12 @@ class BuildLabel(str):
     build_date: str
     build_hash: Optional[str]
 
-    def __init__(self, build_label: str):
-        str.__init__(build_label)
-        if '/' in build_label:
+    def __init__(self, buildlabel: str):
+        str.__init__(buildlabel)
+        if '/' in buildlabel:
             self.build_date, self.build_hash = self.raw.split('/')
         else:
-            self.build_date = build_label
+            self.build_date = buildlabel
 
     def __str__(self):
         return self.raw
@@ -33,6 +33,6 @@ class BuildLabel(str):
     def validate(cls, v: str):
         if not isinstance(v, str):
             raise TypeError("String required, got {!r}".format(v.__class__))
-        if not _build_label_pattern.fullmatch(v):
+        if not _buildlabel_pattern.fullmatch(v):
             raise ValueError("Invalid BuildLabel format")
         return cls(v)

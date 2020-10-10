@@ -7,7 +7,7 @@ from .. import SemVer, BuildLabel
 
 class UpdateIdentifier(BaseModel):
     semver: Optional[SemVer]
-    build_label: Optional[BuildLabel]
+    buildlabel: Optional[BuildLabel]
 
     @root_validator
     def exactly_one_identifier(cls, values):
