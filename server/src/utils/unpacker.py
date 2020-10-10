@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import TracebackType
-from typing import Union, TypedDict, AsyncGenerator, List, Optional, Type
+from typing import Union, AsyncGenerator, List, Optional, Type
 
 import json
 import asyncio
@@ -12,15 +12,7 @@ from gzip import GzipFile
 
 from fastapi import UploadFile
 
-
-class PackageEntry(TypedDict):
-    """
-    A JSON-deserialized package record produced by the unpacker process with --output RECORDS.
-    """
-    # the absolute package path of the record
-    path: str
-    # the package contents
-    package: dict
+from .types import PackageEntry
 
 
 class Unpacker:
