@@ -52,18 +52,20 @@ public class PackageParser {
 
         // wrap with a DataInputStream for ease of reading
         try (DataInputStream stream = new DataInputStream(inputStream)) {
-            // unknown classified header bytes
-            skipNBytes(stream, 17);
+            // 16 byte/128 bit hash
+            skipNBytes(stream, 16);
+            // magic header (0x14 or 20)
+            skipNBytes(stream, 1);
 
             // read file format version
-            int patch = stream.readInt();
-            int minor = stream.readInt();
-            int major = stream.readInt();
+            int version = stream.readInt();
 
-            // determine length of an unknown integer (file format changes)
+            // skip unknown bytes
+            skipNBytes(stream, version <= 29 ? 8 : 7);
+
+            // determine length of an unknown flag
             int unknownLength;
-            // equivalent to org.semver.Version: 0 <= new Version(major, minor, patch).compareTo(new Version(0, 1, 29)
-            if (0 <= major && (major != 0 || minor != 1 || 29 <= patch)) {
+            if (29 <= version) {
                 unknownLength = 1;
             } else {
                 unknownLength = 4;
