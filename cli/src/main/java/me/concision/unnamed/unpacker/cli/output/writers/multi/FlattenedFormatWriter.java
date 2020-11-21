@@ -33,7 +33,9 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
         // create parent directory
         File outputPath = unpacker.args().outputPath;
         if (!outputPath.mkdirs()) {
-            throw new FileNotFoundException("failed to create directory: " + outputPath.getAbsolutePath());
+            if (!outputPath.exists()) {
+                throw new FileNotFoundException("failed to create directory: " + outputPath.getAbsolutePath());
+            }
         }
 
         // sanitize reserved relative filename specifies
@@ -50,9 +52,9 @@ public class FlattenedFormatWriter implements RecordFormatWriter {
         }
 
         // output file
-        File absoluteFile = new File(unpacker.args().outputPath, path + ".json").getAbsoluteFile();
+        File outputFile = new File(unpacker.args().outputPath, path + ".json").getAbsoluteFile();
         // write file
-        try (PrintStream output = new PrintStream(new FileOutputStream(absoluteFile))) {
+        try (PrintStream output = new PrintStream(new FileOutputStream(outputFile))) {
             if (unpacker.buildVersion() != null) {
                 output.println(unpacker.buildVersion());
             }
