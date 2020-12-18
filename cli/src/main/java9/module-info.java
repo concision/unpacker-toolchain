@@ -8,6 +8,7 @@ module me.concision.unnamed.unpacker.cli {
     requires static org.apache.httpcomponents.httpcore;
     requires static com.sun.jna.platform;
     requires static com.sun.jna;
+    requires static pecoff4j;
     requires static org.apache.commons.compress;
 
 
@@ -16,6 +17,8 @@ module me.concision.unnamed.unpacker.cli {
     requires java.logging;
     // required by httpclient
     requires java.naming;
+    // required by com.google.gson (unfortunately)
+    requires java.sql;
 
 
     // export all CLI packages

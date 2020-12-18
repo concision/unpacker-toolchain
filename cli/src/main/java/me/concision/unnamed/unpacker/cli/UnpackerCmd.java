@@ -3,6 +3,7 @@ package me.concision.unnamed.unpacker.cli;
 import me.concision.unnamed.unpacker.cli.logging.UnpackerLoggerFormatter;
 import me.concision.unnamed.unpacker.cli.output.OutputType;
 import me.concision.unnamed.unpacker.cli.output.OutputType.OutputMode;
+import me.concision.unnamed.unpacker.cli.paths.PathMatchingType;
 import me.concision.unnamed.unpacker.cli.source.SourceType;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
@@ -13,12 +14,12 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
-import java.nio.file.FileSystems;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Unpacker CLI entrypoint - processes and validates passed command-line arguments
@@ -47,11 +48,14 @@ public class UnpackerCmd {
     public static final String DEST_SOURCE_PATH = "source_path";
 
     // output flags
-    public static final String FLAG_OUTPUT_FORMAT = "--output";
+    public static final String FLAG_OUTPUT_FORMAT = "--format";
     public static final String DEST_OUTPUT_FORMAT = "output_format";
 
-    public static final String FLAG_OUTPUT_PATH = "--output-path";
+    public static final String FLAG_OUTPUT_PATH = "--output";
     public static final String DEST_OUTPUT_PATH = "output_path";
+
+    public static final String FLAG_PRINT_BUILD_VERSION = "--print-build-version";
+    public static final String DEST_PRINT_BUILD_VERSION = "output_print_build_version";
 
     public static final String FLAG_OUTPUT_SKIP_JSON = "--skip-json";
     public static final String DEST_OUTPUT_SKIP_JSON = "output_skip_json";
@@ -64,6 +68,9 @@ public class UnpackerCmd {
 
     public static final String FLAG_OUTPUT_JSON_INDENT = "--json-indent";
     public static final String DEST_OUTPUT_JSON_INDENT = "output_json_indent";
+
+    public static final String FLAG_PATH_MATCHING_TYPE = "--path-matching";
+    public static final String DEST_PATH_MATCHING_TYPE = "path_matching";
 
     // positional arguments
     public static final String ARGUMENT_PACKAGES = "packages";
@@ -169,6 +176,12 @@ public class UnpackerCmd {
                 .dest(DEST_OUTPUT_PATH)
                 .nargs("?")
                 .type(new FileArgumentType().verifyCanCreate());
+        // output printing build version
+        Argument printBuildVersionArgument = outputGroup.addArgument(FLAG_PRINT_BUILD_VERSION)
+                .help("For '" + FLAG_OUTPUT_FORMAT + " UPDATER', the game client version will be printed on its own line prior to any output\n" +
+                        "(e.g. \"xxxx.xx.xx.xx.xx\\r\\n<output>\")")
+                .dest(DEST_PRINT_BUILD_VERSION)
+                .action(Arguments.storeTrue());
         // skip jsonification
         outputGroup.addArgument(FLAG_OUTPUT_SKIP_JSON)
                 .help("Skips conversion of LUA Tables to JSON (default: false)\n" +
@@ -198,21 +211,26 @@ public class UnpackerCmd {
                 .required(false)
                 .setDefault("  ");
 
+        // path matching type
+        parser.addArgument(FLAG_PATH_MATCHING_TYPE)
+                .help("Specifies the path predicate pattern matching system for positional packages (default: LITERAL)\n" +
+                        PathMatchingType.LITERAL.name() + ": case-insensitive literal string path matching\n" +
+                        PathMatchingType.GLOB.name() + ": case-sensitive glob-style path matching (i.e. '*', '**', '?' wildcards)\n" +
+                        PathMatchingType.REGEX.name() + ": case-sensitive Java regular expression path mathing\n" +
+                        PathMatchingType.MIXED.name() + ": supports any pattern matching type in the form of 'type:pattern'" +
+                        " (e.g. \"literal:/Path/xyz\", \"glob:/**/*\", \"regex:^.+$\")")
+                .dest(DEST_PATH_MATCHING_TYPE)
+                .type(PathMatchingType.class)
+                .required(false)
+                .setDefault(PathMatchingType.LITERAL);
         // positional glob patterns
-        parser.addArgument(ARGUMENT_PACKAGES)
-                .help("List of packages to extract using glob patterns (default: \"**/*\")")
+        Argument packagePatternsArgument = parser.addArgument(ARGUMENT_PACKAGES)
+                .help("List of packages path pattern matching predicates (type specified with '" + FLAG_PATH_MATCHING_TYPE + "') to extract matching packages paths.\n" +
+                        "If no patterns are specified, all package paths will be extracted.")
                 .dest(ARGUMENT_PACKAGES)
                 .nargs("*")
-                // parse to globs
-                .type((argumentParser, arg, value) -> {
-                    try {
-                        return FileSystems.getDefault().getPathMatcher("glob:" + value);
-                    } catch (PatternSyntaxException exception) {
-                        throw new ArgumentParserException("invalid glob syntax" + (exception.getMessage() != null ? ": " + exception.getMessage() : ""), argumentParser, arg);
-                    }
-                })
-                .metavar("/glob/**/pattern/*file*")
-                .setDefault(Collections.singletonList(FileSystems.getDefault().getPathMatcher("glob:**/*")));
+                .type(String.class)
+                .metavar("PATTERN");
 
         // description
         parser.epilog("In lieu of a package list, a file containing a list may be specified with \"@file\"");
@@ -220,11 +238,38 @@ public class UnpackerCmd {
 
         // parse namespace, or exit runtime
         Namespace namespace = parser.parseArgsOrFail(cliArgs);
-        // convert to runtime configuration
-        CommandArguments arguments = CommandArguments.from(namespace);
 
-        // validate additional constraints
+        // convert to runtime configuration
+        CommandArguments arguments;
+
+        // validate and parse additional constraints
         try {
+            // parse package paths
+            List<String> packagePatterns = namespace.get(ARGUMENT_PACKAGES);
+            List<Predicate<String>> pathPredicates = new ArrayList<>(packagePatterns.size());
+            if (packagePatterns.isEmpty()) {
+                pathPredicates.add(path -> true);
+            } else {
+                PathMatchingType type = namespace.get(DEST_PATH_MATCHING_TYPE);
+                for (String packagePattern : packagePatterns) {
+                    try {
+                        pathPredicates.add(type.asPredicate(packagePattern));
+                    } catch (Throwable throwable) {
+                        throw new ArgumentParserException(
+                                "failed to convert package path pattern to predicate: " + packagePattern
+                                        + (throwable.getMessage() != null ? "; " + throwable.getMessage() : ""),
+                                throwable, parser, packagePatternsArgument
+                        );
+                    }
+                }
+            }
+            // update package path patterns
+            namespace.getAttrs().put(ARGUMENT_PACKAGES, pathPredicates);
+
+
+            // convert to runtime configuration
+            arguments = CommandArguments.from(namespace);
+
             // validate a source location is specified
             if (arguments.sourceType.requiresSource() && arguments.sourcePath == null) {
                 throw new ArgumentParserException("'" + FLAG_SOURCE_TYPE + " " + arguments.sourceType + "' requires a specified '" + FLAG_SOURCE_PATH + " PATH'", parser, sourceLocationArgument);
@@ -268,14 +313,22 @@ public class UnpackerCmd {
                     }
                 }
             }
+
+            // validate printing build version only when UPDATER is specified
+            if (arguments.printBuildVersion) {
+                if (arguments.sourceType != SourceType.UPDATER) {
+                    throw new ArgumentParserException("'" + FLAG_PRINT_BUILD_VERSION + "' is only compatible with '" + FLAG_SOURCE_TYPE + " " + SourceType.UPDATER + "' ", parser, printBuildVersionArgument);
+                }
+            }
         } catch (ArgumentParserException exception) {
             parser.handleError(exception);
             System.exit(-1);
+            return;
         }
 
 
         // initialize and configure logging mechanism
-        Logger log = Logger.getLogger(UnpackerCmd.class.getPackageName());
+        Logger log = Logger.getLogger(UnpackerCmd.class.getPackage().getName());
         log.setUseParentHandlers(false);
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new UnpackerLoggerFormatter());

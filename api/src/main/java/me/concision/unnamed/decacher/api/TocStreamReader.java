@@ -161,7 +161,7 @@ public class TocStreamReader {
                 int compressedFileSize = Integer.reverseBytes(stream.readInt());
                 int uncompressedFileSize = Integer.reverseBytes(stream.readInt());
                 // unknown 4 bytes; likely an integer
-                stream.skipBytes(4);
+                stream.readInt();
                 int depthId = Integer.reverseBytes(stream.readInt());
                 String filename;
                 {

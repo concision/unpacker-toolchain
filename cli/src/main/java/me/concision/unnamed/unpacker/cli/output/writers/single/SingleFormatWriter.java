@@ -38,6 +38,9 @@ public abstract class SingleFormatWriter implements OutputFormatWriter, Closeabl
         if (outputPath != null) {
             try {
                 outputStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputPath)));
+                if (unpacker.buildVersion() != null) {
+                    outputStream.println(unpacker.buildVersion());
+                }
             } catch (FileNotFoundException exception) {
                 throw new RuntimeException("failed to create single file output: " + outputPath, exception);
             }

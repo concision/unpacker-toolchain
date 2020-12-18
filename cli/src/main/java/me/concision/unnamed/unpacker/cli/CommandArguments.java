@@ -10,9 +10,9 @@ import me.concision.unnamed.unpacker.cli.source.SourceType;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 import java.io.File;
-import java.nio.file.PathMatcher;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * A runtime configuration enabling more concise code when referencing arguments.
@@ -41,13 +41,14 @@ public class CommandArguments {
     public final OutputType outputFormat;
 
     // flags
+    public final boolean printBuildVersion;
     public final boolean skipJsonification;
     public final boolean convertStringLiterals;
     public final boolean prettifyJson;
     public final String indentationString;
 
     @NonNull
-    public final List<PathMatcher> packages;
+    public final List<Predicate<String>> packages;
 
     /**
      * Constructs a new runtime arguments object from an argparse4j namespace
@@ -67,6 +68,7 @@ public class CommandArguments {
                 namespace.get(UnpackerCmd.DEST_OUTPUT_PATH),
                 namespace.get(UnpackerCmd.DEST_OUTPUT_FORMAT),
                 // output flags
+                namespace.getBoolean(UnpackerCmd.DEST_PRINT_BUILD_VERSION),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_SKIP_JSON),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_CONVERT_STRING_LITERALS),
                 namespace.getBoolean(UnpackerCmd.DEST_OUTPUT_PRETTIFY_JSON),

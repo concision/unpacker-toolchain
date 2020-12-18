@@ -1,5 +1,14 @@
 package me.concision.unnamed.unpacker.cli.source.collectors;
 
+import com.kichik.pecoff4j.PE;
+import com.kichik.pecoff4j.ResourceEntry;
+import com.kichik.pecoff4j.constant.ResourceType;
+import com.kichik.pecoff4j.io.PEParser;
+import com.kichik.pecoff4j.io.ResourceParser;
+import com.kichik.pecoff4j.resources.StringPair;
+import com.kichik.pecoff4j.resources.StringTable;
+import com.kichik.pecoff4j.resources.VersionInfo;
+import com.kichik.pecoff4j.util.ResourceHelper;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.Psapi;
@@ -44,6 +53,7 @@ import java.util.regex.Matcher;
 import static com.sun.jna.platform.win32.User32.INSTANCE;
 import static com.sun.jna.platform.win32.WinNT.PROCESS_QUERY_INFORMATION;
 import static com.sun.jna.platform.win32.WinUser.SW_HIDE;
+import static me.concision.unnamed.unpacker.cli.UnpackerCmd.IS_WINDOWS;
 import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.DEPOT_FILE_PATTERN;
 import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.INDEX_MANIFEST;
 import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.ORIGIN_URL;
@@ -62,7 +72,9 @@ public class UpdaterSourceCollector implements SourceCollector {
 
     @Override
     @SuppressWarnings("DuplicatedCode")
-    public InputStream acquire(@NonNull CommandArguments args) throws IOException {
+    public InputStream acquire(@NonNull Unpacker unpacker) throws IOException {
+        CommandArguments args = unpacker.args();
+
         // obtain listing of CDN depot files
         @RequiredArgsConstructor
         @ToString
@@ -160,14 +172,44 @@ public class UpdaterSourceCollector implements SourceCollector {
             throw new RuntimeException("failed to fetch game client", throwable);
         }
 
+        // extract build version if necessary
+        if (args.printBuildVersion) {
+            log.info("Extracting windows ProductVersion from game client executable");
+
+            String buildVersion = null;
+            try {
+                PE warframeExe = PEParser.parse(executableFile);
+                for (ResourceEntry entry : ResourceHelper.findResources(warframeExe.getImageData().getResourceTable(), ResourceType.VERSION_INFO)) {
+                    VersionInfo version = ResourceParser.readVersionInfo(entry.getData());
+                    StringTable table = version.getStringFileInfo().getTable(0);
+                    for (int i = 0; i < table.getCount(); i++) {
+                        StringPair property = table.getString(i);
+                        if (property.getKey().equals("ProductVersion")) {
+                            buildVersion = property.getValue();
+                        }
+                    }
+                }
+
+                // validate build version
+                if (buildVersion == null) {
+                    throw new RuntimeException("ProductVersion key in executable string table not found");
+                }
+            } catch (Throwable throwable) {
+                throw new RuntimeException("failed to extract ProductVersion from game client executable", throwable);
+            }
+
+            log.info("Extracted ProductVersion: " + buildVersion);
+            // set build version for unpacker
+            unpacker.buildVersion(buildVersion);
+        }
+
         // build game client command to execute
-        boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
-        log.info("Is Windows: " + isWindows);
+        log.info("Is Windows: " + IS_WINDOWS);
         String clientPath = executableFile.getAbsolutePath();
         try {
             // build command
             String[] command;
-            if (isWindows) {
+            if (IS_WINDOWS) {
                 command = new String[]{clientPath, "-silent", "-cluster:public", "-applet:/EE/Types/Framework/ContentUpdate"};
             } else {
                 command = new String[]{
@@ -193,7 +235,7 @@ public class UpdaterSourceCollector implements SourceCollector {
             List<Thread> threads = new LinkedList<>();
 
             // if on Windows, start a thread to hide any popups once the process is available
-            if (isWindows) {
+            if (IS_WINDOWS) {
                 threads.add(new Thread(() -> awaitHideWindow(executableFile), "Unpacker::ClientUpdater::HideWindow"));
             }
 
@@ -228,7 +270,7 @@ public class UpdaterSourceCollector implements SourceCollector {
         File cacheDirectory = new File(tempDirectory, "Cache.Windows");
         Path cachePath = cacheDirectory.toPath();
         // delete all unnecessary files
-        if (!isWindows) {
+        if (!IS_WINDOWS) {
             // native acceleration must be used for performance
             Process deleteProcess = Runtime.getRuntime().exec(new String[]{
                     "rm", "-rf", clientPath, new File(tempDirectory, ".wine64").getAbsolutePath()

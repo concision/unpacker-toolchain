@@ -32,15 +32,8 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
     public void publish(Unpacker unpacker, PackageEntry record) throws IOException {
         CommandArguments args = unpacker.args();
 
-        // output file
-        File file = new File(args.outputPath, record.absolutePath() + ".json").getAbsoluteFile();
-        // create parent directory
-        if (!file.getParentFile().mkdirs()) {
-            throw new FileNotFoundException("failed to create directory: " + file.getParentFile().getAbsolutePath());
-        }
-
         // sanitize reserved relative filename specifies
-        String filePath = Arrays.stream(record.absolutePath().split("/"))
+        String outputFile = Arrays.stream(record.absolutePath().split("/"))
                 .map(path -> {
                     switch (path) {
                         case ".":
@@ -54,8 +47,21 @@ public class RecursiveFormatWriter implements RecordFormatWriter {
                 .filter(path -> !path.isEmpty())
                 .collect(Collectors.joining("/"));
 
+        // output file
+        File file = new File(args.outputPath, outputFile + ".json").getAbsoluteFile();
+
+        // create parent directory
+        if (!file.getParentFile().mkdirs()) {
+            if (!file.getParentFile().exists()) {
+                throw new FileNotFoundException("failed to create directory: " + file.getParentFile().getAbsolutePath());
+            }
+        }
+
         // write file
-        try (PrintStream output = new PrintStream(new FileOutputStream(filePath))) {
+        try (PrintStream output = new PrintStream(new FileOutputStream(file))) {
+            if (unpacker.buildVersion() != null) {
+                output.println(unpacker.buildVersion());
+            }
             if (args.skipJsonification) {
                 output.print(record.contents());
             } else {

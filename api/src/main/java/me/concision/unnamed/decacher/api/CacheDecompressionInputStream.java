@@ -74,9 +74,11 @@ public class CacheDecompressionInputStream extends InputStream {
      */
     @Override
     public int read(@NonNull byte[] buffer, int offset, int len) throws IOException {
-        Objects.checkFromIndexSize(offset, len, buffer.length);
-
-        if (len == 0) {
+        if (buffer == null) {
+            throw new NullPointerException();
+        } else if (offset < 0 || len < 0 || len > buffer.length - offset) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
             return 0;
         }
 

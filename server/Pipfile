@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+flake8 = "*"
+requests = "*"
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+beautifulsoup4 = "*"
+aiohttp = "*"
+async-timeout = "*"
+asyncpg = "*"
+sentry-sdk = "*"
+python-multipart = "*"
+
+[requires]
+python_version = "3.8.5"

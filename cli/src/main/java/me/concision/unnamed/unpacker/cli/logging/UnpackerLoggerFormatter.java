@@ -18,7 +18,7 @@ public class UnpackerLoggerFormatter extends SimpleFormatter {
     /**
      * Default logging format (e.g. "[2020-09-06 20:18:04] INFO    Logged message content")
      */
-    private static final String FORMAT = "[%1$tF %1$tT] %2$-7s %3$s %n";
+    private static final String FORMAT = "[%1$tF %1$tT] %2$-7s %3$s%n";
 
     /**
      * Internal synchronously modified buffer for serializing {@link Throwable}s.

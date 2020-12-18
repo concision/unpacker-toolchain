@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  unpacker:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+      args:
+        DEVELOPMENT: "true"
+    depends_on:
+      - database
+    networks:
+      - backend
+    ports:
+      - 80:80
+    volumes:
+      - ./src/:/unpacker/server/src:ro
+    environment:
+      # enables uvicorn hot reloading
+      DEVELOPMENT: "true"
+      # database URL
+      POSTGRES_URL: "postgresql://database:5432/packages?user=unpacker&password=${DATABASE_PASSWORD:-SecurePasswordTM}&application_name=unpacker"
+  database:
+    image: postgres:13
+    volumes:
+      - database:/var/lib/postgresql/data/
+    networks:
+      - backend
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: "packages"
+      POSTGRES_USER: "unpacker"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD:-SecurePasswordTM}"
+
+volumes:
+  database:
+
+networks:
+  backend:
