@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>me.concision.unnamed</groupId>
-        <artifactId>unpacker</artifactId>
+        <artifactId>unpacker-toolchain</artifactId>
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
@@ -14,7 +14,14 @@
     <artifactId>cli</artifactId>
     <version>2.0.0-SNAPSHOT</version>
 
+    <packaging>jar</packaging>
+
+    <name>Unpacker CLI</name>
     <description>A command-line application that automates the data extraction process for humans and upstream applications</description>
+
+    <properties>
+        <artifact.name>unpacker</artifact.name>
+    </properties>
 
     <dependencies>
         <!-- Unpacker I/O API: Manipulate package streams -->
@@ -69,62 +76,96 @@
     </dependencies>
 
     <build>
+        <!-- configure maven plugin versions -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                    <artifactId>launch4j-maven-plugin</artifactId>
+                    <version>1.7.25</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <!-- build configuration -->
         <plugins>
-            <!-- Compile sources -->
+            <!-- indicates to IDEs that src/main/java9 is a source directory; no-op execution -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
                 <executions>
-                    <!-- Disable default phase due to fixed id and position in lifecycle -->
                     <execution>
-                        <id>default-compile</id>
+                        <id>add-source</id>
                         <phase>none</phase>
-                        <!-- specify source/target for IDE integration -->
-                        <configuration>
-                            <source>9</source>
-                            <target>9</target>
-                        </configuration>
-                    </execution>
-                    <!-- Compile project with Java 9 to ensure module-info.java is valid -->
-                    <execution>
-                        <id>module-compile</id>
                         <goals>
-                            <goal>compile</goal>
+                            <goal>add-source</goal>
                         </goals>
                         <configuration>
-                            <source>9</source>
-                            <release>9</release>
-                            <jdkToolchain>
-                                <version>9</version>
-                            </jdkToolchain>
-                        </configuration>
-                    </execution>
-                    <!-- Recompile as Java 8 to overwrite Java 9 class files, except module-info.java -->
-                    <execution>
-                        <id>jdk8-compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <source>8</source>
-                            <target>8</target>
-                            <jdkToolchain>
-                                <version>[1.8,9)</version>
-                            </jdkToolchain>
-                            <excludes>
-                                <exclude>module-info.java</exclude>
-                            </excludes>
+                            <sources>
+                                <source>${project.basedir}/src/main/java9</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- Shade dependencies -->
+            <!-- compile multi-release JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <!-- indicates to IDEs that the default language level is Java 9 -->
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>9</release>
+                        </configuration>
+                    </execution>
+                    <!-- compile sources for Java 8 -->
+                    <execution>
+                        <id>java-8-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>8</release>
+                        </configuration>
+                    </execution>
+                    <!-- compile module-info for Java 9, stored under META-INF/versions/9/module-info.class -->
+                    <execution>
+                        <id>java-9-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>9</release>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+                            </compileSourceRoots>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                    <version>${lombok.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- shade dependencies into uber JAR; mark artifact as a multi-release JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -132,34 +173,35 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.parent.name}</finalName>
+                            <finalName>${artifact.name}</finalName>
                             <shadedArtifactAttached>false</shadedArtifactAttached>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <minimizeJar>true</minimizeJar>
                             <transformers>
-                                <!-- Specify entrypoint -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
+                                        <!-- mark artifact as a multi-release JAR -->
+                                        <Multi-Release>true</Multi-Release>
+                                        <!-- specify entrypoint -->
                                         <Main-Class>me.concision.unnamed.unpacker.cli.UnpackerCmd</Main-Class>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
                             <filters>
-                                <!-- Required by httpclient -->
+                                <!-- required by httpclient -->
                                 <filter>
                                     <artifact>commons-logging:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
-                                <!-- Filter various other resources -->
+                                <!-- filter various other resources -->
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <!-- Strip module-info from dependencies (e.g. META-INF/versions/*/module-info.class) -->
-                                        <exclude>**/module-info.class</exclude>
-                                        <!-- Strip classes in META-INF due to strange jlink error -->
-                                        <exclude>**/META-INF/versions/**/*</exclude>
+                                        <!-- exclude miscellaneous files-->
+                                        <exclude>**/META-INF/*</exclude>
+                                        <exclude>**/mozilla/**/*</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -167,12 +209,10 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <!-- Add module-info.class into built product -->
+            <!-- add back multi-release classes into JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -181,10 +221,12 @@
                         </goals>
                         <configuration>
                             <target>
+                                <!-- property must be passed into ant's runtime -->
+                                <property name="artifact.name" value="${artifact.name}"/>
                                 <zip
                                         basedir="${project.build.directory}/classes"
-                                        includes="module-info.class"
-                                        destfile="${project.build.directory}/unpacker.jar"
+                                        includes="META-INF/versions/**/*"
+                                        destfile="${project.build.directory}/${artifact.name}.jar"
                                         update="true"
                                 />
                             </target>
@@ -196,37 +238,36 @@
     </build>
 
     <profiles>
-        <!-- Skip Windows executable generator during Docker builds -->
+        <!-- skip Windows executable generator during Docker builds -->
         <profile>
             <id>non-docker</id>
             <activation>
-                <!-- activate if DOCKER environment variable is NOT present -->
+                <!-- activate if DOCKER environment variable is NOT true -->
                 <property>
                     <name>env.DOCKER</name>
                     <value>!true</value>
                 </property>
             </activation>
+            <!-- build configuration -->
             <build>
                 <plugins>
-                    <!-- Compile to executable -->
+                    <!-- build Windows executable -->
                     <plugin>
                         <groupId>com.akathist.maven.plugins.launch4j</groupId>
                         <artifactId>launch4j-maven-plugin</artifactId>
-                        <version>1.7.25</version>
                         <executions>
                             <execution>
-                                <id>l4j-gui</id>
+                                <id>launch4j</id>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>launch4j</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- Build from ProGuard output -->
-                                    <jar>${project.build.directory}/${project.parent.name}.jar</jar>
-                                    <outfile>${project.build.directory}/${project.parent.name}.exe</outfile>
-                                    <icon>launch4j/therox.ico</icon>
+                                    <jar>${project.build.directory}/${artifact.name}.jar</jar>
+                                    <outfile>${project.build.directory}/${artifact.name}.exe</outfile>
+                                    <icon>launch4j.ico</icon>
                                     <versionInfo>
-                                        <originalFilename>${parent.name}.exe</originalFilename>
+                                        <originalFilename>${artifact.name}.exe</originalFilename>
                                         <fileVersion>${windows.version}</fileVersion>
                                         <txtFileVersion>${project.version}</txtFileVersion>
                                         <fileDescription>${project.description}</fileDescription>
@@ -251,7 +292,7 @@
                                     <errTitle>${project.name}</errTitle>
                                     <messages>
                                         <startupErr>An error occurred while bootstrapping ${project.parent.name}</startupErr>
-                                        <jreVersionErr>JDK 1.8 or higher is required</jreVersionErr>
+                                        <jreVersionErr>JRE 1.8 or higher is required</jreVersionErr>
                                         <launcherErr>An exception occurred with Launch4j</launcherErr>
                                     </messages>
                                 </configuration>
