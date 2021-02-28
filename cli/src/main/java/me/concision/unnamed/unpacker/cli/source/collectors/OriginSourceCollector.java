@@ -61,7 +61,7 @@ public class OriginSourceCollector implements SourceCollector {
     /**
      * Matches depot files format from index manifest
      */
-    static final Pattern DEPOT_FILE_PATTERN = Pattern.compile("^(?<path>/(?:[^/]+/)*(?<filename>.+)\\.[0-9A-F]{32}\\.lzma),(?<filesize>\\d+)$");
+    static final Pattern DEPOT_FILE_PATTERN = Pattern.compile("^(?<url>(?<path>/(?:[^/]+/)*(?<filename>.+))\\.[0-9A-F]{32}\\.(?:lzma|bulk)),(?<filesize>\\d+)$");
 
     /**
      * {@inheritDoc}
@@ -75,7 +75,7 @@ public class OriginSourceCollector implements SourceCollector {
         @RequiredArgsConstructor
         @ToString
         class DepotFile {
-            final String path;
+            final String url;
             final String name;
             final long size;
         }
@@ -103,7 +103,7 @@ public class OriginSourceCollector implements SourceCollector {
                     }
 
                     // parse depot format
-                    String path = matcher.group("path");
+                    String url = matcher.group("url");
                     String filename = matcher.group("filename");
                     long filesize;
                     try {
@@ -113,7 +113,7 @@ public class OriginSourceCollector implements SourceCollector {
                         continue;
                     }
 
-                    files.add(new DepotFile(path, filename, filesize));
+                    files.add(new DepotFile(url, filename, filesize));
                 }
             }
         } catch (Throwable throwable) {
@@ -130,7 +130,7 @@ public class OriginSourceCollector implements SourceCollector {
             String tocUrl = files.stream()
                     .filter(file -> file.name.equals(TOC_NAME))
                     .findFirst()
-                    .map(entry -> ORIGIN_URL + entry.path)
+                    .map(entry -> ORIGIN_URL + entry.url)
                     .orElseThrow(() -> new RuntimeException("failed to find " + TOC_NAME + " in manifest"));
             log.info("TOC URL: " + tocUrl);
 
@@ -169,7 +169,7 @@ public class OriginSourceCollector implements SourceCollector {
             String cacheUrl = files.stream()
                     .filter(file -> file.name.equals(CACHE_NAME))
                     .findFirst()
-                    .map(entry -> ORIGIN_URL + entry.path)
+                    .map(entry -> ORIGIN_URL + entry.url)
                     .orElseThrow(() -> new RuntimeException("failed to find " + CACHE_NAME + " in manifest"));
             log.info("Cache URL: " + cacheUrl);
 

@@ -15,22 +15,6 @@ import com.sun.jna.platform.win32.Psapi;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
-import lombok.extern.java.Log;
-import me.concision.unnamed.unpacker.cli.CommandArguments;
-import me.concision.unnamed.unpacker.cli.Unpacker;
-import me.concision.unnamed.unpacker.cli.source.SourceCollector;
-import me.concision.unnamed.unpacker.cli.source.SourceType;
-import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
-import org.apache.commons.compress.utils.IOUtils;
-import org.apache.http.HttpVersion;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -49,14 +33,27 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.extern.java.Log;
+import me.concision.unnamed.unpacker.cli.CommandArguments;
+import me.concision.unnamed.unpacker.cli.Unpacker;
+import me.concision.unnamed.unpacker.cli.source.SourceCollector;
+import me.concision.unnamed.unpacker.cli.source.SourceType;
+import org.apache.commons.compress.compressors.lzma.LZMACompressorInputStream;
+import org.apache.commons.compress.utils.IOUtils;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import static com.sun.jna.platform.win32.User32.INSTANCE;
 import static com.sun.jna.platform.win32.WinNT.PROCESS_QUERY_INFORMATION;
 import static com.sun.jna.platform.win32.WinUser.SW_HIDE;
 import static me.concision.unnamed.unpacker.cli.UnpackerCmd.IS_WINDOWS;
-import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.DEPOT_FILE_PATTERN;
-import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.INDEX_MANIFEST;
-import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.ORIGIN_URL;
+import static me.concision.unnamed.unpacker.cli.source.collectors.OriginSourceCollector.*;
 
 /**
  * See {@link SourceType#UPDATER}.
@@ -70,6 +67,14 @@ public class UpdaterSourceCollector implements SourceCollector {
      */
     private static final String CLIENT_EXECUTABLE_FILENAME = new String(Base64.getDecoder().decode("V2FyZnJhbWUueDY0LmV4ZQ=="), StandardCharsets.ISO_8859_1);
 
+    /**
+     * Requires game launcher files
+     */
+    private static final String[] REQUIRED_CLIENT_FILES = new String[]{
+            "/" + CLIENT_EXECUTABLE_FILENAME,
+            new String(Base64.getDecoder().decode("L1Rvb2xzL09vZGxlL3g2NC9maW5hbC9vbzJjb3JlXzhfd2luNjQuZGxs"), StandardCharsets.ISO_8859_1)
+    };
+
     @Override
     @SuppressWarnings("DuplicatedCode")
     public InputStream acquire(@NonNull Unpacker unpacker) throws IOException {
@@ -79,6 +84,7 @@ public class UpdaterSourceCollector implements SourceCollector {
         @RequiredArgsConstructor
         @ToString
         class DepotFile {
+            final String url;
             final String path;
             final String name;
             final long size;
@@ -107,6 +113,7 @@ public class UpdaterSourceCollector implements SourceCollector {
                     }
 
                     // parse depot
+                    String url = matcher.group("url");
                     String path = matcher.group("path");
                     String filename = matcher.group("filename");
                     long filesize;
@@ -117,7 +124,7 @@ public class UpdaterSourceCollector implements SourceCollector {
                         continue;
                     }
 
-                    files.add(new DepotFile(path, filename, filesize));
+                    files.add(new DepotFile(url, path, filename, filesize));
                 }
             }
         } catch (Throwable throwable) {
@@ -139,33 +146,37 @@ public class UpdaterSourceCollector implements SourceCollector {
         log.info("Using temporary directory: " + tempDirectory.getAbsolutePath());
 
         // find game client
-        log.info("Fetching game client");
+        log.info("Fetching game client files...");
         File executableFile = new File(tempDirectory, CLIENT_EXECUTABLE_FILENAME);
         try (CloseableHttpClient httpClient = HttpClientBuilder.create()
                 .addInterceptorLast(new OriginSourceCollector.HeaderFormatter())
                 .build()) {
-            // build game client url
-            String clientUrl = files.stream()
-                    .filter(file -> file.name.equals(CLIENT_EXECUTABLE_FILENAME))
-                    .findFirst()
-                    .map(entry -> ORIGIN_URL + entry.path)
-                    .orElseThrow(() -> new RuntimeException("failed to find game client in manifest"));
-            log.info("Game client URL: " + clientUrl);
+            for (String requiredClientFile : REQUIRED_CLIENT_FILES) {
+                // build game client url
+                DepotFile clientFile = files.stream()
+                        .filter(file -> file.path.equals(requiredClientFile))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("failed to find client file in manifest: " + requiredClientFile));
+                String clientFileUrl = ORIGIN_URL + clientFile.url;
+                log.info("Fetching file from URL: " + clientFileUrl);
 
-            // form request
-            HttpGet request = new HttpGet(clientUrl);
-            request.setProtocolVersion(HttpVersion.HTTP_1_1);
+                // form request
+                HttpGet request = new HttpGet(clientFileUrl);
+                request.setProtocolVersion(HttpVersion.HTTP_1_1);
 
-            // execute request
-            CloseableHttpResponse response = httpClient.execute(request);
+                // execute request
+                CloseableHttpResponse response = httpClient.execute(request);
 
-            // download game client and save it to temporary directory
-            try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
-                try (OutputStream executableStream = new BufferedOutputStream(new FileOutputStream(executableFile))) {
-                    IOUtils.copy(stream, executableStream);
+                // download game client and save it to temporary directory
+                File tempClientFile = new File(tempDirectory, clientFile.path.startsWith("/") ? clientFile.path.substring(1) : clientFile.path);
+                tempClientFile.getParentFile().mkdirs();
+                try (InputStream stream = new LZMACompressorInputStream(response.getEntity().getContent())) {
+                    try (OutputStream executableStream = new BufferedOutputStream(new FileOutputStream(tempClientFile))) {
+                        IOUtils.copy(stream, executableStream);
+                    }
                 }
+                response.close();
             }
-            response.close();
         } catch (EOFException ignored) {
             throw new RuntimeException("reached EOF before finding game client");
         } catch (Throwable throwable) {
@@ -178,8 +189,8 @@ public class UpdaterSourceCollector implements SourceCollector {
 
             String buildVersion = null;
             try {
-                PE warframeExe = PEParser.parse(executableFile);
-                for (ResourceEntry entry : ResourceHelper.findResources(warframeExe.getImageData().getResourceTable(), ResourceType.VERSION_INFO)) {
+                PE clientExe = PEParser.parse(executableFile);
+                for (ResourceEntry entry : ResourceHelper.findResources(clientExe.getImageData().getResourceTable(), ResourceType.VERSION_INFO)) {
                     VersionInfo version = ResourceParser.readVersionInfo(entry.getData());
                     StringTable table = version.getStringFileInfo().getTable(0);
                     for (int i = 0; i < table.getCount(); i++) {

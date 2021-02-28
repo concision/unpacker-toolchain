@@ -65,6 +65,7 @@ public class DirectorySourceCollector implements SourceCollector {
         }
         // read entry
         CacheEntry cacheEntry = entry.get();
+        log.info("Toc entry: " + cacheEntry);
 
         // skip offset in cache stream
         IOUtils.skip(cacheStream, cacheEntry.offset());
